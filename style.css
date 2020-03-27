@@ -8,6 +8,11 @@ h1 {
   color: #373fff;
 }
 
+h4 {
+  font-weight: bold;
+  color: lightgrey;
+}
+
 footer {
   color: #808080
 }
