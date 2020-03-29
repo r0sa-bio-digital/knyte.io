@@ -1,4 +1,6 @@
 let svgNameSpace;
+const knoxelColors = {}; // knoxel id --> color
+const knoxels = {}; // root knoxel id --> nested knoxel id --> position
 const visualTheme = {
   rect: {
     strokeColor: '#160f19',
@@ -92,16 +94,28 @@ function uuid() {
     hexBytes[b[14]] + hexBytes[b[15]];
 }
 
+function addKnoxel(canvasId, rectId, position, color)
+{
+  if (canvasId)
+    knoxels[canvasId][rectId] = position;
+  knoxels[rectId] = {};
+  knoxelColors[rectId] = color;
+}
+
 function setRectAsRoot(newVisualRootId)
 {
   const visualRoot = document.getElementsByClassName('visualRoot')[0];
   // set color
-  visualRoot.style.backgroundColor = document.getElementById(newVisualRootId).getAttribute('fill');
+  visualRoot.style.backgroundColor = knoxelColors[newVisualRootId];
   // clear children
   while (visualRoot.firstChild)
     visualRoot.firstChild.remove();
   // set actual id
   visualRoot.id = newVisualRootId;
+  // restore all nested rects
+  const nestedRects = knoxels[newVisualRootId];
+  for (let rectId in nestedRects)
+    restoreRect(visualRoot, rectId, nestedRects[rectId], knoxelColors[rectId]);
 }
 
 function onClickRect(e)
@@ -110,7 +124,7 @@ function onClickRect(e)
   e.stopPropagation(); // to prevent onClickVisualRoot call
 }
 
-function addRect(canvasElement, position)
+function addRect(canvasElement, position, color)
 {
   const w = visualTheme.rect.defaultHeight;
   const h = visualTheme.rect.defaultWidth;
@@ -122,7 +136,27 @@ function addRect(canvasElement, position)
   rect.setAttribute('y', y);
   rect.setAttribute('width', w);
   rect.setAttribute('height', h);
-  rect.setAttribute('fill', visualTheme.rect.fillColor.getRandom());
+  rect.setAttribute('fill', color);
+  rect.setAttribute('stroke', visualTheme.rect.strokeColor);
+  rect.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
+  rect.addEventListener('click', onClickRect, false);
+  canvasElement.appendChild(rect);
+  addKnoxel(canvasElement.id, rect.id, position, color);
+}
+
+function restoreRect(canvasElement, id, position, color)
+{
+  const w = visualTheme.rect.defaultHeight;
+  const h = visualTheme.rect.defaultWidth;
+  const x = position.x - w/2;
+  const y = position.y - h/2;
+  const rect = document.createElementNS(svgNameSpace, 'rect');
+  rect.id = id;
+  rect.setAttribute('x', x);
+  rect.setAttribute('y', y);
+  rect.setAttribute('width', w);
+  rect.setAttribute('height', h);
+  rect.setAttribute('fill', color);
   rect.setAttribute('stroke', visualTheme.rect.strokeColor);
   rect.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
   rect.addEventListener('click', onClickRect, false);
@@ -133,7 +167,8 @@ function onClickVisualRoot(e)
 {
   addRect(
     document.getElementsByClassName('visualRoot')[0],
-    {x: e.offsetX, y: e.offsetY}
+    {x: e.offsetX, y: e.offsetY},
+    visualTheme.rect.fillColor.getRandom()
   );
 }
 
@@ -148,7 +183,9 @@ function onLoadBody(e)
 {
   const visualRoot = document.getElementsByClassName('visualRoot')[0];
   visualRoot.id = uuid();
-  visualRoot.style.backgroundColor = visualTheme.rect.fillColor.getRandom();
+  const color = visualTheme.rect.fillColor.getRandom();
+  visualRoot.style.backgroundColor = color;
+  addKnoxel(null, visualRoot.id, null, color);
   svgNameSpace = visualRoot.getAttribute('xmlns');
   visualRoot.addEventListener('click', onClickVisualRoot, false);
   window.addEventListener('resize', onResizeWindow, false);
