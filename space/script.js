@@ -89,22 +89,25 @@ function uuid() {
     hexBytes[b[8]] + hexBytes[b[9]] + '-' +
     hexBytes[b[10]] + hexBytes[b[11]] +
     hexBytes[b[12]] + hexBytes[b[13]] +
-    hexBytes[b[14]] + hexBytes[b[15]]
-  ;
+    hexBytes[b[14]] + hexBytes[b[15]];
 }
 
-function onClickRect(e)
+function setRectAsRoot(newVisualRootId)
 {
-  const newVisualRootId = e.target.id;
   const visualRoot = document.getElementsByClassName('visualRoot')[0];
   // set color
   visualRoot.style.backgroundColor = document.getElementById(newVisualRootId).getAttribute('fill');
   // clear children
   while (visualRoot.firstChild)
     visualRoot.firstChild.remove();
-  // set id
+  // set actual id
   visualRoot.id = newVisualRootId;
-  e.stopPropagation();
+}
+
+function onClickRect(e)
+{
+  setRectAsRoot(e.target.id);
+  e.stopPropagation(); // to prevent onClickVisualRoot call
 }
 
 function addRect(canvasElement, position)
