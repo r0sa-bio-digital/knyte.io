@@ -93,6 +93,20 @@ function uuid() {
   ;
 }
 
+function onClickRect(e)
+{
+  const newVisualRootId = e.target.id;
+  const visualRoot = document.getElementsByClassName('visualRoot')[0];
+  // set color
+  visualRoot.style.backgroundColor = document.getElementById(newVisualRootId).getAttribute('fill');
+  // clear children
+  while (visualRoot.firstChild)
+    visualRoot.firstChild.remove();
+  // set id
+  visualRoot.id = newVisualRootId;
+  e.stopPropagation();
+}
+
 function addRect(canvasElement, position)
 {
   const w = visualTheme.rect.defaultHeight;
@@ -108,6 +122,7 @@ function addRect(canvasElement, position)
   rect.setAttribute('fill', visualTheme.rect.fillColor.getRandom());
   rect.setAttribute('stroke', visualTheme.rect.strokeColor);
   rect.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
+  rect.addEventListener('click', onClickRect, false);
   canvasElement.appendChild(rect);
 }
 
