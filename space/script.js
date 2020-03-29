@@ -106,6 +106,14 @@ function addKnoxel(canvasId, rectId, position, color)
 function setRectAsRoot(newVisualRootId)
 {
   const visualRoot = document.getElementsByClassName('visualRoot')[0];
+  // check for return knoxel
+  const priorVisualRootId = visualRoot.id;
+  if (!knoxels[newVisualRootId] || !Object.keys(knoxels[newVisualRootId]).length)
+    addKnoxel(
+      newVisualRootId, priorVisualRootId,
+      {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight},
+      knoxelColors[priorVisualRootId]
+    )
   // set color
   visualRoot.style.backgroundColor = knoxelColors[newVisualRootId];
   // clear children
