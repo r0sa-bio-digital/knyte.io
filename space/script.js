@@ -98,7 +98,8 @@ function addKnoxel(canvasId, rectId, position, color)
 {
   if (canvasId)
     knoxels[canvasId][rectId] = position;
-  knoxels[rectId] = {};
+  if (!knoxels[rectId])
+    knoxels[rectId] = {};
   knoxelColors[rectId] = color;
 }
 
@@ -146,8 +147,8 @@ function addRect(canvasElement, position, color)
 
 function restoreRect(canvasElement, id, position, color)
 {
-  const w = visualTheme.rect.defaultHeight;
-  const h = visualTheme.rect.defaultWidth;
+  const w = visualTheme.rect.defaultWidth;
+  const h = visualTheme.rect.defaultHeight;
   const x = position.x - w/2;
   const y = position.y - h/2;
   const rect = document.createElementNS(svgNameSpace, 'rect');
@@ -182,13 +183,27 @@ function onResizeWindow(e)
 function onLoadBody(e)
 {
   const visualRoot = document.getElementsByClassName('visualRoot')[0];
+  svgNameSpace = visualRoot.getAttribute('xmlns');
   visualRoot.id = uuid();
   const color = visualTheme.rect.fillColor.getRandom();
-  visualRoot.style.backgroundColor = color;
   addKnoxel(null, visualRoot.id, null, color);
-  svgNameSpace = visualRoot.getAttribute('xmlns');
+  const mirrorId = uuid();
+  const mirrorColor = visualTheme.rect.fillColor.getRandom();
+  addKnoxel(
+    visualRoot.id, mirrorId, 
+    {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight}, 
+    mirrorColor
+  );
+  addKnoxel(
+    mirrorId, visualRoot.id, 
+    {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight}, 
+    color
+  );
   visualRoot.addEventListener('click', onClickVisualRoot, false);
+  setRectAsRoot(visualRoot.id);
+  
   window.addEventListener('resize', onResizeWindow, false);
   onResizeWindow();
+  
   console.log('ready');
 }
