@@ -5,7 +5,7 @@ const visualTheme = {
   },
   rect: {
     strokeColor: '#ffffdd',
-    strokeWidth: '4',
+    strokeWidth: 4,
     fillColor: '#ffc0cb',
     defaultWidth: 32,
     defaultHeight: 32,
@@ -37,11 +37,20 @@ function onClickVisualRoot(e)
   );
 }
 
+function onResizeWindow(e)
+{
+  const visualRoot = document.getElementById('visualRoot');
+  visualRoot.setAttribute('width', window.innerWidth);
+  visualRoot.setAttribute('height', window.innerHeight);
+}
+
 function onLoadBody(e)
 {
   const visualRoot = document.getElementById('visualRoot');
   visualRoot.style.backgroundColor = visualTheme.canvas.color;
   svgNameSpace = visualRoot.getAttribute('xmlns');
   visualRoot.addEventListener('click', onClickVisualRoot, false);
+  window.addEventListener('resize', onResizeWindow, false);
+  onResizeWindow();
   console.log('ready');
 }
