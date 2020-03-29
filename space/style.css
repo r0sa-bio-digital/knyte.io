@@ -8,6 +8,6 @@ body {
   overflow: hidden;
 }
 
-#visualRoot {
+.visualRoot {
   user-select: none;
 }
