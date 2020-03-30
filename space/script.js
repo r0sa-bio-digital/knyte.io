@@ -67,7 +67,7 @@ const visualTheme = {
   }
 };
 
-function Knit()
+const knit = new function()
 {
   // Pre-calculate toString(16) for speed
   let hexBytes = [];
@@ -94,11 +94,10 @@ function Knit()
       hexBytes[b[12]] + hexBytes[b[13]] +
       hexBytes[b[14]] + hexBytes[b[15]];
   }
-
+  // singleton properties
   this.empty = textUuidV4(true);
   this.new = function() {return textUuidV4();};
 }
-const knit = new Knit();
 
 function addKnyte(desc)
 {
@@ -110,14 +109,14 @@ function addKnyte(desc)
   informationMap[desc.knyteId] = desc.color;
 }
 
-function addKnoxel(knyteId, rootId, knoxelId, position)
+function addKnoxel(desc)
 {
-  // TODO: convert to desc parameter like addKnyte
-  knoxels[knoxelId] = knyteId;
-  if (!knoxelSpaces[knoxelId])
-    knoxelSpaces[knoxelId] = {};
-  if (rootId)
-    knoxelSpaces[rootId][knoxelId] = position;
+  // desc: {knyteId, rootId, knoxelId, position}
+  knoxels[desc.knoxelId] = desc.knyteId;
+  if (!knoxelSpaces[desc.knoxelId])
+    knoxelSpaces[desc.knoxelId] = {};
+  if (desc.rootId)
+    knoxelSpaces[desc.rootId][desc.knoxelId] = desc.position;
 }
 
 function setRectAsRoot(newSpaceRootId)
@@ -128,8 +127,10 @@ function setRectAsRoot(newSpaceRootId)
   const priorKnyteId = knoxels[priorSpaceRootId];
   if (!knoxelSpaces[newSpaceRootId] || !Object.keys(knoxelSpaces[newSpaceRootId]).length)
     addKnoxel(
-      priorKnyteId, newSpaceRootId, priorSpaceRootId,
-      {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight}
+      {
+        knyteId: priorKnyteId, rootId: newSpaceRootId, knoxelId: priorSpaceRootId, 
+        position: {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight}
+      }
     )
   // clear children
   while (spaceRoot.firstChild)
@@ -170,7 +171,7 @@ function addRect(canvasElement, position, color)
   canvasElement.appendChild(rect);
   const knyteId = knit.new();
   addKnyte({knyteId, initialId: knit.empty, terminalId: knit.empty, color});
-  addKnoxel(knyteId, canvasElement.id, rect.id, position);
+  addKnoxel({knyteId, rootId: canvasElement.id, knoxelId: rect.id, position});
 }
 
 function restoreRect(canvasElement, id, position, color)
@@ -217,20 +218,15 @@ function onLoadBody(e)
 
   const rootKnyteId = knit.new();
   addKnyte({knyteId: rootKnyteId, initialId: knit.empty, terminalId: knit.empty, color});
-  addKnoxel(rootKnyteId, null, spaceRoot.id, null);
+  addKnoxel({knyteId: rootKnyteId, rootId: null, knoxelId: spaceRoot.id, position: null});
   
   const mirrorKnyteId = knit.new();
   const mirrorColor = visualTheme.rect.fillColor.getRandom();
   addKnyte({knyteId: mirrorKnyteId, initialId: knit.empty, terminalId: knit.empty, color: mirrorColor});
+  const position = {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight};
   const mirrorKnoxelId = knit.new();
-  addKnoxel(
-    mirrorKnyteId, spaceRoot.id, mirrorKnoxelId,
-    {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight}
-  );
-  addKnoxel(
-    rootKnyteId, mirrorKnoxelId, spaceRoot.id,
-    {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight}
-  );
+  addKnoxel({knyteId: mirrorKnyteId, rootId: spaceRoot.id, knoxelId: mirrorKnoxelId, position});
+  addKnoxel({knyteId: rootKnyteId, rootId: mirrorKnoxelId, knoxelId: spaceRoot.id, position});
 
   spaceRoot.addEventListener('click', onClickSpaceRoot, false);
   setRectAsRoot(spaceRoot.id);

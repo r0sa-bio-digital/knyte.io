@@ -31,7 +31,7 @@
 * ввести knyte'ы как источники knoxel'ей
   * knyte обладает цветом фона в качестве information record'а
   * определение knyte'ов через knit'ы
-  * `рефакторинг параметров функций addKnoxel, addRect, restoreRect`
+  * `рефакторинг knit'а как singleton и параметров функций addKnoxel, addRect, restoreRect`
   * создание как новых knyte'ов, так и дополнительных knoxel'ей для существующих knyte'ов
     * cmd+click - новый knyte и knoxel для него
     * alt+click на knoxel'е - новый новый для его knyte'а
