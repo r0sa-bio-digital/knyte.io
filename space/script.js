@@ -143,7 +143,13 @@ function setRectAsRoot(newSpaceRootId)
   // restore all nested rects
   const nestedRects = knoxelSpaces[newSpaceRootId];
   for (let rectId in nestedRects)
-    restoreRect(spaceRoot, rectId, nestedRects[rectId], informationMap[knoxels[rectId]]);
+    restoreRect(
+      {
+        canvasElement: spaceRoot, id: rectId,
+        position: nestedRects[rectId],
+        color: informationMap[knoxels[rectId]]
+      }
+  );
 }
 
 function onClickRect(e)
@@ -152,53 +158,57 @@ function onClickRect(e)
   e.stopPropagation(); // to prevent onClickSpaceRoot call
 }
 
-function addRect(canvasElement, position, color)
+function addRect(desc)
 {
+  // desc: {canvasElement, position, color}
   const w = visualTheme.rect.defaultHeight;
   const h = visualTheme.rect.defaultWidth;
-  const x = position.x - w/2;
-  const y = position.y - h/2;
+  const x = desc.position.x - w/2;
+  const y = desc.position.y - h/2;
   const rect = document.createElementNS(svgNameSpace, 'rect');
   rect.id = knit.new();
   rect.setAttribute('x', x);
   rect.setAttribute('y', y);
   rect.setAttribute('width', w);
   rect.setAttribute('height', h);
-  rect.setAttribute('fill', color);
+  rect.setAttribute('fill', desc.color);
   rect.setAttribute('stroke', visualTheme.rect.strokeColor);
   rect.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
   rect.addEventListener('click', onClickRect, false);
-  canvasElement.appendChild(rect);
+  desc.canvasElement.appendChild(rect);
   const knyteId = knit.new();
-  addKnyte({knyteId, initialId: knit.empty, terminalId: knit.empty, color});
-  addKnoxel({knyteId, rootId: canvasElement.id, knoxelId: rect.id, position});
+  addKnyte({knyteId, initialId: knit.empty, terminalId: knit.empty, color: desc.color});
+  addKnoxel({knyteId, rootId: desc.canvasElement.id, knoxelId: rect.id, position: desc.position});
 }
 
-function restoreRect(canvasElement, id, position, color)
+function restoreRect(desc)
 {
+  // desc: {canvasElement, id, position, color}
   const w = visualTheme.rect.defaultWidth;
   const h = visualTheme.rect.defaultHeight;
-  const x = position.x - w/2;
-  const y = position.y - h/2;
+  const x = desc.position.x - w/2;
+  const y = desc.position.y - h/2;
   const rect = document.createElementNS(svgNameSpace, 'rect');
-  rect.id = id;
+  rect.id = desc.id;
   rect.setAttribute('x', x);
   rect.setAttribute('y', y);
   rect.setAttribute('width', w);
   rect.setAttribute('height', h);
-  rect.setAttribute('fill', color);
+  rect.setAttribute('fill', desc.color);
   rect.setAttribute('stroke', visualTheme.rect.strokeColor);
   rect.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
   rect.addEventListener('click', onClickRect, false);
-  canvasElement.appendChild(rect);
+  desc.canvasElement.appendChild(rect);
 }
 
 function onClickSpaceRoot(e)
 {
   addRect(
-    document.getElementsByClassName('spaceRoot')[0],
-    {x: e.offsetX, y: e.offsetY},
-    visualTheme.rect.fillColor.getRandom()
+    {
+      canvasElement: document.getElementsByClassName('spaceRoot')[0],
+      position: {x: e.offsetX, y: e.offsetY},
+      color: visualTheme.rect.fillColor.getRandom()
+    }
   );
 }
 
