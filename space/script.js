@@ -1,6 +1,8 @@
 let svgNameSpace;
-const knoxelColors = {}; // knoxel id --> color
-const knoxels = {}; // root knoxel id --> nested knoxel id --> position
+const knytesCloud = {}; // core knyte id --> initial knyte id, terminal knyte id
+const informationMap = {}; // knyte id --> color
+const knoxels = {}; // knoxel id --> knyte id
+const knoxelSpaces = {}; // root knoxel id --> nested knoxel id --> position
 const visualTheme = {
   rect: {
     strokeColor: '#160f19',
@@ -65,72 +67,88 @@ const visualTheme = {
   }
 };
 
-let hexBytes = [];
-// Pre-calculate toString(16) for speed
-for (let i = 0; i < 256; i++)
+function Knit()
 {
-  hexBytes[i] = (i + 0x100).toString(16).substr(1);
-}
+  // Pre-calculate toString(16) for speed
+  let hexBytes = [];
+  for (let i = 0; i < 256; i++)
+    hexBytes[i] = (i + 0x100).toString(16).substr(1);
 
-// String UUIDv4 (Random)
-function uuid() {
-  // uuid.bin
-  function uuidBin() {
+  function binUuidV4(empty) {
     let b = new Uint8Array(16);
-    crypto.getRandomValues(b);
+    if (!empty)
+      crypto.getRandomValues(b);
     b[6] = (b[6] & 0x0f) | 0x40;
     b[8] = (b[8] & 0x3f) | 0x80;
     return b;
   }
 
-  var b = uuidBin();
-  return hexBytes[b[0]] + hexBytes[b[1]] +
-    hexBytes[b[2]] + hexBytes[b[3]] + '-' +
-    hexBytes[b[4]] + hexBytes[b[5]] + '-' +
-    hexBytes[b[6]] + hexBytes[b[7]] + '-' +
-    hexBytes[b[8]] + hexBytes[b[9]] + '-' +
-    hexBytes[b[10]] + hexBytes[b[11]] +
-    hexBytes[b[12]] + hexBytes[b[13]] +
-    hexBytes[b[14]] + hexBytes[b[15]];
+  function textUuidV4(empty) {
+    var b = binUuidV4(empty);
+    return hexBytes[b[0]] + hexBytes[b[1]] +
+      hexBytes[b[2]] + hexBytes[b[3]] + '-' +
+      hexBytes[b[4]] + hexBytes[b[5]] + '-' +
+      hexBytes[b[6]] + hexBytes[b[7]] + '-' +
+      hexBytes[b[8]] + hexBytes[b[9]] + '-' +
+      hexBytes[b[10]] + hexBytes[b[11]] +
+      hexBytes[b[12]] + hexBytes[b[13]] +
+      hexBytes[b[14]] + hexBytes[b[15]];
+  }
+
+  this.empty = textUuidV4(true);
+  this.new = function() {return textUuidV4();};
+}
+const knit = new Knit();
+
+function addKnyte(desc)
+{
+  // desc: {knyteId, initialId, terminalId, color}
+  knytesCloud[desc.knyteId] = {
+    initialId: desc.initialId,
+    terminalId: desc.terminalId
+  };
+  informationMap[desc.knyteId] = desc.color;
 }
 
-function addKnoxel(canvasId, rectId, position, color)
+function addKnoxel(knyteId, rootId, knoxelId, position)
 {
-  if (canvasId)
-    knoxels[canvasId][rectId] = position;
-  if (!knoxels[rectId])
-    knoxels[rectId] = {};
-  knoxelColors[rectId] = color;
+  // TODO: convert to desc parameter like addKnyte
+  knoxels[knoxelId] = knyteId;
+  if (!knoxelSpaces[knoxelId])
+    knoxelSpaces[knoxelId] = {};
+  if (rootId)
+    knoxelSpaces[rootId][knoxelId] = position;
 }
 
-function setRectAsRoot(newVisualRootId)
+function setRectAsRoot(newSpaceRootId)
 {
-  const visualRoot = document.getElementsByClassName('visualRoot')[0];
+  const spaceRoot = document.getElementsByClassName('spaceRoot')[0];
   // check for return knoxel
-  const priorVisualRootId = visualRoot.id;
-  if (!knoxels[newVisualRootId] || !Object.keys(knoxels[newVisualRootId]).length)
+  const priorSpaceRootId = spaceRoot.id;
+  const priorKnyteId = knoxels[priorSpaceRootId];
+  if (!knoxelSpaces[newSpaceRootId] || !Object.keys(knoxelSpaces[newSpaceRootId]).length)
     addKnoxel(
-      newVisualRootId, priorVisualRootId,
-      {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight},
-      knoxelColors[priorVisualRootId]
+      priorKnyteId, newSpaceRootId, priorSpaceRootId,
+      {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight}
     )
-  // set color
-  visualRoot.style.backgroundColor = knoxelColors[newVisualRootId];
   // clear children
-  while (visualRoot.firstChild)
-    visualRoot.firstChild.remove();
+  while (spaceRoot.firstChild)
+    spaceRoot.firstChild.remove();
+  // set color
+  const newKnyteId = knoxels[newSpaceRootId];
+  spaceRoot.style.backgroundColor = informationMap[newKnyteId];
   // set actual id
-  visualRoot.id = newVisualRootId;
+  spaceRoot.id = newSpaceRootId;
   // restore all nested rects
-  const nestedRects = knoxels[newVisualRootId];
+  const nestedRects = knoxelSpaces[newSpaceRootId];
   for (let rectId in nestedRects)
-    restoreRect(visualRoot, rectId, nestedRects[rectId], knoxelColors[rectId]);
+    restoreRect(spaceRoot, rectId, nestedRects[rectId], informationMap[knoxels[rectId]]);
 }
 
 function onClickRect(e)
 {
   setRectAsRoot(e.target.id);
-  e.stopPropagation(); // to prevent onClickVisualRoot call
+  e.stopPropagation(); // to prevent onClickSpaceRoot call
 }
 
 function addRect(canvasElement, position, color)
@@ -140,7 +158,7 @@ function addRect(canvasElement, position, color)
   const x = position.x - w/2;
   const y = position.y - h/2;
   const rect = document.createElementNS(svgNameSpace, 'rect');
-  rect.id = uuid();
+  rect.id = knit.new();
   rect.setAttribute('x', x);
   rect.setAttribute('y', y);
   rect.setAttribute('width', w);
@@ -150,7 +168,9 @@ function addRect(canvasElement, position, color)
   rect.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
   rect.addEventListener('click', onClickRect, false);
   canvasElement.appendChild(rect);
-  addKnoxel(canvasElement.id, rect.id, position, color);
+  const knyteId = knit.new();
+  addKnyte({knyteId, initialId: knit.empty, terminalId: knit.empty, color});
+  addKnoxel(knyteId, canvasElement.id, rect.id, position);
 }
 
 function restoreRect(canvasElement, id, position, color)
@@ -172,10 +192,10 @@ function restoreRect(canvasElement, id, position, color)
   canvasElement.appendChild(rect);
 }
 
-function onClickVisualRoot(e)
+function onClickSpaceRoot(e)
 {
   addRect(
-    document.getElementsByClassName('visualRoot')[0],
+    document.getElementsByClassName('spaceRoot')[0],
     {x: e.offsetX, y: e.offsetY},
     visualTheme.rect.fillColor.getRandom()
   );
@@ -183,32 +203,37 @@ function onClickVisualRoot(e)
 
 function onResizeWindow(e)
 {
-  const visualRoot = document.getElementsByClassName('visualRoot')[0];
-  visualRoot.setAttribute('width', window.innerWidth);
-  visualRoot.setAttribute('height', window.innerHeight);
+  const spaceRoot = document.getElementsByClassName('spaceRoot')[0];
+  spaceRoot.setAttribute('width', window.innerWidth);
+  spaceRoot.setAttribute('height', window.innerHeight);
 }
 
 function onLoadBody(e)
 {
-  const visualRoot = document.getElementsByClassName('visualRoot')[0];
-  svgNameSpace = visualRoot.getAttribute('xmlns');
-  visualRoot.id = uuid();
+  const spaceRoot = document.getElementsByClassName('spaceRoot')[0];
+  svgNameSpace = spaceRoot.getAttribute('xmlns');
+  spaceRoot.id = knit.new();
   const color = visualTheme.rect.fillColor.getRandom();
-  addKnoxel(null, visualRoot.id, null, color);
-  const mirrorId = uuid();
+
+  const rootKnyteId = knit.new();
+  addKnyte({knyteId: rootKnyteId, initialId: knit.empty, terminalId: knit.empty, color});
+  addKnoxel(rootKnyteId, null, spaceRoot.id, null);
+  
+  const mirrorKnyteId = knit.new();
   const mirrorColor = visualTheme.rect.fillColor.getRandom();
+  addKnyte({knyteId: mirrorKnyteId, initialId: knit.empty, terminalId: knit.empty, color: mirrorColor});
+  const mirrorKnoxelId = knit.new();
   addKnoxel(
-    visualRoot.id, mirrorId, 
-    {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight}, 
-    mirrorColor
+    mirrorKnyteId, spaceRoot.id, mirrorKnoxelId,
+    {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight}
   );
   addKnoxel(
-    mirrorId, visualRoot.id, 
-    {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight}, 
-    color
+    rootKnyteId, mirrorKnoxelId, spaceRoot.id,
+    {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight}
   );
-  visualRoot.addEventListener('click', onClickVisualRoot, false);
-  setRectAsRoot(visualRoot.id);
+
+  spaceRoot.addEventListener('click', onClickSpaceRoot, false);
+  setRectAsRoot(spaceRoot.id);
   
   window.addEventListener('resize', onResizeWindow, false);
   onResizeWindow();
