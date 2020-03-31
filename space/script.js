@@ -23,12 +23,12 @@ const visualTheme = {
 const knit = new function()
 {
   // Pre-calculate toString(16) for speed
-  let hexBytes = [];
+  const hexBytes = [];
   for (let i = 0; i < 256; i++)
     hexBytes[i] = (i + 0x100).toString(16).substr(1);
 
   function binUuidV4(empty) {
-    let b = new Uint8Array(16);
+    const b = new Uint8Array(16);
     if (!empty)
       crypto.getRandomValues(b);
     b[6] = (b[6] & 0x0f) | 0x40;
@@ -37,7 +37,7 @@ const knit = new function()
   }
 
   function textUuidV4(empty) {
-    var b = binUuidV4(empty);
+    const b = binUuidV4(empty);
     return hexBytes[b[0]] + hexBytes[b[1]] +
       hexBytes[b[2]] + hexBytes[b[3]] + '-' +
       hexBytes[b[4]] + hexBytes[b[5]] + '-' +
@@ -87,17 +87,17 @@ function setRectAsRoot(newSpaceRootId)
         position: {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight}
       }
     )
-  // clear children
+  // clear children rects
   while (spaceRoot.firstChild)
     spaceRoot.firstChild.remove();
-  // set color
+  // set space color
   spaceRoot.style.backgroundColor = informationMap[newKnyteId].color;
-  // set actual id
+  // set actual knoxel id
   spaceRoot.id = newSpaceRootId;
   // restore all nested rects
   const nestedKnoxels = informationMap[newKnyteId].space;
   for (let knoxelId in nestedKnoxels)
-    restoreRect(
+    addRect(
       {
         canvasElement: spaceRoot, id: knoxelId,
         position: nestedKnoxels[knoxelId],
@@ -107,26 +107,6 @@ function setRectAsRoot(newSpaceRootId)
 }
 
 function addRect(desc)
-{
-  // desc: {canvasElement, id, position, color}
-  const w = visualTheme.rect.defaultHeight;
-  const h = visualTheme.rect.defaultWidth;
-  const x = desc.position.x - w/2;
-  const y = desc.position.y - h/2;
-  const rect = document.createElementNS(svgNameSpace, 'rect');
-  rect.id = desc.id;
-  rect.setAttribute('x', x);
-  rect.setAttribute('y', y);
-  rect.setAttribute('width', w);
-  rect.setAttribute('height', h);
-  rect.setAttribute('fill', desc.color);
-  rect.setAttribute('stroke', visualTheme.rect.strokeColor);
-  rect.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
-  rect.addEventListener('click', onClickRect, false);
-  desc.canvasElement.appendChild(rect);
-}
-
-function restoreRect(desc)
 {
   // desc: {canvasElement, id, position, color}
   const w = visualTheme.rect.defaultWidth;
@@ -146,6 +126,16 @@ function restoreRect(desc)
   desc.canvasElement.appendChild(rect);
 }
 
+function addKnoxelRect(knyteId, e)
+{
+  const canvasElement = document.getElementsByClassName('spaceRoot')[0];
+  const knoxelId = knit.new();
+  const position = {x: e.offsetX, y: e.offsetY};
+  const color = informationMap[knyteId].color;
+  addKnoxel({knyteId, rootId: canvasElement.id, knoxelId, position});
+  addRect({canvasElement, id: knoxelId, position, color});  
+}
+
 function onClickRect(e)
 {
   if (!e.shiftKey && !e.altKey && !e.metaKey)
@@ -154,13 +144,8 @@ function onClickRect(e)
   }
   else if (!e.shiftKey && e.altKey && !e.metaKey)
   {
-    const canvasElement = document.getElementsByClassName('spaceRoot')[0];
     const knyteId = knoxels[e.target.id];
-    const knoxelId = knit.new();
-    const position = {x: e.offsetX, y: e.offsetY};
-    const color = informationMap[knyteId].color;
-    addKnoxel({knyteId, rootId: canvasElement.id, knoxelId, position});
-    addRect({canvasElement, id: knoxelId, position, color});
+    addKnoxelRect(knyteId, e);
   }
   e.stopPropagation(); // to prevent onClickSpaceRoot call
 }
@@ -169,24 +154,16 @@ function onClickSpaceRoot(e)
 {
   if (!e.shiftKey && !e.altKey && e.metaKey)
   {
-    const canvasElement = document.getElementsByClassName('spaceRoot')[0];
     const knyteId = knit.new();
-    const knoxelId = knit.new();
-    const position = {x: e.offsetX, y: e.offsetY};
     const color = visualTheme.rect.fillColor.getRandom();
     addKnyte({knyteId, initialId: knit.empty, terminalId: knit.empty, color});
-    addKnoxel({knyteId, rootId: canvasElement.id, knoxelId, position});
-    addRect({canvasElement, id: knoxelId, position, color});
+    addKnoxelRect(knyteId, e);
   }
   else if (!e.shiftKey && e.altKey && !e.metaKey)
   {
     const canvasElement = document.getElementsByClassName('spaceRoot')[0];
     const knyteId = knoxels[canvasElement.id];
-    const knoxelId = knit.new();
-    const position = {x: e.offsetX, y: e.offsetY};
-    const color = informationMap[knyteId].color;
-    addKnoxel({knyteId, rootId: canvasElement.id, knoxelId, position});
-    addRect({canvasElement, id: knoxelId, position, color});
+    addKnoxelRect(knyteId, e);
   }
 }
 
