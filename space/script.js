@@ -201,20 +201,20 @@ function onLoadBody(e)
   spaceBackElement = document.getElementsByClassName('spaceBack')[0];
   svgNameSpace = spaceRootElement.getAttribute('xmlns');
   // create root knyte
-  const rootKnyteId = knit.new();
-  const rootKnoxelId = knit.new();
-  const rootColor = visualTheme.rect.fillColor.getRandom();
-  spaceRootElement.id = rootKnoxelId;
-  addKnyte({knyteId: rootKnyteId, initialId: knit.empty, terminalId: knit.empty, color: rootColor});
-  addKnoxel({hostKnyteId: null, knyteId: rootKnyteId, knoxelId: spaceRootElement.id, position: null});
+  const masterKnyteId = knit.new();
+  const masterKnoxelId = knit.new();
+  const masterColor = visualTheme.rect.fillColor.getRandom();
+  spaceRootElement.id = masterKnoxelId;
+  addKnyte({knyteId: masterKnyteId, initialId: knit.empty, terminalId: knit.empty, color: masterColor});
+  addKnoxel({hostKnyteId: null, knyteId: masterKnyteId, knoxelId: spaceRootElement.id, position: null});
   // create mirror knyte
   const mirrorKnyteId = knit.new();
   const mirrorKnoxelId = knit.new();
   const mirrorColor = visualTheme.rect.fillColor.getRandom();
   addKnyte({knyteId: mirrorKnyteId, initialId: knit.empty, terminalId: knit.empty, color: mirrorColor});
   const position = {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight};
-  addKnoxel({hostKnyteId: rootKnyteId, knyteId: mirrorKnyteId, knoxelId: mirrorKnoxelId, position});
-  addKnoxel({hostKnyteId: mirrorKnyteId, knyteId: rootKnyteId, knoxelId: rootKnoxelId, position});
+  addKnoxel({hostKnyteId: masterKnyteId, knyteId: mirrorKnyteId, knoxelId: mirrorKnoxelId, position});
+  addKnoxel({hostKnyteId: mirrorKnyteId, knyteId: masterKnyteId, knoxelId: masterKnoxelId, position});
   // setup event handlers
   spaceRootElement.addEventListener('click', onClickSpaceRoot, false);
   window.addEventListener('resize', onResizeWindow, false);
