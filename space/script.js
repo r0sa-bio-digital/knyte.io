@@ -83,6 +83,8 @@ function setSpaceRootKnoxel(desc)
   const spaceRootKnoxels = document.getElementById('knoxels');
   while (spaceRootKnoxels.firstChild)
     spaceRootKnoxels.firstChild.remove();
+  if (newKnoxelId !== priorKnoxelId)
+      mouseoverGhostKnoxelId = null;
   // set space color
   spaceRootElement.style.backgroundColor = informationMap[newKnyteId].color;
   // set actual knoxel id
@@ -267,7 +269,7 @@ function onRectGhostMoved(droppedKnoxelId, landingKnoxelId, e)
     const y = e.offsetY - h/2;
     droppedElement.setAttribute('x', x);
     droppedElement.setAttribute('y', y);
-    informationMap[hostKnyteId].space[droppedKnoxelId] = {x, y};
+    informationMap[hostKnyteId].space[droppedKnoxelId] = {x: e.offsetX, y: e.offsetY};
   }
   else if (droppedKnoxelId !== landingKnoxelId)
   {
