@@ -1,6 +1,7 @@
 /* global visualThemeColors */
 
 let svgNameSpace;
+let spaceRootElement;
 const knytesCloud = {}; // core knyte id --> initial knyte id, terminal knyte id
 const informationMap = {}; // knyte id --> {color, space: {knoxel id --> position}}
 const knoxels = {}; // knoxel id --> knyte id
@@ -72,10 +73,9 @@ function addKnoxel(desc)
 
 function setRectAsRoot(newSpaceRootId)
 {
-  const spaceRoot = document.getElementsByClassName('spaceRoot')[0];
   // check for return knoxel
   const newKnyteId = knoxels[newSpaceRootId];
-  const priorSpaceRootId = spaceRoot.id;
+  const priorSpaceRootId = spaceRootElement.id;
   const priorKnyteId = knoxels[priorSpaceRootId];
   if (!Object.keys(informationMap[newKnyteId].space).length)
     addKnoxel(
@@ -85,18 +85,18 @@ function setRectAsRoot(newSpaceRootId)
       }
     )
   // clear children rects
-  while (spaceRoot.firstChild)
-    spaceRoot.firstChild.remove();
+  while (spaceRootElement.firstChild)
+    spaceRootElement.firstChild.remove();
   // set space color
-  spaceRoot.style.backgroundColor = informationMap[newKnyteId].color;
+  spaceRootElement.style.backgroundColor = informationMap[newKnyteId].color;
   // set actual knoxel id
-  spaceRoot.id = newSpaceRootId;
+  spaceRootElement.id = newSpaceRootId;
   // restore all nested rects
   const nestedKnoxels = informationMap[newKnyteId].space;
   for (let knoxelId in nestedKnoxels)
     addRect(
       {
-        canvasElement: spaceRoot, id: knoxelId,
+        canvasElement: spaceRootElement, id: knoxelId,
         position: nestedKnoxels[knoxelId],
         color: informationMap[knoxels[knoxelId]].color
       }
@@ -125,13 +125,12 @@ function addRect(desc)
 
 function addKnoxelRect(knyteId, e)
 {
-  const canvasElement = document.getElementsByClassName('spaceRoot')[0];
-  const hostKnyteId = knoxels[canvasElement.id];
+  const hostKnyteId = knoxels[spaceRootElement.id];
   const knoxelId = knit.new();
   const position = {x: e.offsetX, y: e.offsetY};
   const color = informationMap[knyteId].color;
   addKnoxel({hostKnyteId, knyteId, knoxelId, position});
-  addRect({canvasElement, id: knoxelId, position, color});  
+  addRect({canvasElement: spaceRootElement, id: knoxelId, position, color});  
 }
 
 function onClickRect(e)
@@ -159,31 +158,29 @@ function onClickSpaceRoot(e)
   }
   else if (!e.shiftKey && e.altKey && !e.metaKey)
   {
-    const canvasElement = document.getElementsByClassName('spaceRoot')[0];
-    const knyteId = knoxels[canvasElement.id];
+    const knyteId = knoxels[spaceRootElement.id];
     addKnoxelRect(knyteId, e);
   }
 }
 
 function onResizeWindow(e)
 {
-  const spaceRoot = document.getElementsByClassName('spaceRoot')[0];
-  spaceRoot.setAttribute('width', window.innerWidth);
-  spaceRoot.setAttribute('height', window.innerHeight);
+  spaceRootElement.setAttribute('width', window.innerWidth);
+  spaceRootElement.setAttribute('height', window.innerHeight);
 }
 
 function onLoadBody(e)
 {
   // init space root element
-  const spaceRoot = document.getElementsByClassName('spaceRoot')[0];
-  svgNameSpace = spaceRoot.getAttribute('xmlns');
+  spaceRootElement = document.getElementsByClassName('spaceRoot')[0];
+  svgNameSpace = spaceRootElement.getAttribute('xmlns');
   // create root knyte
   const rootKnyteId = knit.new();
   const rootKnoxelId = knit.new();
   const rootColor = visualTheme.rect.fillColor.getRandom();
-  spaceRoot.id = rootKnoxelId;
+  spaceRootElement.id = rootKnoxelId;
   addKnyte({knyteId: rootKnyteId, initialId: knit.empty, terminalId: knit.empty, color: rootColor});
-  addKnoxel({hostKnyteId: null, knyteId: rootKnyteId, knoxelId: spaceRoot.id, position: null});
+  addKnoxel({hostKnyteId: null, knyteId: rootKnyteId, knoxelId: spaceRootElement.id, position: null});
   // create mirror knyte
   const mirrorKnyteId = knit.new();
   const mirrorKnoxelId = knit.new();
@@ -193,10 +190,10 @@ function onLoadBody(e)
   addKnoxel({hostKnyteId: rootKnyteId, knyteId: mirrorKnyteId, knoxelId: mirrorKnoxelId, position});
   addKnoxel({hostKnyteId: mirrorKnyteId, knyteId: rootKnyteId, knoxelId: rootKnoxelId, position});
   // setup event handlers
-  spaceRoot.addEventListener('click', onClickSpaceRoot, false);
+  spaceRootElement.addEventListener('click', onClickSpaceRoot, false);
   window.addEventListener('resize', onResizeWindow, false);
   // setup space root view
-  setRectAsRoot(spaceRoot.id);
+  setRectAsRoot(spaceRootElement.id);
   onResizeWindow();
   
   console.log('ready');
