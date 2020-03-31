@@ -96,8 +96,7 @@ function setRectAsRoot(newSpaceRootId)
   for (let knoxelId in nestedKnoxels)
     addRect(
       {
-        canvasElement: spaceRootElement, id: knoxelId,
-        position: nestedKnoxels[knoxelId],
+        id: knoxelId, position: nestedKnoxels[knoxelId],
         color: informationMap[knoxels[knoxelId]].color
       }
   );
@@ -105,7 +104,7 @@ function setRectAsRoot(newSpaceRootId)
 
 function addRect(desc)
 {
-  // desc: {canvasElement, id, position, color}
+  // desc: {id, position, color}
   const w = visualTheme.rect.defaultWidth;
   const h = visualTheme.rect.defaultHeight;
   const x = desc.position.x - w/2;
@@ -120,7 +119,7 @@ function addRect(desc)
   rect.setAttribute('stroke', visualTheme.rect.strokeColor);
   rect.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
   rect.addEventListener('click', onClickRect, false);
-  desc.canvasElement.appendChild(rect);
+  spaceRootElement.appendChild(rect);
 }
 
 function addKnoxelRect(knyteId, e)
@@ -130,7 +129,7 @@ function addKnoxelRect(knyteId, e)
   const position = {x: e.offsetX, y: e.offsetY};
   const color = informationMap[knyteId].color;
   addKnoxel({hostKnyteId, knyteId, knoxelId, position});
-  addRect({canvasElement: spaceRootElement, id: knoxelId, position, color});  
+  addRect({id: knoxelId, position, color});  
 }
 
 function onClickRect(e)
