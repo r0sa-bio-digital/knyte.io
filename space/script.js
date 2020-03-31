@@ -1,8 +1,7 @@
 let svgNameSpace;
 const knytesCloud = {}; // core knyte id --> initial knyte id, terminal knyte id
-const informationMap = {}; // knyte id --> color
+const informationMap = {}; // knyte id --> {color, space: {knoxel id --> position}}
 const knoxels = {}; // knoxel id --> knyte id
-const knoxelSpaces = {}; // root knoxel id --> nested knoxel id --> position
 const visualTheme = {
   rect: {
     strokeColor: '#160f19',
@@ -106,26 +105,28 @@ function addKnyte(desc)
     initialId: desc.initialId,
     terminalId: desc.terminalId
   };
-  informationMap[desc.knyteId] = desc.color;
+  informationMap[desc.knyteId] = {color: desc.color, space: {}};
 }
 
 function addKnoxel(desc)
 {
   // desc: {knyteId, rootId, knoxelId, position}
   knoxels[desc.knoxelId] = desc.knyteId;
-  if (!knoxelSpaces[desc.knoxelId])
-    knoxelSpaces[desc.knoxelId] = {};
   if (desc.rootId)
-    knoxelSpaces[desc.rootId][desc.knoxelId] = desc.position;
+  {
+    const rootKnyteId = knoxels[desc.rootId];
+    informationMap[rootKnyteId].space[desc.knoxelId] = desc.position;
+  }
 }
 
 function setRectAsRoot(newSpaceRootId)
 {
   const spaceRoot = document.getElementsByClassName('spaceRoot')[0];
   // check for return knoxel
+  const newKnyteId = knoxels[newSpaceRootId];
   const priorSpaceRootId = spaceRoot.id;
   const priorKnyteId = knoxels[priorSpaceRootId];
-  if (!knoxelSpaces[newSpaceRootId] || !Object.keys(knoxelSpaces[newSpaceRootId]).length)
+  if (!Object.keys(informationMap[newKnyteId].space).length)
     addKnoxel(
       {
         knyteId: priorKnyteId, rootId: newSpaceRootId, knoxelId: priorSpaceRootId, 
@@ -136,18 +137,17 @@ function setRectAsRoot(newSpaceRootId)
   while (spaceRoot.firstChild)
     spaceRoot.firstChild.remove();
   // set color
-  const newKnyteId = knoxels[newSpaceRootId];
-  spaceRoot.style.backgroundColor = informationMap[newKnyteId];
+  spaceRoot.style.backgroundColor = informationMap[newKnyteId].color;
   // set actual id
   spaceRoot.id = newSpaceRootId;
   // restore all nested rects
-  const nestedRects = knoxelSpaces[newSpaceRootId];
-  for (let rectId in nestedRects)
+  const nestedKnoxels = informationMap[newKnyteId].space;
+  for (let knoxelId in nestedKnoxels)
     restoreRect(
       {
-        canvasElement: spaceRoot, id: rectId,
-        position: nestedRects[rectId],
-        color: informationMap[knoxels[rectId]]
+        canvasElement: spaceRoot, id: knoxelId,
+        position: nestedKnoxels[knoxelId],
+        color: informationMap[knoxels[knoxelId]].color
       }
   );
 }
@@ -204,7 +204,7 @@ function onClickRect(e)
     const knyteId = knoxels[e.target.id];
     const knoxelId = knit.new();
     const position = {x: e.offsetX, y: e.offsetY};
-    const color = informationMap[knyteId];
+    const color = informationMap[knyteId].color;
     addKnoxel({knyteId, rootId: canvasElement.id, knoxelId, position});
     addRect({canvasElement, id: knoxelId, position, color});
   }
@@ -230,7 +230,7 @@ function onClickSpaceRoot(e)
     const knyteId = knoxels[canvasElement.id];
     const knoxelId = knit.new();
     const position = {x: e.offsetX, y: e.offsetY};
-    const color = informationMap[knyteId];
+    const color = informationMap[knyteId].color;
     addKnoxel({knyteId, rootId: canvasElement.id, knoxelId, position});
     addRect({canvasElement, id: knoxelId, position, color});
   }
