@@ -131,9 +131,12 @@ function onClickRect(e)
 {
   if (!e.shiftKey && !e.altKey && !e.metaKey)
   {
-    spaceBackStack.push(spaceRootElement.id);
-    setSpaceBackState(spaceRootElement.id);
-    setSpaceRootKnoxel({knoxelId: e.target.id});
+    if (e.target.id !== spaceRootElement.id)
+    {
+      spaceBackStack.push(spaceRootElement.id);
+      setSpaceBackState(spaceRootElement.id);
+      setSpaceRootKnoxel({knoxelId: e.target.id});
+    }
   }
   else if (!e.shiftKey && e.altKey && !e.metaKey)
   {
