@@ -6,7 +6,7 @@ let spaceBackElement;
 const knytesCloud = {}; // core knyte id --> initial knyte id, terminal knyte id
 const informationMap = {}; // knyte id --> {color, space: {knoxel id --> position}}
 const knoxels = {}; // knoxel id --> knyte id
-const backArrowRoutes = {}; // current space root knoxel id --> previous space root knoxel id
+const spaceBackStack = []; // [previous space root knoxel id]
 const visualTheme = {
   rect: {
     strokeColor: visualThemeColors.outline,
@@ -131,10 +131,9 @@ function onClickRect(e)
 {
   if (!e.shiftKey && !e.altKey && !e.metaKey)
   {
-    const priorKnoxelId = spaceRootElement.id;
+    spaceBackStack.push(spaceRootElement.id);
+    setSpaceBackState(spaceRootElement.id);
     setSpaceRootKnoxel({knoxelId: e.target.id});
-    backArrowRoutes[spaceRootElement.id] = priorKnoxelId;
-    setSpaceBackState(backArrowRoutes[spaceRootElement.id]);
   }
   else if (!e.shiftKey && e.altKey && !e.metaKey)
   {
@@ -162,11 +161,11 @@ function onClickSpaceRoot(e)
 
 function onClickSpaceBack(e)
 {
-  const backKnoxelId = spaceBackElement.dataset.backKnoxelId;
-  if (backKnoxelId !== knit.empty)
+  const backKnoxelId = spaceBackStack.pop();
+  if (backKnoxelId)
   {
     setSpaceRootKnoxel({knoxelId: backKnoxelId});
-    setSpaceBackState(backArrowRoutes[spaceRootElement.id]);
+    setSpaceBackState(spaceBackStack[spaceBackStack.length - 1]);
   }
 }
 
@@ -190,7 +189,6 @@ function setSpaceBackState(backKnoxelId)
     backArrowShape.setAttribute('stroke', visualThemeColors.navigation);
     backArrowShape.setAttribute('fill', color);
   }
-  spaceBackElement.dataset.backKnoxelId = backKnoxelId;
 }
 
 function onLoadBody(e)
@@ -220,7 +218,7 @@ function onLoadBody(e)
   document.getElementById('backArrowShape').addEventListener('click', onClickSpaceBack, false);
   // setup space root view
   setSpaceRootKnoxel({knoxelId: spaceRootElement.id});
-  setSpaceBackState(knit.empty);
+  setSpaceBackState();
   onResizeWindow();
   
   console.log('ready');
