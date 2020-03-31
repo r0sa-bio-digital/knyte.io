@@ -80,8 +80,9 @@ function setSpaceRootKnoxel(desc)
   const newKnyteId = knoxels[newKnoxelId];
   const priorKnoxelId = spaceRootElement.id;
   // clear children rects
-  while (spaceRootElement.firstChild)
-    spaceRootElement.firstChild.remove();
+  const spaceRootKnoxels = document.getElementById('knoxels');
+  while (spaceRootKnoxels.firstChild)
+    spaceRootKnoxels.firstChild.remove();
   // set space color
   spaceRootElement.style.backgroundColor = informationMap[newKnyteId].color;
   // set actual knoxel id
@@ -97,7 +98,7 @@ function setSpaceRootKnoxel(desc)
   );
 }
 
-function addRect(desc)
+function addRect(desc, ghost)
 {
   // desc: {id, position, color}
   const w = visualTheme.rect.defaultWidth;
@@ -113,8 +114,19 @@ function addRect(desc)
   rect.setAttribute('fill', desc.color);
   rect.setAttribute('stroke', visualTheme.rect.strokeColor);
   rect.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
-  rect.addEventListener('click', onClickRect, false);
-  spaceRootElement.appendChild(rect);
+  if (ghost)
+  {
+    rect.setAttribute('opacity', 0.5);
+    rect.style.pointerEvents = 'none';
+    document.getElementById('ghosts').appendChild(rect);
+  }
+  else
+  {
+    rect.addEventListener('click', onClickRect, false);
+    rect.addEventListener('mouseover', onMouseOverRect, false);
+    rect.addEventListener('mouseout', onMouseOutRect, false);
+    document.getElementById('knoxels').appendChild(rect);
+  }
 }
 
 function addKnoxelRect(knyteId, e)
@@ -144,6 +156,18 @@ function onClickRect(e)
     addKnoxelRect(knyteId, e);
   }
   e.stopPropagation(); // to prevent onClickSpaceRoot call
+}
+
+let mouseoverGhostKnoxelId = null;
+
+function onMouseOverRect(e)
+{
+  mouseoverGhostKnoxelId = e.target.id;
+}
+
+function onMouseOutRect(e)
+{
+  mouseoverGhostKnoxelId = null;
 }
 
 function onClickSpaceRoot(e)
@@ -194,6 +218,66 @@ function setSpaceBackState(backKnoxelId)
   }
 }
 
+let activeGhostKnoxelId = null;
+
+function onMouseDownSpaceRoot(e)
+{
+  activeGhostKnoxelId = mouseoverGhostKnoxelId;
+  if (!activeGhostKnoxelId)
+    return;
+  const knyteId = knoxels[activeGhostKnoxelId];
+  const knoxelId = knit.new();
+  const position = {x: e.offsetX, y: e.offsetY};
+  const color = informationMap[knyteId].color;
+  addRect({id: activeGhostKnoxelId + '.ghost', position, color}, true);
+}
+
+function onMouseMoveSpaceRoot(e)
+{
+  if (!activeGhostKnoxelId)
+    return;
+  const ghostElement = document.getElementById(activeGhostKnoxelId + '.ghost');
+  const w = visualTheme.rect.defaultWidth;
+  const h = visualTheme.rect.defaultHeight;
+  const x = e.offsetX - w/2;
+  const y = e.offsetY - h/2;
+  ghostElement.setAttribute('x', x);
+  ghostElement.setAttribute('y', y);
+}
+
+function onMouseUpSpaceRoot(e)
+{
+  if (!activeGhostKnoxelId)
+    return;
+  const ghostElement = document.getElementById(activeGhostKnoxelId + '.ghost');
+  ghostElement.remove();
+  onRectGhostMoved(activeGhostKnoxelId, mouseoverGhostKnoxelId, e);
+  activeGhostKnoxelId = null;
+}
+
+function onRectGhostMoved(droppedKnoxelId, landingKnoxelId, e)
+{
+  const hostKnyteId = knoxels[spaceRootElement.id];
+  if (!landingKnoxelId)
+  {
+    const droppedElement = document.getElementById(activeGhostKnoxelId);
+    const w = visualTheme.rect.defaultWidth;
+    const h = visualTheme.rect.defaultHeight;
+    const x = e.offsetX - w/2;
+    const y = e.offsetY - h/2;
+    droppedElement.setAttribute('x', x);
+    droppedElement.setAttribute('y', y);
+    informationMap[hostKnyteId].space[droppedKnoxelId] = {x, y};
+  }
+  else if (droppedKnoxelId !== landingKnoxelId)
+  {
+    const landingKnyteId = knoxels[landingKnoxelId];
+    delete informationMap[hostKnyteId].space[droppedKnoxelId];
+    informationMap[landingKnyteId].space[droppedKnoxelId] = {x: 0, y: 0};
+    setSpaceRootKnoxel({knoxelId: spaceRootElement.id}); // TODO: optimise space refresh
+  }
+}
+
 function onLoadBody(e)
 {
   // init space root element
@@ -217,6 +301,9 @@ function onLoadBody(e)
   addKnoxel({hostKnyteId: mirrorKnyteId, knyteId: masterKnyteId, knoxelId: masterKnoxelId, position});
   // setup event handlers
   spaceRootElement.addEventListener('click', onClickSpaceRoot, false);
+  spaceRootElement.addEventListener('mousedown', onMouseDownSpaceRoot, false);
+  spaceRootElement.addEventListener('mousemove', onMouseMoveSpaceRoot, false);
+  spaceRootElement.addEventListener('mouseup', onMouseUpSpaceRoot, false);
   window.addEventListener('resize', onResizeWindow, false);
   document.getElementById('backArrowShape').addEventListener('click', onClickSpaceBack, false);
   // setup space root view
