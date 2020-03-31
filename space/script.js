@@ -1,62 +1,16 @@
+/* global visualThemeColors */
+
 let svgNameSpace;
 const knytesCloud = {}; // core knyte id --> initial knyte id, terminal knyte id
 const informationMap = {}; // knyte id --> {color, space: {knoxel id --> position}}
 const knoxels = {}; // knoxel id --> knyte id
 const visualTheme = {
   rect: {
-    strokeColor: '#160f19',
+    strokeColor: visualThemeColors.outline,
     strokeWidth: 4,
     fillColor: {
       getRandom: function() {
-        const colors = [
-          '#79e6d9',
-          '#a4a4e4',
-          '#fddd88',
-          '#6eca98',
-          '#72c0c2',
-          '#ff5d5d',
-          '#55ff84',
-          '#ffaabf',
-          '#006280',
-          '#b1419f',
-          '#1da6ac',
-          '#f3929f',
-          '#444122',
-          '#4d97ff',
-          '#284a35',
-          '#58243a',
-          '#418cab',
-          '#b98e01',
-          '#36945b',
-          '#b62d4e',
-          '#dc286f',
-          '#d820ca',
-          '#5571f1',
-          '#b440f1',
-          '#e74141',
-          '#d8b621',
-          '#a4a4ff',
-          '#fe84d4',
-          '#ffc0cb',
-          '#00fa9a',
-          '#b46bd2',
-          '#7460e1',
-          '#0000ff',
-          '#bb99ff',
-          '#ffffdd',
-          '#282828',
-          '#333333',
-          '#404040',
-          '#484848',
-          '#4e4e4e',
-          '#565656',
-          '#666666',
-          '#777777',
-          '#7b7b7b',
-          '#898989',
-          '#9b9b9b',
-          '#eeeeee',
-        ];
+        const colors = visualThemeColors.elements;
         const randomIndex = Math.floor(Math.random() * colors.length);
         return colors[randomIndex];
       }
@@ -245,27 +199,29 @@ function onResizeWindow(e)
 
 function onLoadBody(e)
 {
+  // init space root element
   const spaceRoot = document.getElementsByClassName('spaceRoot')[0];
   svgNameSpace = spaceRoot.getAttribute('xmlns');
-  spaceRoot.id = knit.new();
-  const color = visualTheme.rect.fillColor.getRandom();
-
+  // create root knyte
   const rootKnyteId = knit.new();
-  addKnyte({knyteId: rootKnyteId, initialId: knit.empty, terminalId: knit.empty, color});
+  const rootKnoxelId = knit.new();
+  const rootColor = visualTheme.rect.fillColor.getRandom();
+  spaceRoot.id = rootKnoxelId;
+  addKnyte({knyteId: rootKnyteId, initialId: knit.empty, terminalId: knit.empty, color: rootColor});
   addKnoxel({knyteId: rootKnyteId, rootId: null, knoxelId: spaceRoot.id, position: null});
-  
+  // create mirror knyte
   const mirrorKnyteId = knit.new();
+  const mirrorKnoxelId = knit.new();
   const mirrorColor = visualTheme.rect.fillColor.getRandom();
   addKnyte({knyteId: mirrorKnyteId, initialId: knit.empty, terminalId: knit.empty, color: mirrorColor});
   const position = {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight};
-  const mirrorKnoxelId = knit.new();
   addKnoxel({knyteId: mirrorKnyteId, rootId: spaceRoot.id, knoxelId: mirrorKnoxelId, position});
   addKnoxel({knyteId: rootKnyteId, rootId: mirrorKnoxelId, knoxelId: spaceRoot.id, position});
-
+  // setup event handlers
   spaceRoot.addEventListener('click', onClickSpaceRoot, false);
-  setRectAsRoot(spaceRoot.id);
-  
   window.addEventListener('resize', onResizeWindow, false);
+  // setup space root view
+  setRectAsRoot(spaceRoot.id);
   onResizeWindow();
   
   console.log('ready');
