@@ -152,21 +152,15 @@ function setRectAsRoot(newSpaceRootId)
   );
 }
 
-function onClickRect(e)
-{
-  setRectAsRoot(e.target.id);
-  e.stopPropagation(); // to prevent onClickSpaceRoot call
-}
-
 function addRect(desc)
 {
-  // desc: {canvasElement, position, color}
+  // desc: {canvasElement, id, position, color}
   const w = visualTheme.rect.defaultHeight;
   const h = visualTheme.rect.defaultWidth;
   const x = desc.position.x - w/2;
   const y = desc.position.y - h/2;
   const rect = document.createElementNS(svgNameSpace, 'rect');
-  rect.id = knit.new();
+  rect.id = desc.id;
   rect.setAttribute('x', x);
   rect.setAttribute('y', y);
   rect.setAttribute('width', w);
@@ -176,9 +170,6 @@ function addRect(desc)
   rect.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
   rect.addEventListener('click', onClickRect, false);
   desc.canvasElement.appendChild(rect);
-  const knyteId = knit.new();
-  addKnyte({knyteId, initialId: knit.empty, terminalId: knit.empty, color: desc.color});
-  addKnoxel({knyteId, rootId: desc.canvasElement.id, knoxelId: rect.id, position: desc.position});
 }
 
 function restoreRect(desc)
@@ -201,15 +192,48 @@ function restoreRect(desc)
   desc.canvasElement.appendChild(rect);
 }
 
+function onClickRect(e)
+{
+  if (!e.shiftKey && !e.altKey && !e.metaKey)
+  {
+    setRectAsRoot(e.target.id);
+  }
+  else if (!e.shiftKey && e.altKey && !e.metaKey)
+  {
+    const canvasElement = document.getElementsByClassName('spaceRoot')[0];
+    const knyteId = knoxels[e.target.id];
+    const knoxelId = knit.new();
+    const position = {x: e.offsetX, y: e.offsetY};
+    const color = informationMap[knyteId];
+    addKnoxel({knyteId, rootId: canvasElement.id, knoxelId, position});
+    addRect({canvasElement, id: knoxelId, position, color});
+  }
+  e.stopPropagation(); // to prevent onClickSpaceRoot call
+}
+
 function onClickSpaceRoot(e)
 {
-  addRect(
-    {
-      canvasElement: document.getElementsByClassName('spaceRoot')[0],
-      position: {x: e.offsetX, y: e.offsetY},
-      color: visualTheme.rect.fillColor.getRandom()
-    }
-  );
+  if (!e.shiftKey && !e.altKey && e.metaKey)
+  {
+    const canvasElement = document.getElementsByClassName('spaceRoot')[0];
+    const knyteId = knit.new();
+    const knoxelId = knit.new();
+    const position = {x: e.offsetX, y: e.offsetY};
+    const color = visualTheme.rect.fillColor.getRandom();
+    addKnyte({knyteId, initialId: knit.empty, terminalId: knit.empty, color});
+    addKnoxel({knyteId, rootId: canvasElement.id, knoxelId, position});
+    addRect({canvasElement, id: knoxelId, position, color});
+  }
+  else if (!e.shiftKey && e.altKey && !e.metaKey)
+  {
+    const canvasElement = document.getElementsByClassName('spaceRoot')[0];
+    const knyteId = knoxels[canvasElement.id];
+    const knoxelId = knit.new();
+    const position = {x: e.offsetX, y: e.offsetY};
+    const color = informationMap[knyteId];
+    addKnoxel({knyteId, rootId: canvasElement.id, knoxelId, position});
+    addRect({canvasElement, id: knoxelId, position, color});
+  }
 }
 
 function onResizeWindow(e)
