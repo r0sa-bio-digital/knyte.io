@@ -64,13 +64,10 @@ function addKnyte(desc)
 
 function addKnoxel(desc)
 {
-  // desc: {knyteId, rootId, knoxelId, position}
+  // desc: {rootKnyteId, knyteId, knoxelId, position}
   knoxels[desc.knoxelId] = desc.knyteId;
-  if (desc.rootId)
-  {
-    const rootKnyteId = knoxels[desc.rootId];
-    informationMap[rootKnyteId].space[desc.knoxelId] = desc.position;
-  }
+  if (desc.rootKnyteId)
+    informationMap[desc.rootKnyteId].space[desc.knoxelId] = desc.position;
 }
 
 function setRectAsRoot(newSpaceRootId)
@@ -83,7 +80,7 @@ function setRectAsRoot(newSpaceRootId)
   if (!Object.keys(informationMap[newKnyteId].space).length)
     addKnoxel(
       {
-        knyteId: priorKnyteId, rootId: newSpaceRootId, knoxelId: priorSpaceRootId, 
+        rootKnyteId: newKnyteId, knyteId: priorKnyteId, knoxelId: priorSpaceRootId, 
         position: {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight}
       }
     )
@@ -129,10 +126,11 @@ function addRect(desc)
 function addKnoxelRect(knyteId, e)
 {
   const canvasElement = document.getElementsByClassName('spaceRoot')[0];
+  const rootKnyteId = knoxels[canvasElement.id];
   const knoxelId = knit.new();
   const position = {x: e.offsetX, y: e.offsetY};
   const color = informationMap[knyteId].color;
-  addKnoxel({knyteId, rootId: canvasElement.id, knoxelId, position});
+  addKnoxel({rootKnyteId, knyteId, knoxelId, position});
   addRect({canvasElement, id: knoxelId, position, color});  
 }
 
@@ -185,15 +183,15 @@ function onLoadBody(e)
   const rootColor = visualTheme.rect.fillColor.getRandom();
   spaceRoot.id = rootKnoxelId;
   addKnyte({knyteId: rootKnyteId, initialId: knit.empty, terminalId: knit.empty, color: rootColor});
-  addKnoxel({knyteId: rootKnyteId, rootId: null, knoxelId: spaceRoot.id, position: null});
+  addKnoxel({rootKnoxelId: null, knyteId: rootKnyteId, knoxelId: spaceRoot.id, position: null});
   // create mirror knyte
   const mirrorKnyteId = knit.new();
   const mirrorKnoxelId = knit.new();
   const mirrorColor = visualTheme.rect.fillColor.getRandom();
   addKnyte({knyteId: mirrorKnyteId, initialId: knit.empty, terminalId: knit.empty, color: mirrorColor});
   const position = {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight};
-  addKnoxel({knyteId: mirrorKnyteId, rootId: spaceRoot.id, knoxelId: mirrorKnoxelId, position});
-  addKnoxel({knyteId: rootKnyteId, rootId: mirrorKnoxelId, knoxelId: spaceRoot.id, position});
+  addKnoxel({rootKnyteId: rootKnyteId, knyteId: mirrorKnyteId, knoxelId: mirrorKnoxelId, position});
+  addKnoxel({rootKnyteId: mirrorKnyteId, knyteId: rootKnyteId, knoxelId: rootKnoxelId, position});
   // setup event handlers
   spaceRoot.addEventListener('click', onClickSpaceRoot, false);
   window.addEventListener('resize', onResizeWindow, false);
