@@ -38,3 +38,6 @@
   * drag'n'drop knoxel в пространстве - переместить knoxel на новую позицию в том же пространстве
   * drag'n'drop knoxel на другой knoxel - переместить knoxel в (0, 0) в пространстве выбранного knoxel'я
   * esc в процессе drag'n'drop - прервать перемещение knoxel'я
+  * space в процессе drag'n'drop - зафиксировать ghost knoxel'я в screenspace'e
+  * space с зафиксированным ghost knoxel'ем - поместить knoxel в позицию его ghost'а
+  * esc с зафиксированным ghost knoxel'ем - убрать ghost и отменить перемещение knoxel'я
