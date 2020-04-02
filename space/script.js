@@ -92,12 +92,16 @@ function setSpaceRootKnoxel(desc)
   // restore all nested rects
   const nestedKnoxels = informationMap[newKnyteId].space;
   for (let knoxelId in nestedKnoxels)
+  {
+    if (knoxelId === newKnoxelId)
+      continue;
     addRect(
       {
         id: knoxelId, position: nestedKnoxels[knoxelId],
         color: informationMap[knoxels[knoxelId]].color
       }
-  );
+    );
+  }
 }
 
 function addRect(desc)
