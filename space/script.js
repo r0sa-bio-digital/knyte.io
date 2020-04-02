@@ -222,16 +222,29 @@ function setSpaceBackState(backKnoxelId)
 
 let activeGhostKnoxelId = null;
 
-function onMouseDownSpaceRoot(e)
+function spawnGhostRect(ghostKnoxelId, e)
 {
-  activeGhostKnoxelId = mouseoverGhostKnoxelId;
-  if (!activeGhostKnoxelId)
-    return;
+  activeGhostKnoxelId = ghostKnoxelId;
   const knyteId = knoxels[activeGhostKnoxelId];
   const knoxelId = knit.new();
   const position = {x: e.offsetX, y: e.offsetY};
   const color = informationMap[knyteId].color;
-  addRect({id: activeGhostKnoxelId + '.ghost', position, color}, true);
+  const id = activeGhostKnoxelId + '.ghost';
+  addRect({id, position, color}, true);
+}
+
+function terminateGhostRect()
+{
+  const ghostElement = document.getElementById(activeGhostKnoxelId + '.ghost');
+  ghostElement.remove();
+  activeGhostKnoxelId = null;
+}
+
+function onMouseDownSpaceRoot(e)
+{
+  if (!mouseoverGhostKnoxelId)
+    return;
+  spawnGhostRect(mouseoverGhostKnoxelId, e);
 }
 
 function onMouseMoveSpaceRoot(e)
@@ -251,18 +264,16 @@ function onMouseUpSpaceRoot(e)
 {
   if (!activeGhostKnoxelId)
     return;
-  const ghostElement = document.getElementById(activeGhostKnoxelId + '.ghost');
-  ghostElement.remove();
-  onRectGhostMoved(activeGhostKnoxelId, mouseoverGhostKnoxelId, e);
-  activeGhostKnoxelId = null;
+  onGhostRectMoved(activeGhostKnoxelId, mouseoverGhostKnoxelId, e);
+  terminateGhostRect();
 }
 
-function onRectGhostMoved(droppedKnoxelId, landingKnoxelId, e)
+function onGhostRectMoved(droppedKnoxelId, landingKnoxelId, e)
 {
   const hostKnyteId = knoxels[spaceRootElement.id];
   if (!landingKnoxelId)
   {
-    const droppedElement = document.getElementById(activeGhostKnoxelId);
+    const droppedElement = document.getElementById(droppedKnoxelId);
     const w = visualTheme.rect.defaultWidth;
     const h = visualTheme.rect.defaultHeight;
     const x = e.offsetX - w/2;
@@ -277,6 +288,15 @@ function onRectGhostMoved(droppedKnoxelId, landingKnoxelId, e)
     delete informationMap[hostKnyteId].space[droppedKnoxelId];
     informationMap[landingKnyteId].space[droppedKnoxelId] = {x: 0, y: 0};
     setSpaceRootKnoxel({knoxelId: spaceRootElement.id}); // TODO: optimise space refresh
+  }
+}
+
+function onKeyDownWindow(e)
+{
+  if (e.key === 'Escape')
+  {
+    if (activeGhostKnoxelId)
+      terminateGhostRect();
   }
 }
 
@@ -307,6 +327,7 @@ function onLoadBody(e)
   spaceRootElement.addEventListener('mousemove', onMouseMoveSpaceRoot, false);
   spaceRootElement.addEventListener('mouseup', onMouseUpSpaceRoot, false);
   window.addEventListener('resize', onResizeWindow, false);
+  window.addEventListener('keydown', onKeyDownWindow, false);
   document.getElementById('backArrowShape').addEventListener('click', onClickSpaceBack, false);
   // setup space root view
   setSpaceRootKnoxel({knoxelId: spaceRootElement.id});
