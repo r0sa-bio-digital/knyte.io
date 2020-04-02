@@ -221,15 +221,18 @@ function setSpaceBackState(backKnoxelId)
 }
 
 let activeGhostKnoxelId = null;
+let activeGhostHostKnyteId = null;
+let ghostRectIsFixed = false;
 
-function spawnGhostRect(ghostKnoxelId, e)
+function spawnGhostRect(ghostKnoxelId, ghostHostKnyteId, e)
 {
   activeGhostKnoxelId = ghostKnoxelId;
-  const knyteId = knoxels[activeGhostKnoxelId];
+  activeGhostHostKnyteId = ghostHostKnyteId;
+  const knyteId = knoxels[ghostKnoxelId];
   const knoxelId = knit.new();
   const position = {x: e.offsetX, y: e.offsetY};
   const color = informationMap[knyteId].color;
-  const id = activeGhostKnoxelId + '.ghost';
+  const id = ghostKnoxelId + '.ghost';
   addRect({id, position, color}, true);
 }
 
@@ -238,18 +241,19 @@ function terminateGhostRect()
   const ghostElement = document.getElementById(activeGhostKnoxelId + '.ghost');
   ghostElement.remove();
   activeGhostKnoxelId = null;
+  activeGhostHostKnyteId = null;
 }
 
 function onMouseDownSpaceRoot(e)
 {
-  if (!mouseoverGhostKnoxelId)
+  if (!mouseoverGhostKnoxelId || ghostRectIsFixed)
     return;
-  spawnGhostRect(mouseoverGhostKnoxelId, e);
+  spawnGhostRect(mouseoverGhostKnoxelId, knoxels[spaceRootElement.id], e);
 }
 
 function onMouseMoveSpaceRoot(e)
 {
-  if (!activeGhostKnoxelId)
+  if (!activeGhostKnoxelId || ghostRectIsFixed)
     return;
   const ghostElement = document.getElementById(activeGhostKnoxelId + '.ghost');
   const w = visualTheme.rect.defaultWidth;
@@ -262,41 +266,61 @@ function onMouseMoveSpaceRoot(e)
 
 function onMouseUpSpaceRoot(e)
 {
-  if (!activeGhostKnoxelId)
+  if (!activeGhostKnoxelId || ghostRectIsFixed)
     return;
-  onGhostRectMoved(activeGhostKnoxelId, mouseoverGhostKnoxelId, e);
+  onGhostRectMoved(activeGhostKnoxelId, activeGhostHostKnyteId, mouseoverGhostKnoxelId, {x: e.offsetX, y: e.offsetY});
   terminateGhostRect();
 }
 
-function onGhostRectMoved(droppedKnoxelId, landingKnoxelId, e)
+function onGhostRectMoved(droppedKnoxelId, droppedHostKnyteId, landingKnoxelId, position)
 {
-  const hostKnyteId = knoxels[spaceRootElement.id];
+  const droppedElement = document.getElementById(droppedKnoxelId);
+  if (!droppedElement && !landingKnoxelId)
+    landingKnoxelId = spaceRootElement.id;
+  else if (landingKnoxelId)
+    position = {x: 0, y: 0};
   if (!landingKnoxelId)
   {
-    const droppedElement = document.getElementById(droppedKnoxelId);
+    // move knoxel inside the space
     const w = visualTheme.rect.defaultWidth;
     const h = visualTheme.rect.defaultHeight;
-    const x = e.offsetX - w/2;
-    const y = e.offsetY - h/2;
+    const x = position.x - w/2;
+    const y = position.y - h/2;
     droppedElement.setAttribute('x', x);
     droppedElement.setAttribute('y', y);
-    informationMap[hostKnyteId].space[droppedKnoxelId] = {x: e.offsetX, y: e.offsetY};
+    informationMap[droppedHostKnyteId].space[droppedKnoxelId] = position;
   }
   else if (droppedKnoxelId !== landingKnoxelId)
   {
     const landingKnyteId = knoxels[landingKnoxelId];
-    delete informationMap[hostKnyteId].space[droppedKnoxelId];
-    informationMap[landingKnyteId].space[droppedKnoxelId] = {x: 0, y: 0};
+    delete informationMap[droppedHostKnyteId].space[droppedKnoxelId];
+    informationMap[landingKnyteId].space[droppedKnoxelId] = position;
     setSpaceRootKnoxel({knoxelId: spaceRootElement.id}); // TODO: optimise space refresh
   }
 }
 
 function onKeyDownWindow(e)
 {
-  if (e.key === 'Escape')
+  if (e.code === 'Escape' && activeGhostKnoxelId)
   {
-    if (activeGhostKnoxelId)
+    terminateGhostRect();
+    ghostRectIsFixed = false;
+  }
+  else if (e.code === 'Space' && activeGhostKnoxelId)
+  {
+    if (!ghostRectIsFixed)
+      ghostRectIsFixed = true;
+    else
+    {
+      const ghostElement = document.getElementById(activeGhostKnoxelId + '.ghost');
+      const w = visualTheme.rect.defaultWidth;
+      const h = visualTheme.rect.defaultHeight;
+      const x = parseInt(ghostElement.getAttribute('x')) + w/2;
+      const y = parseInt(ghostElement.getAttribute('y')) + h/2;
+      onGhostRectMoved(activeGhostKnoxelId, activeGhostHostKnyteId, null, {x, y});
       terminateGhostRect();
+      ghostRectIsFixed = false;
+    }
   }
 }
 
