@@ -93,7 +93,7 @@ function setSpaceRootKnoxel(desc)
   const nestedKnoxels = informationMap[newKnyteId].space;
   for (let knoxelId in nestedKnoxels)
   {
-    if (knoxelId === newKnoxelId)
+    if (knoxelId === newKnoxelId) // don't view knoxel inside itself
       continue;
     addRect(
       {
