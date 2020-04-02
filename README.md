@@ -32,12 +32,9 @@
   * <https://knyte-io.glitch.me/space>
   * <https://www.knyte.io/space>
 * управление
-  * cmd + click в пространство - создать новый knyte и knoxel для него
-  * alt + click в knoxel/пространство - создать knoxel для выбранного knyte'а
+  * cmd + click - создать новый knyte и knoxel для него в указанной точке пространства
   * click в knoxel - перейти в пространство knoxel'я
-  * drag'n'drop knoxel в пространстве - переместить knoxel на новую позицию в том же пространстве
-  * drag'n'drop knoxel на другой knoxel - переместить knoxel в (0, 0) в пространстве выбранного knoxel'я
-  * esc в процессе drag'n'drop - прервать перемещение knoxel'я
-  * space в процессе drag'n'drop - зафиксировать ghost knoxel'я в screenspace'e
-  * space с зафиксированным ghost knoxel'ем - поместить knoxel в позицию его ghost'а
-  * esc с зафиксированным ghost knoxel'ем - убрать ghost и отменить перемещение knoxel'я
+  * space без ghost'а - создать ghost для выбранного knoxel'я. пространство - это тоже knoxel. ghost существует в screenspace'e и привязан к курсору.
+  * alt + click с ghost'ом - создать knoxel для выбранного ghost knyte'а
+  * space c ghost'ом - переместить ghost knoxel в выбранную позицию выбранного пространства
+  * escape c ghost'ом - сбросить ghost
