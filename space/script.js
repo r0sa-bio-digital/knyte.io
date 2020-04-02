@@ -276,7 +276,8 @@ function onMouseUpSpaceRoot(e)
   onGhostRectMoved(
     {
       droppedKnoxelId: activeGhostKnoxelId, droppedHostKnyteId: activeGhostHostKnyteId,
-      landingKnoxelId: mouseoverGhostKnoxelId, position: {x: e.offsetX, y: e.offsetY}
+      landingKnoxelId: mouseoverGhostKnoxelId || spaceRootElement.id, 
+      position: mouseoverGhostKnoxelId ? {x:0, y: 0} : {x: e.offsetX, y: e.offsetY}
     }
   );
   terminateGhostRect();
@@ -285,23 +286,7 @@ function onMouseUpSpaceRoot(e)
 function onGhostRectMoved(desc)
 {
   // desc: {droppedKnoxelId, droppedHostKnyteId, landingKnoxelId, position}
-  const droppedElement = document.getElementById(desc.droppedKnoxelId);
-  if (!droppedElement && !desc.landingKnoxelId)
-    desc.landingKnoxelId = spaceRootElement.id;
-  else if (desc.landingKnoxelId)
-    desc.position = {x: 0, y: 0};
-  if (!desc.landingKnoxelId)
-  {
-    // move knoxel inside the space
-    const w = visualTheme.rect.defaultWidth;
-    const h = visualTheme.rect.defaultHeight;
-    const x = desc.position.x - w/2;
-    const y = desc.position.y - h/2;
-    droppedElement.setAttribute('x', x);
-    droppedElement.setAttribute('y', y);
-    informationMap[desc.droppedHostKnyteId].space[desc.droppedKnoxelId] = desc.position;
-  }
-  else if (desc.droppedKnoxelId !== desc.landingKnoxelId)
+  if (desc.droppedKnoxelId !== desc.landingKnoxelId)
   {
     const landingKnyteId = knoxels[desc.landingKnoxelId];
     delete informationMap[desc.droppedHostKnyteId].space[desc.droppedKnoxelId];
@@ -331,7 +316,7 @@ function onKeyDownWindow(e)
       onGhostRectMoved(
         {
           droppedKnoxelId: activeGhostKnoxelId, droppedHostKnyteId: activeGhostHostKnyteId,
-          landingKnoxelId: null, position: {x, y}
+          landingKnoxelId: spaceRootElement.id, position: {x, y}
         }
       );
       terminateGhostRect();
