@@ -295,8 +295,8 @@ function onKeyDownWindow(e)
         onGhostRectMoved(
           {
             droppedKnoxelId: activeGhostKnoxelId, droppedHostKnyteId: activeGhostHostKnyteId,
-            landingKnoxelId: mouseoverGhostKnoxelId || spaceRootElement.id, 
-            position: mouseoverGhostKnoxelId ? {x:0, y: 0} : mouseMovePosition
+            landingKnoxelId: spaceRootElement.id, 
+            position: mouseMovePosition
           }
         );
         terminateGhostRect();
