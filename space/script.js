@@ -101,6 +101,12 @@ function setSpaceRootKnoxel(desc)
         color: informationMap[knoxels[knoxelId]].color
       }
     );
+    if (knoxelId === activeGhostKnoxelId)
+    {
+      const rect2 = document.getElementById(activeGhostKnoxelId);
+      rect2.setAttribute('stroke-dasharray', '0 16');
+      rect2.setAttribute('stroke-linecap', 'square');
+    }
   }
 }
 
@@ -233,12 +239,30 @@ function spawnGhostRect(desc)
   const color = informationMap[knyteId].color;
   const id = desc.ghostKnoxelId + '.ghost';
   addRect({id, position: desc.position, color, ghost: true});
+  const rect = document.getElementById(id);
+  const knoxelPosition = informationMap[desc.ghostHostKnyteId].space[desc.ghostKnoxelId];
+  const offset = {
+    x: knoxelPosition.x - desc.position.x, 
+    y: knoxelPosition.y - desc.position.y
+  };
+  rect.dataset.offsetX = offset.x;
+  rect.dataset.offsetY = offset.y;
+  rect.setAttribute(
+    'transform', 
+    'translate(' + offset.x + ' ' + offset.y + ')'
+  );
+  const rect2 = document.getElementById(activeGhostKnoxelId);
+  rect2.setAttribute('stroke-dasharray', '0 16');
+  rect2.setAttribute('stroke-linecap', 'square');
 }
 
 function terminateGhostRect()
 {
   const ghostElement = document.getElementById(activeGhostKnoxelId + '.ghost');
   ghostElement.remove();
+  const rect2 = document.getElementById(activeGhostKnoxelId);
+  rect2.removeAttribute('stroke-dasharray');
+  rect2.removeAttribute('stroke-linecap');
   activeGhostKnoxelId = null;
   activeGhostHostKnyteId = null;
 }
@@ -272,7 +296,12 @@ function onGhostRectMoved(desc)
     return;
   const landingKnyteId = knoxels[desc.landingKnoxelId];
   delete informationMap[desc.droppedHostKnyteId].space[desc.droppedKnoxelId];
-  informationMap[landingKnyteId].space[desc.droppedKnoxelId] = desc.position;
+  const rect = document.getElementById(activeGhostKnoxelId + '.ghost');
+  const landingPosition = {
+    x: desc.position.x + parseFloat(rect.dataset.offsetX),
+    y: desc.position.y + parseFloat(rect.dataset.offsetY)
+  };
+  informationMap[landingKnyteId].space[desc.droppedKnoxelId] = landingPosition;
   setSpaceRootKnoxel({knoxelId: spaceRootElement.id}); // TODO: optimise space refresh
 }
 
