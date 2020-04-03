@@ -6,10 +6,19 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="space/style.css">
+    <script src="space/colors.js" defer></script>
     <script src="space/script.js" defer></script>
   </head>  
   <body onload="onLoadBody(event);">
-    <svg class="visualRoot" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <svg class="spaceRoot" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+      <g id="knoxels"></g>
+      <g id="ghosts"></g>
     </svg>
+    <div class="spaceBack">
+      <svg class="backArrow" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <polygon id="backArrowShape" points="4,38 36,38 20,6" stroke-width="4" stroke="#101010" fill="#ffff00">
+        </polygon>
+      </svg>
+    </div>
   </body>
 </html>

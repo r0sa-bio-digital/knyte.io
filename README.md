@@ -25,3 +25,16 @@
 * collaborative work and cloud run-time
 * unified bio-digital language
 * full cycle ecosystem
+
+Прототип пространства
+---------------------
+* ссылка
+  * <https://knyte-io.glitch.me/space>
+  * <https://www.knyte.io/space>
+* управление
+  * cmd + click - создать новый knyte и knoxel для него в указанной точке пространства
+  * click в knoxel - перейти в пространство knoxel'я
+  * space без ghost'а - создать ghost для выбранного knoxel'я. пространство - это тоже knoxel. ghost существует в screenspace'e и привязан к курсору.
+  * alt + click с ghost'ом - создать knoxel для выбранного ghost knyte'а
+  * space c ghost'ом - переместить ghost knoxel в выбранную позицию выбранного пространства
+  * escape c ghost'ом - сбросить ghost

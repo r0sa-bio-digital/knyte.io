@@ -1,61 +1,19 @@
+/* global visualThemeColors */
+
 let svgNameSpace;
-const knoxelColors = {}; // knoxel id --> color
-const knoxels = {}; // root knoxel id --> nested knoxel id --> position
+let spaceRootElement;
+let spaceBackElement;
+const knytesCloud = {}; // core knyte id --> initial knyte id, terminal knyte id
+const informationMap = {}; // knyte id --> {color, space: {knoxel id --> position}}
+const knoxels = {}; // knoxel id --> knyte id
+const spaceBackStack = []; // [previous space root knoxel id]
 const visualTheme = {
   rect: {
-    strokeColor: '#160f19',
+    strokeColor: visualThemeColors.outline,
     strokeWidth: 4,
     fillColor: {
       getRandom: function() {
-        const colors = [
-          '#79e6d9',
-          '#a4a4e4',
-          '#fddd88',
-          '#6eca98',
-          '#72c0c2',
-          '#ff5d5d',
-          '#55ff84',
-          '#ffaabf',
-          '#006280',
-          '#b1419f',
-          '#1da6ac',
-          '#f3929f',
-          '#444122',
-          '#4d97ff',
-          '#284a35',
-          '#58243a',
-          '#418cab',
-          '#b98e01',
-          '#36945b',
-          '#b62d4e',
-          '#dc286f',
-          '#d820ca',
-          '#5571f1',
-          '#b440f1',
-          '#e74141',
-          '#d8b621',
-          '#a4a4ff',
-          '#fe84d4',
-          '#ffc0cb',
-          '#00fa9a',
-          '#b46bd2',
-          '#7460e1',
-          '#0000ff',
-          '#bb99ff',
-          '#ffffdd',
-          '#282828',
-          '#333333',
-          '#404040',
-          '#484848',
-          '#4e4e4e',
-          '#565656',
-          '#666666',
-          '#777777',
-          '#7b7b7b',
-          '#898989',
-          '#9b9b9b',
-          '#eeeeee',
-        ];
+        const colors = visualThemeColors.elements;
         const randomIndex = Math.floor(Math.random() * colors.length);
         return colors[randomIndex];
       }
@@ -65,152 +23,324 @@ const visualTheme = {
   }
 };
 
-let hexBytes = [];
-// Pre-calculate toString(16) for speed
-for (let i = 0; i < 256; i++)
+const knit = new function()
 {
-  hexBytes[i] = (i + 0x100).toString(16).substr(1);
-}
+  // Pre-calculate toString(16) for speed
+  const hexBytes = [];
+  for (let i = 0; i < 256; i++)
+    hexBytes[i] = (i + 0x100).toString(16).substr(1);
 
-// String UUIDv4 (Random)
-function uuid() {
-  // uuid.bin
-  function uuidBin() {
-    let b = new Uint8Array(16);
-    crypto.getRandomValues(b);
+  function binUuidV4(empty) {
+    const b = new Uint8Array(16);
+    if (!empty)
+      crypto.getRandomValues(b);
     b[6] = (b[6] & 0x0f) | 0x40;
     b[8] = (b[8] & 0x3f) | 0x80;
     return b;
   }
 
-  var b = uuidBin();
-  return hexBytes[b[0]] + hexBytes[b[1]] +
-    hexBytes[b[2]] + hexBytes[b[3]] + '-' +
-    hexBytes[b[4]] + hexBytes[b[5]] + '-' +
-    hexBytes[b[6]] + hexBytes[b[7]] + '-' +
-    hexBytes[b[8]] + hexBytes[b[9]] + '-' +
-    hexBytes[b[10]] + hexBytes[b[11]] +
-    hexBytes[b[12]] + hexBytes[b[13]] +
-    hexBytes[b[14]] + hexBytes[b[15]];
+  function textUuidV4(empty) {
+    const b = binUuidV4(empty);
+    return hexBytes[b[0]] + hexBytes[b[1]] +
+      hexBytes[b[2]] + hexBytes[b[3]] + '-' +
+      hexBytes[b[4]] + hexBytes[b[5]] + '-' +
+      hexBytes[b[6]] + hexBytes[b[7]] + '-' +
+      hexBytes[b[8]] + hexBytes[b[9]] + '-' +
+      hexBytes[b[10]] + hexBytes[b[11]] +
+      hexBytes[b[12]] + hexBytes[b[13]] +
+      hexBytes[b[14]] + hexBytes[b[15]];
+  }
+  // singleton properties
+  this.empty = textUuidV4(true);
+  this.new = function() {return textUuidV4();};
 }
 
-function addKnoxel(canvasId, rectId, position, color)
+function addKnyte(desc)
 {
-  if (canvasId)
-    knoxels[canvasId][rectId] = position;
-  if (!knoxels[rectId])
-    knoxels[rectId] = {};
-  knoxelColors[rectId] = color;
+  // desc: {knyteId, initialId, terminalId, color}
+  knytesCloud[desc.knyteId] = {
+    initialId: desc.initialId,
+    terminalId: desc.terminalId
+  };
+  informationMap[desc.knyteId] = {color: desc.color, space: {}};
 }
 
-function setRectAsRoot(newVisualRootId)
+function addKnoxel(desc)
 {
-  const visualRoot = document.getElementsByClassName('visualRoot')[0];
-  // check for return knoxel
-  const priorVisualRootId = visualRoot.id;
-  if (!knoxels[newVisualRootId] || !Object.keys(knoxels[newVisualRootId]).length)
-    addKnoxel(
-      newVisualRootId, priorVisualRootId,
-      {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight},
-      knoxelColors[priorVisualRootId]
-    )
-  // set color
-  visualRoot.style.backgroundColor = knoxelColors[newVisualRootId];
-  // clear children
-  while (visualRoot.firstChild)
-    visualRoot.firstChild.remove();
-  // set actual id
-  visualRoot.id = newVisualRootId;
+  // desc: {hostKnyteId, knyteId, knoxelId, position}
+  knoxels[desc.knoxelId] = desc.knyteId;
+  if (desc.hostKnyteId)
+    informationMap[desc.hostKnyteId].space[desc.knoxelId] = desc.position;
+}
+
+function setSpaceRootKnoxel(desc)
+{
+  // desc: {knoxelId}
+  const newKnoxelId = desc.knoxelId;
+  const newKnyteId = knoxels[newKnoxelId];
+  const priorKnoxelId = spaceRootElement.id;
+  // clear children rects
+  const spaceRootKnoxels = document.getElementById('knoxels');
+  while (spaceRootKnoxels.firstChild)
+    spaceRootKnoxels.firstChild.remove();
+  if (newKnoxelId !== priorKnoxelId)
+      mouseoverGhostKnoxelId = null;
+  // set space color
+  spaceRootElement.style.backgroundColor = informationMap[newKnyteId].color;
+  // set actual knoxel id
+  spaceRootElement.id = newKnoxelId;
   // restore all nested rects
-  const nestedRects = knoxels[newVisualRootId];
-  for (let rectId in nestedRects)
-    restoreRect(visualRoot, rectId, nestedRects[rectId], knoxelColors[rectId]);
+  const nestedKnoxels = informationMap[newKnyteId].space;
+  for (let knoxelId in nestedKnoxels)
+  {
+    if (knoxelId === newKnoxelId) // don't view knoxel inside itself
+      continue;
+    addRect(
+      {
+        id: knoxelId, position: nestedKnoxels[knoxelId],
+        color: informationMap[knoxels[knoxelId]].color
+      }
+    );
+  }
+}
+
+function addRect(desc)
+{
+  // desc: {id, position, color, ghost}
+  const w = visualTheme.rect.defaultWidth;
+  const h = visualTheme.rect.defaultHeight;
+  const x = desc.position.x - w/2;
+  const y = desc.position.y - h/2;
+  const rect = document.createElementNS(svgNameSpace, 'rect');
+  rect.id = desc.id;
+  rect.setAttribute('x', x);
+  rect.setAttribute('y', y);
+  rect.setAttribute('width', w);
+  rect.setAttribute('height', h);
+  rect.setAttribute('fill', desc.color);
+  rect.setAttribute('stroke', visualTheme.rect.strokeColor);
+  rect.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
+  if (desc.ghost)
+  {
+    rect.setAttribute('opacity', 0.5);
+    rect.style.pointerEvents = 'none';
+    document.getElementById('ghosts').appendChild(rect);
+  }
+  else
+  {
+    rect.addEventListener('click', onClickRect, false);
+    rect.addEventListener('mouseover', onMouseOverRect, false);
+    rect.addEventListener('mouseout', onMouseOutRect, false);
+    document.getElementById('knoxels').appendChild(rect);
+  }
+}
+
+function addKnoxelRect(knyteId, e)
+{
+  const hostKnyteId = knoxels[spaceRootElement.id];
+  const knoxelId = knit.new();
+  const position = {x: e.offsetX, y: e.offsetY};
+  const color = informationMap[knyteId].color;
+  addKnoxel({hostKnyteId, knyteId, knoxelId, position});
+  addRect({id: knoxelId, position, color});  
 }
 
 function onClickRect(e)
 {
-  setRectAsRoot(e.target.id);
-  e.stopPropagation(); // to prevent onClickVisualRoot call
+  if (!e.shiftKey && !e.altKey && !e.metaKey)
+  {
+    if (e.target.id !== spaceRootElement.id)
+    {
+      spaceBackStack.push(spaceRootElement.id);
+      setSpaceBackState(spaceRootElement.id);
+      setSpaceRootKnoxel({knoxelId: e.target.id});
+    }
+    e.stopPropagation(); // to prevent onClickSpaceRoot call
+  }
 }
 
-function addRect(canvasElement, position, color)
+let mouseoverGhostKnoxelId = null;
+let mouseMovePosition = {x: 0, y: 0};
+
+function onMouseOverRect(e)
 {
-  const w = visualTheme.rect.defaultHeight;
-  const h = visualTheme.rect.defaultWidth;
-  const x = position.x - w/2;
-  const y = position.y - h/2;
-  const rect = document.createElementNS(svgNameSpace, 'rect');
-  rect.id = uuid();
-  rect.setAttribute('x', x);
-  rect.setAttribute('y', y);
-  rect.setAttribute('width', w);
-  rect.setAttribute('height', h);
-  rect.setAttribute('fill', color);
-  rect.setAttribute('stroke', visualTheme.rect.strokeColor);
-  rect.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
-  rect.addEventListener('click', onClickRect, false);
-  canvasElement.appendChild(rect);
-  addKnoxel(canvasElement.id, rect.id, position, color);
+  mouseoverGhostKnoxelId = e.target.id;
 }
 
-function restoreRect(canvasElement, id, position, color)
+function onMouseOutRect(e)
 {
-  const w = visualTheme.rect.defaultWidth;
-  const h = visualTheme.rect.defaultHeight;
-  const x = position.x - w/2;
-  const y = position.y - h/2;
-  const rect = document.createElementNS(svgNameSpace, 'rect');
-  rect.id = id;
-  rect.setAttribute('x', x);
-  rect.setAttribute('y', y);
-  rect.setAttribute('width', w);
-  rect.setAttribute('height', h);
-  rect.setAttribute('fill', color);
-  rect.setAttribute('stroke', visualTheme.rect.strokeColor);
-  rect.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
-  rect.addEventListener('click', onClickRect, false);
-  canvasElement.appendChild(rect);
+  mouseoverGhostKnoxelId = null;
 }
 
-function onClickVisualRoot(e)
+function onClickSpaceRoot(e)
 {
-  addRect(
-    document.getElementsByClassName('visualRoot')[0],
-    {x: e.offsetX, y: e.offsetY},
-    visualTheme.rect.fillColor.getRandom()
-  );
+  if (!e.shiftKey && !e.altKey && e.metaKey)
+  {
+    const knyteId = knit.new();
+    const color = visualTheme.rect.fillColor.getRandom();
+    addKnyte({knyteId, initialId: knit.empty, terminalId: knit.empty, color});
+    addKnoxelRect(knyteId, e);
+  }
+  else if (!e.shiftKey && e.altKey && !e.metaKey)
+  {
+    if (activeGhostKnoxelId)
+      addKnoxelRect(knoxels[activeGhostKnoxelId], e);
+  }
+}
+
+function onClickSpaceBack(e)
+{
+  const backKnoxelId = spaceBackStack.pop();
+  if (backKnoxelId)
+  {
+    setSpaceRootKnoxel({knoxelId: backKnoxelId});
+    setSpaceBackState(spaceBackStack[spaceBackStack.length - 1]);
+  }
 }
 
 function onResizeWindow(e)
 {
-  const visualRoot = document.getElementsByClassName('visualRoot')[0];
-  visualRoot.setAttribute('width', window.innerWidth);
-  visualRoot.setAttribute('height', window.innerHeight);
+  spaceRootElement.setAttribute('width', window.innerWidth);
+  spaceRootElement.setAttribute('height', window.innerHeight);
+}
+function setSpaceBackState(backKnoxelId)
+{
+  const backKnyteId = knoxels[backKnoxelId];
+  if (!backKnyteId)
+  {
+    spaceBackElement.style.display = 'none';
+  }
+  else
+  {
+    const color = informationMap[backKnyteId].color;
+    spaceBackElement.style.display = 'block';
+    const backArrowShape = document.getElementById('backArrowShape');
+    backArrowShape.setAttribute('stroke', visualThemeColors.navigation);
+    backArrowShape.setAttribute('fill', color);
+  }
+}
+
+let activeGhostKnoxelId = null;
+let activeGhostHostKnyteId = null;
+
+function spawnGhostRect(desc)
+{
+  // desc: {ghostKnoxelId, ghostHostKnyteId, position}
+  activeGhostKnoxelId = desc.ghostKnoxelId;
+  activeGhostHostKnyteId = desc.ghostHostKnyteId;
+  const knyteId = knoxels[desc.ghostKnoxelId];
+  const knoxelId = knit.new();
+  const color = informationMap[knyteId].color;
+  const id = desc.ghostKnoxelId + '.ghost';
+  addRect({id, position: desc.position, color, ghost: true});
+}
+
+function terminateGhostRect()
+{
+  const ghostElement = document.getElementById(activeGhostKnoxelId + '.ghost');
+  ghostElement.remove();
+  activeGhostKnoxelId = null;
+  activeGhostHostKnyteId = null;
+}
+
+function onMouseDownSpaceRoot(e)
+{
+}
+
+function onMouseMoveSpaceRoot(e)
+{
+  mouseMovePosition = {x: e.offsetX, y: e.offsetY};
+  if (!activeGhostKnoxelId)
+    return;
+  const ghostElement = document.getElementById(activeGhostKnoxelId + '.ghost');
+  const w = visualTheme.rect.defaultWidth;
+  const h = visualTheme.rect.defaultHeight;
+  const x = mouseMovePosition.x - w/2;
+  const y = mouseMovePosition.y - h/2;
+  ghostElement.setAttribute('x', x);
+  ghostElement.setAttribute('y', y);
+}
+
+function onMouseUpSpaceRoot(e)
+{
+}
+
+function onGhostRectMoved(desc)
+{
+  // desc: {droppedKnoxelId, droppedHostKnyteId, landingKnoxelId, position}
+  if (desc.droppedKnoxelId === desc.landingKnoxelId)
+    return;
+  const landingKnyteId = knoxels[desc.landingKnoxelId];
+  delete informationMap[desc.droppedHostKnyteId].space[desc.droppedKnoxelId];
+  informationMap[landingKnyteId].space[desc.droppedKnoxelId] = desc.position;
+  setSpaceRootKnoxel({knoxelId: spaceRootElement.id}); // TODO: optimise space refresh
+}
+
+function onKeyDownWindow(e)
+{
+  if (e.code === 'Escape' && activeGhostKnoxelId)
+  {
+    terminateGhostRect();
+  }
+  else if (e.code === 'Space')
+  {
+    if (!e.shiftKey && !e.altKey && !e.metaKey)
+    {
+      if (!activeGhostKnoxelId)
+        spawnGhostRect(
+          {
+            ghostKnoxelId: mouseoverGhostKnoxelId || spaceRootElement.id,
+            ghostHostKnyteId: knoxels[spaceRootElement.id],
+            position: mouseMovePosition
+          }
+        );
+      else
+      {
+        onGhostRectMoved(
+          {
+            droppedKnoxelId: activeGhostKnoxelId, droppedHostKnyteId: activeGhostHostKnyteId,
+            landingKnoxelId: spaceRootElement.id, 
+            position: mouseMovePosition
+          }
+        );
+        terminateGhostRect();
+      }
+    }
+  }
 }
 
 function onLoadBody(e)
 {
-  const visualRoot = document.getElementsByClassName('visualRoot')[0];
-  svgNameSpace = visualRoot.getAttribute('xmlns');
-  visualRoot.id = uuid();
-  const color = visualTheme.rect.fillColor.getRandom();
-  addKnoxel(null, visualRoot.id, null, color);
-  const mirrorId = uuid();
+  // init space root element
+  spaceRootElement = document.getElementsByClassName('spaceRoot')[0];
+  spaceBackElement = document.getElementsByClassName('spaceBack')[0];
+  svgNameSpace = spaceRootElement.getAttribute('xmlns');
+  // create root knyte
+  const masterKnyteId = knit.new();
+  const masterKnoxelId = knit.new();
+  const masterColor = visualTheme.rect.fillColor.getRandom();
+  spaceRootElement.id = masterKnoxelId;
+  addKnyte({knyteId: masterKnyteId, initialId: knit.empty, terminalId: knit.empty, color: masterColor});
+  addKnoxel({hostKnyteId: null, knyteId: masterKnyteId, knoxelId: spaceRootElement.id, position: null});
+  // create mirror knyte
+  const mirrorKnyteId = knit.new();
+  const mirrorKnoxelId = knit.new();
   const mirrorColor = visualTheme.rect.fillColor.getRandom();
-  addKnoxel(
-    visualRoot.id, mirrorId, 
-    {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight}, 
-    mirrorColor
-  );
-  addKnoxel(
-    mirrorId, visualRoot.id, 
-    {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight}, 
-    color
-  );
-  visualRoot.addEventListener('click', onClickVisualRoot, false);
-  setRectAsRoot(visualRoot.id);
-  
+  addKnyte({knyteId: mirrorKnyteId, initialId: knit.empty, terminalId: knit.empty, color: mirrorColor});
+  const position = {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight};
+  addKnoxel({hostKnyteId: masterKnyteId, knyteId: mirrorKnyteId, knoxelId: mirrorKnoxelId, position});
+  addKnoxel({hostKnyteId: mirrorKnyteId, knyteId: masterKnyteId, knoxelId: masterKnoxelId, position});
+  // setup event handlers
+  spaceRootElement.addEventListener('click', onClickSpaceRoot, false);
+  spaceRootElement.addEventListener('mousedown', onMouseDownSpaceRoot, false);
+  spaceRootElement.addEventListener('mousemove', onMouseMoveSpaceRoot, false);
+  spaceRootElement.addEventListener('mouseup', onMouseUpSpaceRoot, false);
   window.addEventListener('resize', onResizeWindow, false);
+  window.addEventListener('keydown', onKeyDownWindow, false);
+  document.getElementById('backArrowShape').addEventListener('click', onClickSpaceBack, false);
+  // setup space root view
+  setSpaceRootKnoxel({knoxelId: spaceRootElement.id});
+  setSpaceBackState();
   onResizeWindow();
   
   console.log('ready');

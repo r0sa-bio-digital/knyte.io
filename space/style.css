@@ -8,6 +8,17 @@ body {
   overflow: hidden;
 }
 
-.visualRoot {
+.spaceRoot {
   user-select: none;
+}
+
+.spaceBack {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+}
+
+.backArrow {
+  width: 40px;
+  height: 40px;  
 }
