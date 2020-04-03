@@ -143,9 +143,17 @@ function addRect(desc)
 
 function addKnoxelRect(knyteId, e)
 {
+  let position = {x: e.offsetX, y: e.offsetY};
+  if (activeGhostKnoxelId)
+  {
+    const rect = document.getElementById(activeGhostKnoxelId + '.ghost');
+    position = {
+      x: position.x + parseFloat(rect.dataset.offsetX),
+      y: position.y + parseFloat(rect.dataset.offsetY)
+    };
+  }
   const hostKnyteId = knoxels[spaceRootElement.id];
   const knoxelId = knit.new();
-  const position = {x: e.offsetX, y: e.offsetY};
   const color = informationMap[knyteId].color;
   addKnoxel({hostKnyteId, knyteId, knoxelId, position});
   addRect({id: knoxelId, position, color});  
@@ -240,7 +248,7 @@ function spawnGhostRect(desc)
   const id = desc.ghostKnoxelId + '.ghost';
   addRect({id, position: desc.position, color, ghost: true});
   const rect = document.getElementById(id);
-  const knoxelPosition = informationMap[desc.ghostHostKnyteId].space[desc.ghostKnoxelId];
+  const knoxelPosition = informationMap[desc.ghostHostKnyteId].space[desc.ghostKnoxelId] || desc.position;
   const offset = {
     x: knoxelPosition.x - desc.position.x, 
     y: knoxelPosition.y - desc.position.y
