@@ -93,7 +93,7 @@ function setSpaceRootKnoxel(desc)
   const nestedKnoxels = informationMap[newKnyteId].space;
   for (let knoxelId in nestedKnoxels)
   {
-    if (knoxelId === newKnoxelId) // don't view knoxel inside itself
+    if (knoxelId === newKnoxelId) // don't show knoxel inside itself
       continue;
     addRect(
       {
@@ -248,7 +248,13 @@ function spawnGhostRect(desc)
   const id = desc.ghostKnoxelId + '.ghost';
   addRect({id, position: desc.position, color, ghost: true});
   const rect = document.getElementById(id);
-  const knoxelPosition = informationMap[desc.ghostHostKnyteId].space[desc.ghostKnoxelId] || desc.position;
+  const knoxelPosition = informationMap[desc.ghostHostKnyteId].space[desc.ghostKnoxelId];
+  if (!knoxelPosition)
+  {
+    rect.dataset.offsetX = 0;
+    rect.dataset.offsetY = 0;
+    return;
+  }
   const offset = {
     x: knoxelPosition.x - desc.position.x, 
     y: knoxelPosition.y - desc.position.y
@@ -259,7 +265,7 @@ function spawnGhostRect(desc)
     'transform', 
     'translate(' + offset.x + ' ' + offset.y + ')'
   );
-  const rect2 = document.getElementById(activeGhostKnoxelId);
+  const rect2 = document.getElementById(desc.ghostKnoxelId);
   rect2.setAttribute('stroke-dasharray', '0 16');
   rect2.setAttribute('stroke-linecap', 'square');
 }
