@@ -3,10 +3,12 @@
 let svgNameSpace;
 let spaceRootElement;
 let spaceBackElement;
+let spaceForwardElement;
 const knytesCloud = {}; // core knyte id --> initial knyte id, terminal knyte id
 const informationMap = {}; // knyte id --> {color, space: {knoxel id --> position}}
 const knoxels = {}; // knoxel id --> knyte id
 const spaceBackStack = []; // [previous space root knoxel id]
+const spaceForwardStack = []; // [next space root knoxel id]
 const visualTheme = {
   rect: {
     strokeColor: visualThemeColors.outline,
@@ -166,6 +168,7 @@ function onClickRect(e)
     if (e.target.id !== spaceRootElement.id)
     {
       spaceBackStack.push(spaceRootElement.id);
+      spaceForwardStack.length = 0;
       setSpaceBackState(spaceRootElement.id);
       setSpaceRootKnoxel({knoxelId: e.target.id});
     }
@@ -204,11 +207,29 @@ function onClickSpaceRoot(e)
 
 function onClickSpaceBack(e)
 {
+  spaceForwardStack.push(spaceRootElement.id);
   const backKnoxelId = spaceBackStack.pop();
   if (backKnoxelId)
   {
     setSpaceRootKnoxel({knoxelId: backKnoxelId});
-    setSpaceBackState(spaceBackStack[spaceBackStack.length - 1]);
+    setSpaceBackState(
+      spaceBackStack[spaceBackStack.length - 1],
+      spaceForwardStack[spaceForwardStack.length - 1]
+    );
+  }
+}
+
+function onClickSpaceForward(e)
+{
+  spaceBackStack.push(spaceRootElement.id);
+  const forwardKnoxelId = spaceForwardStack.pop();
+  if (forwardKnoxelId)
+  {
+    setSpaceRootKnoxel({knoxelId: forwardKnoxelId});
+    setSpaceBackState(
+      spaceBackStack[spaceBackStack.length - 1],
+      spaceForwardStack[spaceForwardStack.length - 1]
+    );
   }
 }
 
@@ -217,7 +238,7 @@ function onResizeWindow(e)
   spaceRootElement.setAttribute('width', window.innerWidth);
   spaceRootElement.setAttribute('height', window.innerHeight);
 }
-function setSpaceBackState(backKnoxelId)
+function setSpaceBackState(backKnoxelId, forwardKnoxelId)
 {
   const backKnyteId = knoxels[backKnoxelId];
   if (!backKnyteId)
@@ -231,6 +252,19 @@ function setSpaceBackState(backKnoxelId)
     const backArrowShape = document.getElementById('backArrowShape');
     backArrowShape.setAttribute('stroke', visualThemeColors.navigation);
     backArrowShape.setAttribute('fill', color);
+  }
+  const forwardKnyteId = knoxels[forwardKnoxelId];
+  if (!forwardKnyteId)
+  {
+    spaceForwardElement.style.display = 'none';
+  }
+  else
+  {
+    const color = informationMap[forwardKnyteId].color;
+    spaceForwardElement.style.display = 'block';
+    const forwardArrowShape = document.getElementById('forwardArrowShape');
+    forwardArrowShape.setAttribute('stroke', visualThemeColors.navigation);
+    forwardArrowShape.setAttribute('fill', color);
   }
 }
 
@@ -357,6 +391,7 @@ function onLoadBody(e)
   // init space root element
   spaceRootElement = document.getElementsByClassName('spaceRoot')[0];
   spaceBackElement = document.getElementsByClassName('spaceBack')[0];
+  spaceForwardElement = document.getElementsByClassName('spaceForward')[0];
   svgNameSpace = spaceRootElement.getAttribute('xmlns');
   // create root knyte
   const masterKnyteId = knit.new();
@@ -381,6 +416,7 @@ function onLoadBody(e)
   window.addEventListener('resize', onResizeWindow, false);
   window.addEventListener('keydown', onKeyDownWindow, false);
   document.getElementById('backArrowShape').addEventListener('click', onClickSpaceBack, false);
+  document.getElementById('forwardArrowShape').addEventListener('click', onClickSpaceForward, false);
   // setup space root view
   setSpaceRootKnoxel({knoxelId: spaceRootElement.id});
   setSpaceBackState();

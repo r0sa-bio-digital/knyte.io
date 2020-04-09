@@ -22,3 +22,14 @@ body {
   width: 40px;
   height: 40px;  
 }
+
+.spaceForward {
+  position: absolute;
+  left: 64px;
+  bottom: 12px;
+}
+
+.forwardArrow {
+  width: 40px;
+  height: 40px;  
+}
