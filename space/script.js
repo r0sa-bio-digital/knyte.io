@@ -205,6 +205,11 @@ function onClickSpaceRoot(e)
   }
 }
 
+function onClickSpaceMap(e)
+{
+  console.log(e); // TODO: implement
+}
+
 function onClickSpaceBack(e)
 {
   spaceForwardStack.push(spaceRootElement.id);
@@ -417,6 +422,7 @@ function onLoadBody(e)
   window.addEventListener('keydown', onKeyDownWindow, false);
   document.getElementById('backArrowShape').addEventListener('click', onClickSpaceBack, false);
   document.getElementById('forwardArrowShape').addEventListener('click', onClickSpaceForward, false);
+  document.getElementById('spaceMapButton').addEventListener('click', onClickSpaceMap, false);
   // setup space root view
   setSpaceRootKnoxel({knoxelId: spaceRootElement.id});
   setSpaceBackState();
