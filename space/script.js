@@ -4,6 +4,7 @@ let svgNameSpace;
 let spaceRootElement;
 let spaceBackElement;
 let spaceForwardElement;
+let spaceMapElement;
 let masterKnoxelId;
 let spacemapKnoxelId;
 const knytesCloud = {}; // core knyte id --> initial knyte id, terminal knyte id
@@ -77,6 +78,73 @@ function addKnoxel(desc)
     informationMap[desc.hostKnyteId].space[desc.knoxelId] = desc.position;
 }
 
+function buildSpaceMap()
+{
+  // detect islands
+  const maxIterations = 4096;
+  let islands = [];
+  let processingKnoxels = {};
+  for (let knoxelId in knoxels)
+  {
+    if (knoxelId === spacemapKnoxelId || knoxelId === masterKnoxelId)
+      continue;
+    processingKnoxels[knoxelId] = true;
+  }
+  let island = {};
+  island[masterKnoxelId] = true;
+  for (let i = 0; i < maxIterations; ++i)
+  {
+    let islandSize = Object.keys(island).length;
+    for (let j = 0; j < maxIterations; ++j)
+    {
+      for (let knoxelId in island)
+      {
+        const knyteId = knoxels[knoxelId];
+        const space = informationMap[knyteId].space;
+        for (let newKnoxelId in space)
+          island[newKnoxelId] = true;
+        for (let checkKnoxelId in processingKnoxels)
+        {
+          const checkKnyteId = knoxels[checkKnoxelId];
+          const checkSpace = informationMap[checkKnyteId].space;
+          if (knoxelId in checkSpace)
+            island[checkKnoxelId] = true;
+        }
+      }
+      let newIslandSize = Object.keys(island).length;
+      if (islandSize < newIslandSize)
+        islandSize = newIslandSize;
+      else
+        break;
+    }
+    islands.push(island);
+    for (let knoxelId in island)
+      delete processingKnoxels[knoxelId];
+    const processingKnoxelsKeys = Object.keys(processingKnoxels);
+    if (processingKnoxelsKeys.length === 0)
+      break;
+    island = {};
+    island[processingKnoxelsKeys[0]] = true;
+  }
+  console.log(islands);
+  // construct space
+  const space = {};
+  const spacemapKnyteId = knoxels[spacemapKnoxelId];
+  let position = {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight};
+  for (let i = 0; i < islands.length; ++i)
+  {
+    const island = islands[i];
+    for (let knoxelId in island)
+    {
+      space[knoxelId] = {x: position.x, y: position.y};
+      position.y += 1.5 * visualTheme.rect.defaultHeight;
+    }
+    position.x += 2.0 * visualTheme.rect.defaultWidth;
+    position.y = visualTheme.rect.defaultHeight;
+  }
+  informationMap[spacemapKnyteId].space = space;
+}
+
 function setSpaceRootKnoxel(desc)
 {
   // desc: {knoxelId}
@@ -89,6 +157,9 @@ function setSpaceRootKnoxel(desc)
     spaceRootKnoxels.firstChild.remove();
   if (newKnoxelId !== priorKnoxelId)
       mouseoverGhostKnoxelId = null;
+  // build space map if needed
+  if (newKnoxelId === spacemapKnoxelId)
+    buildSpaceMap();
   // set space color
   spaceRootElement.style.backgroundColor = informationMap[newKnyteId].color;
   // set actual knoxel id
@@ -171,8 +242,10 @@ function onClickRect(e)
     {
       spaceBackStack.push(spaceRootElement.id);
       spaceForwardStack.length = 0;
-      setSpaceBackState(spaceRootElement.id);
       setSpaceRootKnoxel({knoxelId: e.target.id});
+      setSpaceBackState(
+        spaceBackStack[spaceBackStack.length - 1],
+      );
     }
     e.stopPropagation(); // to prevent onClickSpaceRoot call
   }
@@ -207,80 +280,16 @@ function onClickSpaceRoot(e)
   }
 }
 
-function buildSpaceMap()
-{
-  // detect islands
-  const maxIterations = 4096;
-  let islands = [];
-  let processingKnoxels = {};
-  for (let knoxelId in knoxels)
-  {
-    if (knoxelId === spacemapKnoxelId || knoxelId === masterKnoxelId)
-      continue;
-    processingKnoxels[knoxelId] = true;
-  }
-  let island = {};
-  island[masterKnoxelId] = true;
-  for (let i = 0; i < maxIterations; ++i)
-  {
-    let islandSize = Object.keys(island).length;
-    for (let j = 0; j < maxIterations; ++j)
-    {
-      for (let knoxelId in island)
-      {
-        const knyteId = knoxels[knoxelId];
-        const space = informationMap[knyteId].space;
-        for (let newKnoxelId in space)
-          island[newKnoxelId] = true;
-        for (let checkKnoxelId in processingKnoxels)
-        {
-          const checkKnyteId = knoxels[checkKnoxelId];
-          const checkSpace = informationMap[checkKnyteId].space;
-          if (knoxelId in checkSpace)
-            island[checkKnoxelId] = true;
-        }
-      }
-      let newIslandSize = Object.keys(island).length;
-      if (islandSize < newIslandSize)
-        islandSize = newIslandSize;
-      else
-        break;
-    }
-    islands.push(island);
-    for (let knoxelId in island)
-      delete processingKnoxels[knoxelId];
-    const processingKnoxelsKeys = Object.keys(processingKnoxels);
-    if (processingKnoxelsKeys.length === 0)
-      break;
-    island = {};
-    island[processingKnoxelsKeys[0]] = true;
-  }
-  console.log(islands);
-  // construct space
-  const space = {};
-  const spacemapKnyteId = knoxels[spacemapKnoxelId];
-  let position = {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight};
-  for (let i = 0; i < islands.length; ++i)
-  {
-    const island = islands[i];
-    for (let knoxelId in island)
-    {
-      space[knoxelId] = {x: position.x, y: position.y};
-      position.y += 1.5 * visualTheme.rect.defaultHeight;
-    }
-    position.x += 2.0 * visualTheme.rect.defaultWidth;
-    position.y = visualTheme.rect.defaultHeight;
-  }
-  informationMap[spacemapKnyteId].space = space;
-}
-
 function onClickSpaceMap(e)
 {
-  spaceBackStack.length = 0;
+  if (spaceRootElement.id === spacemapKnoxelId)
+    return;
+  spaceBackStack.push(spaceRootElement.id);
   spaceForwardStack.length = 0;
-  buildSpaceMap();
   setSpaceRootKnoxel({knoxelId: spacemapKnoxelId});
-  setSpaceBackState();
+  setSpaceBackState(
+    spaceBackStack[spaceBackStack.length - 1]
+  );
 }
 
 function onClickSpaceBack(e)
@@ -344,6 +353,7 @@ function setSpaceBackState(backKnoxelId, forwardKnoxelId)
     forwardArrowShape.setAttribute('stroke', visualThemeColors.navigation);
     forwardArrowShape.setAttribute('fill', color);
   }
+  spaceMapElement.style.display = spaceRootElement.id !== spacemapKnoxelId ? 'block' : 'none';
 }
 
 let activeGhostKnoxelId = null;
@@ -470,6 +480,7 @@ function onLoadBody(e)
   spaceRootElement = document.getElementsByClassName('spaceRoot')[0];
   spaceBackElement = document.getElementsByClassName('spaceBack')[0];
   spaceForwardElement = document.getElementsByClassName('spaceForward')[0];
+  spaceMapElement = document.getElementsByClassName('spaceMap')[0];
   svgNameSpace = spaceRootElement.getAttribute('xmlns');
   // create master knyte
   const masterKnyteId = knit.new();
