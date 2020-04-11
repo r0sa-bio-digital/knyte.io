@@ -231,7 +231,14 @@ function buildSpaceMap()
         const knyteId = knoxels[knoxelId];
         const space = informationMap[knyteId].space;
         for (let newKnoxelId in space)
-         island[newKnoxelId] = true;
+          island[newKnoxelId] = true;
+        for (let checkKnoxelId in processingKnoxels)
+        {
+          const checkKnyteId = knoxels[checkKnoxelId];
+          const checkSpace = informationMap[checkKnyteId].space;
+          if (knoxelId in checkSpace)
+            island[checkKnoxelId] = true;
+        }
       }
       let newIslandSize = Object.keys(island).length;
       if (islandSize < newIslandSize)
