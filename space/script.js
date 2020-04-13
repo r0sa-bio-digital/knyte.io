@@ -499,7 +499,6 @@ function onLoadBody(e)
   const masterColor = visualTheme.rect.fillColor.getRandom();
   addKnyte({knyteId: masterKnyteId, initialId: knit.empty, terminalId: knit.empty, color: masterColor});
   addKnoxel({hostKnyteId: null, knyteId: masterKnyteId, knoxelId: masterKnoxelId, position: null});
-  //spaceRootElement.dataset.knoxelId = masterKnoxelId;
   // create mirror knyte
   const mirrorKnyteId = knit.new();
   const mirrorKnoxelId = knit.new();
@@ -525,7 +524,6 @@ function onLoadBody(e)
   document.getElementById('forwardArrowShape').addEventListener('click', onClickSpaceForward, false);
   document.getElementById('spaceMapButton').addEventListener('click', onClickSpaceMap, false);
   // setup space root view
-  //setSpaceRootKnoxel({knoxelId: spaceRootElement.id});
   setSpaceRootKnoxel({knoxelId: masterKnoxelId});
   setNavigationControlState({});
   onResizeWindow();
