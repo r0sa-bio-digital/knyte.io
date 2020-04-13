@@ -233,10 +233,10 @@ function addKnoxelRect(desc)
   let position = desc.position;
   if (activeGhostKnoxelId)
   {
-    const rect = document.getElementById(activeGhostKnoxelId + '.ghost');
+    const ghostElement = document.getElementById(activeGhostKnoxelId + '.ghost');
     position = {
-      x: position.x + parseFloat(rect.dataset.offsetX),
-      y: position.y + parseFloat(rect.dataset.offsetY)
+      x: position.x + parseFloat(ghostElement.dataset.offsetX),
+      y: position.y + parseFloat(ghostElement.dataset.offsetY)
     };
   }
   const hostKnyteId = knoxels[spaceRootElement.id];
@@ -255,9 +255,9 @@ function onClickRect(e)
       spaceBackStack.push(spaceRootElement.id);
       spaceForwardStack.length = 0;
       setSpaceRootKnoxel({knoxelId: e.target.id});
-      setSpaceBackState(
-        spaceBackStack[spaceBackStack.length - 1]
-      );
+      setNavigationControlState({
+        backKnoxelId: spaceBackStack[spaceBackStack.length - 1]
+      });
     }
     e.stopPropagation(); // to prevent onClickSpaceRoot call
   }
@@ -304,9 +304,9 @@ function onClickSpaceMap(e)
   spaceBackStack.push(spaceRootElement.id);
   spaceForwardStack.length = 0;
   setSpaceRootKnoxel({knoxelId: spacemapKnoxelId});
-  setSpaceBackState(
-    spaceBackStack[spaceBackStack.length - 1]
-  );
+  setNavigationControlState({
+    backKnoxelId: spaceBackStack[spaceBackStack.length - 1]
+  });
 }
 
 function onClickSpaceBack(e)
@@ -316,10 +316,10 @@ function onClickSpaceBack(e)
   if (backKnoxelId)
   {
     setSpaceRootKnoxel({knoxelId: backKnoxelId});
-    setSpaceBackState(
-      spaceBackStack[spaceBackStack.length - 1],
-      spaceForwardStack[spaceForwardStack.length - 1]
-    );
+    setNavigationControlState({
+      backKnoxelId: spaceBackStack[spaceBackStack.length - 1],
+      forwardKnoxelId: spaceForwardStack[spaceForwardStack.length - 1]
+    });
   }
 }
 
@@ -330,10 +330,10 @@ function onClickSpaceForward(e)
   if (forwardKnoxelId)
   {
     setSpaceRootKnoxel({knoxelId: forwardKnoxelId});
-    setSpaceBackState(
-      spaceBackStack[spaceBackStack.length - 1],
-      spaceForwardStack[spaceForwardStack.length - 1]
-    );
+    setNavigationControlState({
+      backKnoxelId: spaceBackStack[spaceBackStack.length - 1],
+      forwardKnoxelId: spaceForwardStack[spaceForwardStack.length - 1]
+    });
   }
 }
 
@@ -342,9 +342,10 @@ function onResizeWindow(e)
   spaceRootElement.setAttribute('width', window.innerWidth);
   spaceRootElement.setAttribute('height', window.innerHeight);
 }
-function setSpaceBackState(backKnoxelId, forwardKnoxelId)
+function setNavigationControlState(desc)
 {
-  const backKnyteId = knoxels[backKnoxelId];
+  // desc: {backKnoxelId, forwardKnoxelId}
+  const backKnyteId = knoxels[desc.backKnoxelId];
   if (!backKnyteId)
   {
     spaceBackElement.style.display = 'none';
@@ -357,7 +358,7 @@ function setSpaceBackState(backKnoxelId, forwardKnoxelId)
     backArrowShape.setAttribute('stroke', visualThemeColors.navigation);
     backArrowShape.setAttribute('fill', color);
   }
-  const forwardKnyteId = knoxels[forwardKnoxelId];
+  const forwardKnyteId = knoxels[desc.forwardKnoxelId];
   if (!forwardKnyteId)
   {
     spaceForwardElement.style.display = 'none';
@@ -527,7 +528,7 @@ function onLoadBody(e)
   document.getElementById('spaceMapButton').addEventListener('click', onClickSpaceMap, false);
   // setup space root view
   setSpaceRootKnoxel({knoxelId: spaceRootElement.id});
-  setSpaceBackState();
+  setNavigationControlState({});
   onResizeWindow();
   
   console.log('ready');
