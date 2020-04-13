@@ -163,7 +163,7 @@ function setGhostedMode(desc)
 function setSpaceRootKnoxel(desc)
 {
   // desc: {knoxelId}
-  const priorKnoxelId = spaceRootElement.id;
+  const priorKnoxelId = spaceRootElement.dataset.knoxelId;
   const newKnoxelId = desc.knoxelId;
   const newKnyteId = knoxels[newKnoxelId];
   // clear children rects
@@ -177,14 +177,12 @@ function setSpaceRootKnoxel(desc)
   if (newKnoxelId === spacemapKnoxelId)
     buildSpaceMap();
   // set actual knoxel id and space color
-  spaceRootElement.id = newKnoxelId;
+  spaceRootElement.dataset.knoxelId = newKnoxelId;
   spaceRootElement.style.backgroundColor = informationMap[newKnyteId].color;
   // restore all nested rects
   const nestedKnoxels = informationMap[newKnyteId].space;
   for (let knoxelId in nestedKnoxels)
   {
-    if (knoxelId === newKnoxelId) // don't show knoxel inside itself
-      continue;
     addRect(
       {
         id: knoxelId, position: nestedKnoxels[knoxelId],
@@ -233,7 +231,7 @@ function addKnoxelRect(desc)
   const position = activeGhost.knoxelId
     ? {x: desc.position.x + activeGhost.offset.x, y: desc.position.y + activeGhost.offset.y}
     : desc.position;
-  const hostKnyteId = knoxels[spaceRootElement.id];
+  const hostKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
   const knoxelId = knit.new();
   const color = informationMap[desc.knyteId].color;
   addKnoxel({hostKnyteId, knyteId: desc.knyteId, knoxelId, position});
@@ -244,9 +242,9 @@ function onClickRect(e)
 {
   if (!e.shiftKey && !e.altKey && !e.metaKey)
   {
-    if (e.target.id !== spaceRootElement.id)
+    if (e.target.id !== spaceRootElement.dataset.knoxelId)
     {
-      spaceBackStack.push(spaceRootElement.id);
+      spaceBackStack.push(spaceRootElement.dataset.knoxelId);
       spaceForwardStack.length = 0;
       setSpaceRootKnoxel({knoxelId: e.target.id});
       setNavigationControlState({
@@ -293,9 +291,9 @@ function onClickSpaceRoot(e)
 
 function onClickSpaceMap(e)
 {
-  if (spaceRootElement.id === spacemapKnoxelId)
+  if (spaceRootElement.dataset.knoxelId === spacemapKnoxelId)
     return;
-  spaceBackStack.push(spaceRootElement.id);
+  spaceBackStack.push(spaceRootElement.dataset.knoxelId);
   spaceForwardStack.length = 0;
   setSpaceRootKnoxel({knoxelId: spacemapKnoxelId});
   setNavigationControlState({
@@ -305,7 +303,7 @@ function onClickSpaceMap(e)
 
 function onClickSpaceBack(e)
 {
-  spaceForwardStack.push(spaceRootElement.id);
+  spaceForwardStack.push(spaceRootElement.dataset.knoxelId);
   const backKnoxelId = spaceBackStack.pop();
   if (backKnoxelId)
   {
@@ -319,7 +317,7 @@ function onClickSpaceBack(e)
 
 function onClickSpaceForward(e)
 {
-  spaceBackStack.push(spaceRootElement.id);
+  spaceBackStack.push(spaceRootElement.dataset.knoxelId);
   const forwardKnoxelId = spaceForwardStack.pop();
   if (forwardKnoxelId)
   {
@@ -365,7 +363,9 @@ function setNavigationControlState(desc)
     forwardArrowShape.setAttribute('stroke', visualThemeColors.navigation);
     forwardArrowShape.setAttribute('fill', color);
   }
-  spaceMapElement.style.display = spaceRootElement.id !== spacemapKnoxelId ? 'block' : 'none';
+  spaceMapElement.style.display = spaceRootElement.dataset.knoxelId !== spacemapKnoxelId
+    ? 'block'
+    : 'none';
 }
 
 const activeGhost = {
@@ -405,7 +405,9 @@ function spawnGhostRect(desc)
 function terminateGhostRect()
 {
   activeGhost.element.remove();
-  setGhostedMode({knoxelId: activeGhost.knoxelId, isGhosted: false});
+  const knyteId = knoxels[spaceRootElement.dataset.knoxelId];
+  if (activeGhost.knoxelId in informationMap[knyteId].space)
+    setGhostedMode({knoxelId: activeGhost.knoxelId, isGhosted: false});
   activeGhost.knoxelId = null;
   activeGhost.hostKnyteId = null;
   activeGhost.offset = {x: 0, y: 0};
@@ -445,7 +447,7 @@ function dropGhostRect(desc)
     y: desc.position.y + activeGhost.offset.y
   };
   informationMap[landingKnyteId].space[desc.droppedKnoxelId] = landingPosition;
-  setSpaceRootKnoxel({knoxelId: spaceRootElement.id}); // TODO: optimise space refresh
+  setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
 }
 
 function onKeyDownWindow(e)
@@ -462,9 +464,9 @@ function onKeyDownWindow(e)
       if (!activeGhost.knoxelId)
         spawnGhostRect(
           {
-            ghostKnoxelId: mouseoverGhostKnoxelId || spaceRootElement.id,
-            ghostHostKnyteId: knoxels[spaceRootElement.id],
-            position: mouseMovePosition
+            ghostKnoxelId: mouseoverGhostKnoxelId || spaceRootElement.dataset.knoxelId,
+            ghostHostKnyteId: knoxels[spaceRootElement.dataset.knoxelId],
+            position: mouseMovePosition,
           }
         );
       else
@@ -473,8 +475,8 @@ function onKeyDownWindow(e)
           {
             droppedKnoxelId: activeGhost.knoxelId,
             droppedHostKnyteId: activeGhost.hostKnyteId,
-            landingKnoxelId: spaceRootElement.id, 
-            position: mouseMovePosition
+            landingKnoxelId: spaceRootElement.dataset.knoxelId,
+            position: mouseMovePosition,
           }
         );
         terminateGhostRect();
@@ -497,7 +499,7 @@ function onLoadBody(e)
   const masterColor = visualTheme.rect.fillColor.getRandom();
   addKnyte({knyteId: masterKnyteId, initialId: knit.empty, terminalId: knit.empty, color: masterColor});
   addKnoxel({hostKnyteId: null, knyteId: masterKnyteId, knoxelId: masterKnoxelId, position: null});
-  spaceRootElement.id = masterKnoxelId;
+  //spaceRootElement.dataset.knoxelId = masterKnoxelId;
   // create mirror knyte
   const mirrorKnyteId = knit.new();
   const mirrorKnoxelId = knit.new();
@@ -523,7 +525,8 @@ function onLoadBody(e)
   document.getElementById('forwardArrowShape').addEventListener('click', onClickSpaceForward, false);
   document.getElementById('spaceMapButton').addEventListener('click', onClickSpaceMap, false);
   // setup space root view
-  setSpaceRootKnoxel({knoxelId: spaceRootElement.id});
+  //setSpaceRootKnoxel({knoxelId: spaceRootElement.id});
+  setSpaceRootKnoxel({knoxelId: masterKnoxelId});
   setNavigationControlState({});
   onResizeWindow();
   
