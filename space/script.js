@@ -16,6 +16,9 @@ const visualTheme = {
   rect: {
     strokeColor: visualThemeColors.outline,
     strokeWidth: 4,
+    selfcontained: {
+      rx: 8
+    },
     fillColor: {
       getRandom: function() {
         const colors = visualThemeColors.elements;
@@ -183,10 +186,13 @@ function setSpaceRootKnoxel(desc)
   const nestedKnoxels = informationMap[newKnyteId].space;
   for (let knoxelId in nestedKnoxels)
   {
+    const selfcontained = knoxelId === spaceRootElement.dataset.knoxelId;
     addRect(
       {
-        id: knoxelId, position: nestedKnoxels[knoxelId],
-        color: informationMap[knoxels[knoxelId]].color
+        id: knoxelId,
+        position: nestedKnoxels[knoxelId],
+        color: informationMap[knoxels[knoxelId]].color,
+        selfcontained,
       }
     );
     if (knoxelId === activeGhost.knoxelId)
@@ -196,7 +202,7 @@ function setSpaceRootKnoxel(desc)
 
 function addRect(desc)
 {
-  // desc: {id, position, color, ghost}
+  // desc: {id, position, color, ghost, selfcontained}
   const w = visualTheme.rect.defaultWidth;
   const h = visualTheme.rect.defaultHeight;
   const x = desc.position.x - w/2;
@@ -210,6 +216,10 @@ function addRect(desc)
   rect.setAttribute('fill', desc.color);
   rect.setAttribute('stroke', visualTheme.rect.strokeColor);
   rect.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
+  if (desc.selfcontained)
+  {
+    rect.setAttribute('rx', visualTheme.rect.selfcontained.rx);
+  }
   if (desc.ghost)
   {
     rect.setAttribute('opacity', 0.5);
@@ -383,9 +393,10 @@ function spawnGhostRect(desc)
   const knyteId = knoxels[desc.ghostKnoxelId];
   const color = informationMap[knyteId].color;
   const id = desc.ghostKnoxelId + '.ghost';
+  const selfcontained = desc.ghostKnoxelId === spaceRootElement.dataset.knoxelId;
   addRect({id, position: desc.position, color, ghost: true});
   activeGhost.element = document.getElementById(id);
-  if (desc.ghostKnoxelId === spaceRootElement.dataset.knoxelId)
+  if (selfcontained)
   {
     activeGhost.offset = {x: 0, y: 0};
     if (desc.ghostKnoxelId in informationMap[desc.ghostHostKnyteId].space)
