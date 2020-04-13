@@ -126,7 +126,6 @@ function buildSpaceMap()
     island = {};
     island[processingKnoxelsKeys[0]] = true;
   }
-  console.log(islands);
   // construct space
   const space = {};
   const spacemapKnyteId = knoxels[spacemapKnoxelId];
@@ -145,25 +144,41 @@ function buildSpaceMap()
   informationMap[spacemapKnyteId].space = space;
 }
 
+function setGhostedMode(desc)
+{
+  // desc: {knoxelId, isGhosted}
+  const knoxelElement = document.getElementById(desc.knoxelId);
+  if (desc.isGhosted)
+  {
+    knoxelElement.setAttribute('stroke-dasharray', '0 16');
+    knoxelElement.setAttribute('stroke-linecap', 'square');
+  }
+  else
+  {
+    knoxelElement.removeAttribute('stroke-dasharray');
+    knoxelElement.removeAttribute('stroke-linecap');
+  }
+}
+
 function setSpaceRootKnoxel(desc)
 {
   // desc: {knoxelId}
+  const priorKnoxelId = spaceRootElement.id;
   const newKnoxelId = desc.knoxelId;
   const newKnyteId = knoxels[newKnoxelId];
-  const priorKnoxelId = spaceRootElement.id;
   // clear children rects
   const spaceRootKnoxels = document.getElementById('knoxels');
   while (spaceRootKnoxels.firstChild)
     spaceRootKnoxels.firstChild.remove();
+  // reset mouseover knoxel cause of changing space
   if (newKnoxelId !== priorKnoxelId)
       mouseoverGhostKnoxelId = null;
   // build space map if needed
   if (newKnoxelId === spacemapKnoxelId)
     buildSpaceMap();
-  // set space color
-  spaceRootElement.style.backgroundColor = informationMap[newKnyteId].color;
-  // set actual knoxel id
+  // set actual knoxel id and space color
   spaceRootElement.id = newKnoxelId;
+  spaceRootElement.style.backgroundColor = informationMap[newKnyteId].color;
   // restore all nested rects
   const nestedKnoxels = informationMap[newKnyteId].space;
   for (let knoxelId in nestedKnoxels)
@@ -177,11 +192,7 @@ function setSpaceRootKnoxel(desc)
       }
     );
     if (knoxelId === activeGhostKnoxelId)
-    {
-      const rect2 = document.getElementById(activeGhostKnoxelId);
-      rect2.setAttribute('stroke-dasharray', '0 16');
-      rect2.setAttribute('stroke-linecap', 'square');
-    }
+      setGhostedMode({knoxelId, isGhosted: true});
   }
 }
 
@@ -216,9 +227,10 @@ function addRect(desc)
   }
 }
 
-function addKnoxelRect(knyteId, e)
+function addKnoxelRect(desc)
 {
-  let position = {x: e.offsetX, y: e.offsetY};
+  // desc: {knyteId, position}
+  let position = desc.position;
   if (activeGhostKnoxelId)
   {
     const rect = document.getElementById(activeGhostKnoxelId + '.ghost');
@@ -229,8 +241,8 @@ function addKnoxelRect(knyteId, e)
   }
   const hostKnyteId = knoxels[spaceRootElement.id];
   const knoxelId = knit.new();
-  const color = informationMap[knyteId].color;
-  addKnoxel({hostKnyteId, knyteId, knoxelId, position});
+  const color = informationMap[desc.knyteId].color;
+  addKnoxel({hostKnyteId, knyteId: desc.knyteId, knoxelId, position});
   addRect({id: knoxelId, position, color});  
 }
 
@@ -244,7 +256,7 @@ function onClickRect(e)
       spaceForwardStack.length = 0;
       setSpaceRootKnoxel({knoxelId: e.target.id});
       setSpaceBackState(
-        spaceBackStack[spaceBackStack.length - 1],
+        spaceBackStack[spaceBackStack.length - 1]
       );
     }
     e.stopPropagation(); // to prevent onClickSpaceRoot call
@@ -261,22 +273,27 @@ function onMouseOverRect(e)
 
 function onMouseOutRect(e)
 {
-  mouseoverGhostKnoxelId = null;
+  if (e.target.id === mouseoverGhostKnoxelId)
+    mouseoverGhostKnoxelId = null;
 }
 
 function onClickSpaceRoot(e)
 {
+  const position = {x: e.offsetX, y: e.offsetY};
   if (!e.shiftKey && !e.altKey && e.metaKey)
   {
     const knyteId = knit.new();
     const color = visualTheme.rect.fillColor.getRandom();
     addKnyte({knyteId, initialId: knit.empty, terminalId: knit.empty, color});
-    addKnoxelRect(knyteId, e);
+    addKnoxelRect({knyteId, position});
   }
   else if (!e.shiftKey && e.altKey && !e.metaKey)
   {
     if (activeGhostKnoxelId)
-      addKnoxelRect(knoxels[activeGhostKnoxelId], e);
+    {
+      const knyteId = knoxels[activeGhostKnoxelId];
+      addKnoxelRect({knyteId, position});
+    }
   }
 }
 
@@ -365,40 +382,35 @@ function spawnGhostRect(desc)
   activeGhostKnoxelId = desc.ghostKnoxelId;
   activeGhostHostKnyteId = desc.ghostHostKnyteId;
   const knyteId = knoxels[desc.ghostKnoxelId];
-  const knoxelId = knit.new();
   const color = informationMap[knyteId].color;
   const id = desc.ghostKnoxelId + '.ghost';
   addRect({id, position: desc.position, color, ghost: true});
-  const rect = document.getElementById(id);
+  const ghostElement = document.getElementById(id);
   const knoxelPosition = informationMap[desc.ghostHostKnyteId].space[desc.ghostKnoxelId];
   if (!knoxelPosition)
   {
-    rect.dataset.offsetX = 0;
-    rect.dataset.offsetY = 0;
+    ghostElement.dataset.offsetX = 0;
+    ghostElement.dataset.offsetY = 0;
     return;
   }
   const offset = {
     x: knoxelPosition.x - desc.position.x, 
     y: knoxelPosition.y - desc.position.y
   };
-  rect.dataset.offsetX = offset.x;
-  rect.dataset.offsetY = offset.y;
-  rect.setAttribute(
+  ghostElement.dataset.offsetX = offset.x;
+  ghostElement.dataset.offsetY = offset.y;
+  ghostElement.setAttribute(
     'transform', 
     'translate(' + offset.x + ' ' + offset.y + ')'
   );
-  const rect2 = document.getElementById(desc.ghostKnoxelId);
-  rect2.setAttribute('stroke-dasharray', '0 16');
-  rect2.setAttribute('stroke-linecap', 'square');
+  setGhostedMode({knoxelId: desc.ghostKnoxelId, isGhosted: true});
 }
 
 function terminateGhostRect()
 {
   const ghostElement = document.getElementById(activeGhostKnoxelId + '.ghost');
   ghostElement.remove();
-  const rect2 = document.getElementById(activeGhostKnoxelId);
-  rect2.removeAttribute('stroke-dasharray');
-  rect2.removeAttribute('stroke-linecap');
+  setGhostedMode({knoxelId: activeGhostKnoxelId, isGhosted: false});
   activeGhostKnoxelId = null;
   activeGhostHostKnyteId = null;
 }
@@ -425,17 +437,17 @@ function onMouseUpSpaceRoot(e)
 {
 }
 
-function onGhostRectMoved(desc)
+function dropGhostRect(desc)
 {
   // desc: {droppedKnoxelId, droppedHostKnyteId, landingKnoxelId, position}
   if (desc.droppedKnoxelId === desc.landingKnoxelId)
     return;
   const landingKnyteId = knoxels[desc.landingKnoxelId];
   delete informationMap[desc.droppedHostKnyteId].space[desc.droppedKnoxelId];
-  const rect = document.getElementById(activeGhostKnoxelId + '.ghost');
+  const ghostElement = document.getElementById(activeGhostKnoxelId + '.ghost');
   const landingPosition = {
-    x: desc.position.x + parseFloat(rect.dataset.offsetX),
-    y: desc.position.y + parseFloat(rect.dataset.offsetY)
+    x: desc.position.x + parseFloat(ghostElement.dataset.offsetX),
+    y: desc.position.y + parseFloat(ghostElement.dataset.offsetY)
   };
   informationMap[landingKnyteId].space[desc.droppedKnoxelId] = landingPosition;
   setSpaceRootKnoxel({knoxelId: spaceRootElement.id}); // TODO: optimise space refresh
@@ -461,7 +473,7 @@ function onKeyDownWindow(e)
         );
       else
       {
-        onGhostRectMoved(
+        dropGhostRect(
           {
             droppedKnoxelId: activeGhostKnoxelId, droppedHostKnyteId: activeGhostHostKnyteId,
             landingKnoxelId: spaceRootElement.id, 
