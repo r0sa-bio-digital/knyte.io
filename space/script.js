@@ -385,21 +385,25 @@ function spawnGhostRect(desc)
   const id = desc.ghostKnoxelId + '.ghost';
   addRect({id, position: desc.position, color, ghost: true});
   activeGhost.element = document.getElementById(id);
-  const knoxelPosition = informationMap[desc.ghostHostKnyteId].space[desc.ghostKnoxelId];
-  if (!knoxelPosition)
+  if (desc.ghostKnoxelId === spaceRootElement.dataset.knoxelId)
   {
     activeGhost.offset = {x: 0, y: 0};
-    return;
+    if (desc.ghostKnoxelId in informationMap[desc.ghostHostKnyteId].space)
+      setGhostedMode({knoxelId: desc.ghostKnoxelId, isGhosted: true});
   }
-  activeGhost.offset = {
-    x: knoxelPosition.x - desc.position.x, 
-    y: knoxelPosition.y - desc.position.y
-  };
-  activeGhost.element.setAttribute(
-    'transform', 
-    'translate(' + activeGhost.offset.x + ' ' + activeGhost.offset.y + ')'
-  );
-  setGhostedMode({knoxelId: desc.ghostKnoxelId, isGhosted: true});
+  else
+  {
+    const knoxelPosition = informationMap[desc.ghostHostKnyteId].space[desc.ghostKnoxelId];
+    activeGhost.offset = {
+      x: knoxelPosition.x - desc.position.x, 
+      y: knoxelPosition.y - desc.position.y
+    };
+    activeGhost.element.setAttribute(
+      'transform', 
+      'translate(' + activeGhost.offset.x + ' ' + activeGhost.offset.y + ')'
+    );
+    setGhostedMode({knoxelId: desc.ghostKnoxelId, isGhosted: true});
+  }
 }
 
 function terminateGhostRect()
@@ -438,9 +442,12 @@ function onMouseUpSpaceRoot(e)
 function dropGhostRect(desc)
 {
   // desc: {droppedKnoxelId, droppedHostKnyteId, landingKnoxelId, position}
-  if (desc.droppedKnoxelId === desc.landingKnoxelId)
-    return;
   const landingKnyteId = knoxels[desc.landingKnoxelId];
+  if (
+    desc.droppedKnoxelId === desc.landingKnoxelId &&
+    !(desc.droppedKnoxelId in informationMap[landingKnyteId].space)
+  )
+    return;
   delete informationMap[desc.droppedHostKnyteId].space[desc.droppedKnoxelId];
   const landingPosition = {
     x: desc.position.x + activeGhost.offset.x,
