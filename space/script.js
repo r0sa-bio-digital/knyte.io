@@ -450,9 +450,10 @@ function dropGhostRect(desc)
 
 function onKeyDownWindow(e)
 {
-  if (e.code === 'Escape' && activeGhost.knoxelId)
+  if (e.code === 'Escape')
   {
-    terminateGhostRect();
+    if (activeGhost.knoxelId)
+      terminateGhostRect();
   }
   else if (e.code === 'Space')
   {
