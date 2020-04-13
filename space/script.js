@@ -191,7 +191,7 @@ function setSpaceRootKnoxel(desc)
         color: informationMap[knoxels[knoxelId]].color
       }
     );
-    if (knoxelId === activeGhostKnoxelId)
+    if (knoxelId === activeGhost.knoxelId)
       setGhostedMode({knoxelId, isGhosted: true});
   }
 }
@@ -230,15 +230,9 @@ function addRect(desc)
 function addKnoxelRect(desc)
 {
   // desc: {knyteId, position}
-  let position = desc.position;
-  if (activeGhostKnoxelId)
-  {
-    const ghostElement = document.getElementById(activeGhostKnoxelId + '.ghost');
-    position = {
-      x: position.x + parseFloat(ghostElement.dataset.offsetX),
-      y: position.y + parseFloat(ghostElement.dataset.offsetY)
-    };
-  }
+  const position = activeGhost.knoxelId
+    ? {x: desc.position.x + activeGhost.offset.x, y: desc.position.y + activeGhost.offset.y}
+    : desc.position;
   const hostKnyteId = knoxels[spaceRootElement.id];
   const knoxelId = knit.new();
   const color = informationMap[desc.knyteId].color;
@@ -289,9 +283,9 @@ function onClickSpaceRoot(e)
   }
   else if (!e.shiftKey && e.altKey && !e.metaKey)
   {
-    if (activeGhostKnoxelId)
+    if (activeGhost.knoxelId)
     {
-      const knyteId = knoxels[activeGhostKnoxelId];
+      const knyteId = knoxels[activeGhost.knoxelId];
       addKnoxelRect({knyteId, position});
     }
   }
@@ -374,46 +368,48 @@ function setNavigationControlState(desc)
   spaceMapElement.style.display = spaceRootElement.id !== spacemapKnoxelId ? 'block' : 'none';
 }
 
-let activeGhostKnoxelId = null;
-let activeGhostHostKnyteId = null;
+const activeGhost = {
+  knoxelId: null,
+  hostKnyteId: null,
+  offset: {x: 0, y: 0},
+  element: null
+};
 
 function spawnGhostRect(desc)
 {
   // desc: {ghostKnoxelId, ghostHostKnyteId, position}
-  activeGhostKnoxelId = desc.ghostKnoxelId;
-  activeGhostHostKnyteId = desc.ghostHostKnyteId;
+  activeGhost.knoxelId = desc.ghostKnoxelId;
+  activeGhost.hostKnyteId = desc.ghostHostKnyteId;
   const knyteId = knoxels[desc.ghostKnoxelId];
   const color = informationMap[knyteId].color;
   const id = desc.ghostKnoxelId + '.ghost';
   addRect({id, position: desc.position, color, ghost: true});
-  const ghostElement = document.getElementById(id);
+  activeGhost.element = document.getElementById(id);
   const knoxelPosition = informationMap[desc.ghostHostKnyteId].space[desc.ghostKnoxelId];
   if (!knoxelPosition)
   {
-    ghostElement.dataset.offsetX = 0;
-    ghostElement.dataset.offsetY = 0;
+    activeGhost.offset = {x: 0, y: 0};
     return;
   }
-  const offset = {
+  activeGhost.offset = {
     x: knoxelPosition.x - desc.position.x, 
     y: knoxelPosition.y - desc.position.y
   };
-  ghostElement.dataset.offsetX = offset.x;
-  ghostElement.dataset.offsetY = offset.y;
-  ghostElement.setAttribute(
+  activeGhost.element.setAttribute(
     'transform', 
-    'translate(' + offset.x + ' ' + offset.y + ')'
+    'translate(' + activeGhost.offset.x + ' ' + activeGhost.offset.y + ')'
   );
   setGhostedMode({knoxelId: desc.ghostKnoxelId, isGhosted: true});
 }
 
 function terminateGhostRect()
 {
-  const ghostElement = document.getElementById(activeGhostKnoxelId + '.ghost');
-  ghostElement.remove();
-  setGhostedMode({knoxelId: activeGhostKnoxelId, isGhosted: false});
-  activeGhostKnoxelId = null;
-  activeGhostHostKnyteId = null;
+  activeGhost.element.remove();
+  setGhostedMode({knoxelId: activeGhost.knoxelId, isGhosted: false});
+  activeGhost.knoxelId = null;
+  activeGhost.hostKnyteId = null;
+  activeGhost.offset = {x: 0, y: 0};
+  activeGhost.element = null;
 }
 
 function onMouseDownSpaceRoot(e)
@@ -423,15 +419,14 @@ function onMouseDownSpaceRoot(e)
 function onMouseMoveSpaceRoot(e)
 {
   mouseMovePosition = {x: e.offsetX, y: e.offsetY};
-  if (!activeGhostKnoxelId)
+  if (!activeGhost.knoxelId)
     return;
-  const ghostElement = document.getElementById(activeGhostKnoxelId + '.ghost');
   const w = visualTheme.rect.defaultWidth;
   const h = visualTheme.rect.defaultHeight;
   const x = mouseMovePosition.x - w/2;
   const y = mouseMovePosition.y - h/2;
-  ghostElement.setAttribute('x', x);
-  ghostElement.setAttribute('y', y);
+  activeGhost.element.setAttribute('x', x);
+  activeGhost.element.setAttribute('y', y);
 }
 
 function onMouseUpSpaceRoot(e)
@@ -445,10 +440,9 @@ function dropGhostRect(desc)
     return;
   const landingKnyteId = knoxels[desc.landingKnoxelId];
   delete informationMap[desc.droppedHostKnyteId].space[desc.droppedKnoxelId];
-  const ghostElement = document.getElementById(activeGhostKnoxelId + '.ghost');
   const landingPosition = {
-    x: desc.position.x + parseFloat(ghostElement.dataset.offsetX),
-    y: desc.position.y + parseFloat(ghostElement.dataset.offsetY)
+    x: desc.position.x + activeGhost.offset.x,
+    y: desc.position.y + activeGhost.offset.y
   };
   informationMap[landingKnyteId].space[desc.droppedKnoxelId] = landingPosition;
   setSpaceRootKnoxel({knoxelId: spaceRootElement.id}); // TODO: optimise space refresh
@@ -456,7 +450,7 @@ function dropGhostRect(desc)
 
 function onKeyDownWindow(e)
 {
-  if (e.code === 'Escape' && activeGhostKnoxelId)
+  if (e.code === 'Escape' && activeGhost.knoxelId)
   {
     terminateGhostRect();
   }
@@ -464,7 +458,7 @@ function onKeyDownWindow(e)
   {
     if (!e.shiftKey && !e.altKey && !e.metaKey)
     {
-      if (!activeGhostKnoxelId)
+      if (!activeGhost.knoxelId)
         spawnGhostRect(
           {
             ghostKnoxelId: mouseoverGhostKnoxelId || spaceRootElement.id,
@@ -476,7 +470,8 @@ function onKeyDownWindow(e)
       {
         dropGhostRect(
           {
-            droppedKnoxelId: activeGhostKnoxelId, droppedHostKnyteId: activeGhostHostKnyteId,
+            droppedKnoxelId: activeGhost.knoxelId,
+            droppedHostKnyteId: activeGhost.hostKnyteId,
             landingKnoxelId: spaceRootElement.id, 
             position: mouseMovePosition
           }
