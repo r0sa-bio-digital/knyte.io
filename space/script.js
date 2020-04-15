@@ -477,11 +477,12 @@ function dropGhostRect(desc)
     !(desc.droppedKnoxelId in informationMap[landingKnyteId].space)
   )
     return;
-  delete informationMap[desc.droppedHostKnyteId].space[desc.droppedKnoxelId];
   const landingPosition = {
     x: desc.position.x + activeGhost.offset.x,
     y: desc.position.y + activeGhost.offset.y
   };
+  if (desc.landingKnoxelId !== spacemapKnoxelId)
+    delete informationMap[desc.droppedHostKnyteId].space[desc.droppedKnoxelId];
   informationMap[landingKnyteId].space[desc.droppedKnoxelId] = landingPosition;
   setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId, refreshCall: true}); // TODO: optimise space refresh
 }
