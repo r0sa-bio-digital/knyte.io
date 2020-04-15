@@ -8,10 +8,10 @@ let spaceMapElement;
 let spaceHostElement;
 let masterKnoxelId;
 let spacemapKnoxelId;
-const knytesCloud = {}; // core knyte id --> initial knyte id, terminal knyte id
+const knytesCloud = {}; // core knyte id --> {initialKnyteId, terminalKnyteId}
 const informationMap = {}; // knyte id --> {color, space: {knoxel id --> position}}
 const knoxels = {}; // knoxel id --> knyte id
-const arrows = {}; // arrow id --> {initial: rect id, terminal: rect id}
+const arrows = {}; // arrow id --> {initialKnoxelId, terminalKnoxelId}
 const spaceBackStack = []; // [previous space root knoxel id]
 const spaceForwardStack = []; // [next space root knoxel id]
 const visualTheme = {
@@ -71,10 +71,10 @@ const knit = new function()
 
 function addKnyte(desc)
 {
-  // desc: {knyteId, initialId, terminalId, color}
+  // desc: {knyteId, initialKnyteId, terminalKnyteId, color}
   knytesCloud[desc.knyteId] = {
-    initialId: desc.initialId,
-    terminalId: desc.terminalId
+    initialKnyteId: desc.initialKnyteId,
+    terminalKnyteId: desc.terminalKnyteId
   };
   informationMap[desc.knyteId] = {color: desc.color, space: {}};
 }
@@ -206,7 +206,11 @@ function setSpaceRootKnoxel(desc)
   }
   // clear or update arrows
   if (!desc.refreshCall)
+  {
     cleanupArrows();
+    if (newKnoxelId === spacemapKnoxelId)
+      createSpacemapArrows();
+  }
   else
     updateArrows();
 }
@@ -248,15 +252,15 @@ function addRect(desc)
 
 function addOriginsArrow(desc)
 {
-  // desc: {id, initialRectId, terminalRectId}
+  // desc: {id, initialKnoxelId, terminalKnoxelId}
   const spaceRootKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
   const arrowSpace = informationMap[spaceRootKnyteId].space;
-  const initialPos = arrowSpace[desc.initialRectId];
-  const terminalPos = arrowSpace[desc.terminalRectId];
-  const x1 = initialPos.x;
-  const y1 = initialPos.y;
-  const x2 = terminalPos.x;
-  const y2 = terminalPos.y;
+  const initialPosition = arrowSpace[desc.initialKnoxelId];
+  const terminalPosition = arrowSpace[desc.terminalKnoxelId];
+  const x1 = initialPosition.x;
+  const y1 = initialPosition.y;
+  const x2 = terminalPosition.x;
+  const y2 = terminalPosition.y;
   const arrow = document.createElementNS(svgNameSpace, 'line');
   arrow.id = desc.id;
   arrow.setAttribute('x1', x1);
@@ -268,7 +272,7 @@ function addOriginsArrow(desc)
   arrow.setAttribute('marker-start', 'url(#arrowTail)');
   arrow.setAttribute('marker-end', 'url(#arrowHead)');
   document.getElementById('arrows').appendChild(arrow);
-  arrows[desc.id] = {initial: desc.initialRectId, terminal: desc.terminalRectId};
+  arrows[desc.id] = {initialKnoxelId: desc.initialKnoxelId, terminalKnoxelId: desc.terminalKnoxelId};
 }
 
 function updateOriginsArrow(desc)
@@ -278,12 +282,12 @@ function updateOriginsArrow(desc)
   const arrow = document.getElementById(desc.id);
   const spaceRootKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
   const arrowSpace = informationMap[spaceRootKnyteId].space;
-  const initialPos = arrowSpace[endpoints.initial];
-  const terminalPos = arrowSpace[endpoints.terminal];
-  const x1 = initialPos.x;
-  const y1 = initialPos.y;
-  const x2 = terminalPos.x;
-  const y2 = terminalPos.y;
+  const initialPosition = arrowSpace[endpoints.initialKnoxelId];
+  const terminalPosition = arrowSpace[endpoints.terminalKnoxelId];
+  const x1 = initialPosition.x;
+  const y1 = initialPosition.y;
+  const x2 = terminalPosition.x;
+  const y2 = terminalPosition.y;
   arrow.setAttribute('x1', x1);
   arrow.setAttribute('y1', y1);
   arrow.setAttribute('x2', x2);
@@ -303,6 +307,19 @@ function cleanupArrows()
   {
     delete arrows[spaceArrows.firstChild.id];
     spaceArrows.firstChild.remove();
+  }
+}
+
+function createSpacemapArrows()
+{
+  const spacemapKnyteId = knoxels[spacemapKnoxelId];
+  const spacemapSpace = informationMap[spacemapKnyteId].space;
+  for (let knoxelId in spacemapSpace)
+  {
+    const knyteId = knoxels[knoxelId];
+    const space = informationMap[knyteId].space;
+    for (let nestedKnoxelId in space)
+      addOriginsArrow({id: knit.new(), initialKnoxelId: knoxelId, terminalKnoxelId: nestedKnoxelId});
   }
 }
 
@@ -357,7 +374,7 @@ function onClickSpaceRoot(e)
   {
     const knyteId = knit.new();
     const color = visualTheme.rect.fillColor.getRandom();
-    addKnyte({knyteId, initialId: knit.empty, terminalId: knit.empty, color});
+    addKnyte({knyteId, initialKnyteId: knit.empty, terminalKnyteId: knit.empty, color});
     addKnoxelRect({knyteId, position});
   }
   else if (!e.shiftKey && e.altKey && !e.metaKey)
@@ -609,13 +626,13 @@ function onLoadBody(e)
   const masterKnyteId = knit.new();
   masterKnoxelId = knit.new();
   const masterColor = visualTheme.rect.fillColor.getRandom();
-  addKnyte({knyteId: masterKnyteId, initialId: knit.empty, terminalId: knit.empty, color: masterColor});
+  addKnyte({knyteId: masterKnyteId, initialKnyteId: knit.empty, terminalKnyteId: knit.empty, color: masterColor});
   addKnoxel({hostKnyteId: null, knyteId: masterKnyteId, knoxelId: masterKnoxelId, position: null});
   // create mirror knyte
   const mirrorKnyteId = knit.new();
   const mirrorKnoxelId = knit.new();
   const mirrorColor = visualTheme.rect.fillColor.getRandom();
-  addKnyte({knyteId: mirrorKnyteId, initialId: knit.empty, terminalId: knit.empty, color: mirrorColor});
+  addKnyte({knyteId: mirrorKnyteId, initialKnyteId: knit.empty, terminalKnyteId: knit.empty, color: mirrorColor});
   const position = {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight};
   addKnoxel({hostKnyteId: masterKnyteId, knyteId: mirrorKnyteId, knoxelId: mirrorKnoxelId, position});
   addKnoxel({hostKnyteId: mirrorKnyteId, knyteId: masterKnyteId, knoxelId: masterKnoxelId, position});
@@ -623,7 +640,7 @@ function onLoadBody(e)
   const spacemapKnyteId = knit.new();
   spacemapKnoxelId = knit.new();
   const spacemapColor = visualThemeColors.navigation;
-  addKnyte({knyteId: spacemapKnyteId, initialId: knit.empty, terminalId: knit.empty, color: spacemapColor});
+  addKnyte({knyteId: spacemapKnyteId, initialKnyteId: knit.empty, terminalKnyteId: knit.empty, color: spacemapColor});
   addKnoxel({hostKnyteId: null, knyteId: spacemapKnyteId, knoxelId: spacemapKnoxelId, position: null});
   // setup event handlers
   spaceRootElement.addEventListener('click', onClickSpaceRoot, false);
