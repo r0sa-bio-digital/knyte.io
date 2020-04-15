@@ -546,7 +546,9 @@ function onKnoxelSpaceChanged()
   {
     const knyteId = knoxels[knoxelId];
     spacemapKnytes[knyteId] = true;
-    knyteIdToKnoxelIdMap[knyteId] = knoxelId;
+    if (!knyteIdToKnoxelIdMap[knyteId])
+      knyteIdToKnoxelIdMap[knyteId] = {};
+    knyteIdToKnoxelIdMap[knyteId][knoxelId] = true;
   }
   const newKnytes = {};
   for (let knyteId in knytesCloud)
@@ -559,7 +561,8 @@ function onKnoxelSpaceChanged()
   {
     const knoxelId = knit.new();
     addKnoxel({hostKnyteId: spacemapKnyteId, knyteId, knoxelId, position, spacemap: true});
-    knyteIdToKnoxelIdMap[knyteId] = knoxelId;
+    knyteIdToKnoxelIdMap[knyteId] = {};
+    knyteIdToKnoxelIdMap[knyteId][knoxelId] = true;
   }
   
   // build arrows
@@ -573,11 +576,11 @@ function onKnoxelSpaceChanged()
     for (let nestedKnoxelId in space)
     {
       const nestedKnyteId = knoxels[nestedKnoxelId];
-      addOriginsArrow({
-        id: knit.new(), 
-        initialKnoxelId: knyteIdToKnoxelIdMap[knyteId], 
-        terminalKnoxelId: knyteIdToKnoxelIdMap[nestedKnyteId]
-      });
+      const initialKnoxelIds = knyteIdToKnoxelIdMap[knyteId];
+      const terminalKnoxelIds = knyteIdToKnoxelIdMap[nestedKnyteId];
+      for (let initialKnoxelId in initialKnoxelIds)
+        for (let terminalKnoxelId in terminalKnoxelIds)
+          addOriginsArrow({id: knit.new(), initialKnoxelId, terminalKnoxelId});
     }
   }
 }
