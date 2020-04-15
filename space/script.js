@@ -29,7 +29,11 @@ const visualTheme = {
     },
     defaultWidth: 32,
     defaultHeight: 32,
-  }
+  },
+  arrow: {
+    strokeColor: visualThemeColors.line,
+    strokeWidth: 3,
+  },
 };
 
 const knit = new function()
@@ -234,6 +238,28 @@ function addRect(desc)
     rect.addEventListener('mouseout', onMouseOutRect, false);
     document.getElementById('knoxels').appendChild(rect);
   }
+}
+
+function addOriginsArrow(desc)
+{
+  // desc: {id, initialRectId, terminalRectId}
+  const initialRect = document.getElementById(desc.initialRectId);
+  const terminalRect = document.getElementById(desc.terminalRectId);
+  const x1 = initialRect.getAttribute('x');
+  const y1 = initialRect.getAttribute('y');
+  const x2 = terminalRect.getAttribute('x');
+  const y2 = terminalRect.getAttribute('y');
+  const arrow = document.createElementNS(svgNameSpace, 'line');
+  arrow.id = desc.id;
+  arrow.setAttribute('x1', x1);
+  arrow.setAttribute('y1', y1);
+  arrow.setAttribute('x2', x2);
+  arrow.setAttribute('y2', y2);
+  arrow.setAttribute('stroke', visualTheme.arrow.strokeColor);
+  arrow.setAttribute('stroke-width', visualTheme.arrow.strokeWidth);
+  arrow.setAttribute('marker-start', 'url(#arrowTail)');
+  arrow.setAttribute('marker-end', 'url(#arrowHead)');
+  document.getElementById('arrows').appendChild(arrow);
 }
 
 function addKnoxelRect(desc)
