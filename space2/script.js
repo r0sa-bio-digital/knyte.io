@@ -77,7 +77,6 @@ function addKnyte(desc)
     terminalKnyteId: desc.terminalKnyteId
   };
   informationMap[desc.knyteId] = {color: desc.color, space: {}};
-  onKnoxelSpaceChanged();
 }
 
 function addKnoxel(desc)
