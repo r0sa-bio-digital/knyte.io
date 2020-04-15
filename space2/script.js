@@ -35,6 +35,10 @@ const visualTheme = {
     strokeColor: visualThemeColors.line,
     strokeWidth: 3,
   },
+  navigation: {
+    strokeColor: visualThemeColors.control,
+    fillColor: visualThemeColors.navigation,
+  },
 };
 
 const knit = new function()
@@ -373,7 +377,7 @@ function setNavigationControlState(desc)
     const color = informationMap[backKnyteId].color;
     spaceBackElement.style.display = 'block';
     const backArrowShape = document.getElementById('backArrowShape');
-    backArrowShape.setAttribute('stroke', visualThemeColors.navigation);
+    backArrowShape.setAttribute('stroke', visualTheme.navigation.strokeColor);
     backArrowShape.setAttribute('fill', color);
   }
   const forwardKnyteId = knoxels[desc.forwardKnoxelId];
@@ -386,16 +390,33 @@ function setNavigationControlState(desc)
     const color = informationMap[forwardKnyteId].color;
     spaceForwardElement.style.display = 'block';
     const forwardArrowShape = document.getElementById('forwardArrowShape');
-    forwardArrowShape.setAttribute('stroke', visualThemeColors.navigation);
+    forwardArrowShape.setAttribute('stroke', visualTheme.navigation.strokeColor);
     forwardArrowShape.setAttribute('fill', color);
   }
-  spaceMapElement.style.display = spaceRootElement.dataset.knoxelId !== spacemapKnoxelId
-    ? 'block'
-    : 'none';
-  spaceHostElement.style.display = activeGhost.hostKnoxelId && 
+  if (spaceRootElement.dataset.knoxelId !== spacemapKnoxelId)
+  {
+    const mapShape = document.getElementById('mapShape');
+    mapShape.setAttribute('fill', visualTheme.navigation.fillColor);
+    spaceMapElement.style.display = 'block';
+  }
+  else
+  {
+    spaceMapElement.style.display = 'none';
+  }
+  if (
+    spaceHostElement.style.display = activeGhost.hostKnoxelId && 
     activeGhost.hostKnoxelId !== spaceRootElement.dataset.knoxelId
-    ? 'block' 
-    : 'none';
+  )
+  {
+    const hostShape = document.getElementById('hostShape');
+    hostShape.setAttribute('stroke', visualTheme.navigation.strokeColor);
+    hostShape.setAttribute('fill', visualTheme.navigation.fillColor);
+    spaceHostElement.style.display = 'block';
+  }
+  else
+  {
+    spaceHostElement.style.display = 'none';
+  }
 }
 
 const activeGhost = {
@@ -495,7 +516,13 @@ function onKeyDownWindow(e)
   if (e.code === 'Escape')
   {
     if (activeGhost.knoxelId)
+    {
       terminateGhostRect();
+      setNavigationControlState({
+        backKnoxelId: spaceBackStack[spaceBackStack.length - 1],
+        forwardKnoxelId: spaceForwardStack[spaceForwardStack.length - 1]
+      });
+    }
   }
   else if (e.code === 'Space')
   {
@@ -602,7 +629,7 @@ function onLoadBody(e)
   // create spacemap knyte
   const spacemapKnyteId = knit.new();
   spacemapKnoxelId = knit.new();
-  const spacemapColor = visualThemeColors.navigation;
+  const spacemapColor = visualTheme.navigation.fillColor;
   addKnyte({knyteId: spacemapKnyteId, initialKnyteId: knit.empty, terminalKnyteId: knit.empty, color: spacemapColor});
   // create master and spacemap knoxels
   const position = {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight};
