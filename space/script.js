@@ -585,24 +585,29 @@ function onKeyDownWindow(e)
   {
     if (!e.shiftKey && !e.altKey && !e.metaKey)
     {
+      const position = mouseMovePosition;
       if (!activeGhost.knoxelId)
-        spawnGhostRect(
-          {
-            ghostKnoxelId: mouseoverGhostKnoxelId || spaceRootElement.dataset.knoxelId,
-            ghostHostKnoxelId: spaceRootElement.dataset.knoxelId,
-            position: mouseMovePosition,
-          }
-        );
+      {
+        const ghostKnoxelId = mouseoverGhostKnoxelId || spaceRootElement.dataset.knoxelId;
+        const ghostHostKnoxelId = spaceRootElement.dataset.knoxelId;
+        if (ghostKnoxelId !== spacemapKnoxelId)
+          spawnGhostRect({ghostKnoxelId, ghostHostKnoxelId, position});
+      }
       else
       {
-        dropGhostRect(
-          {
-            droppedKnoxelId: activeGhost.knoxelId,
-            droppedHostKnyteId: knoxels[activeGhost.hostKnoxelId],
-            landingKnoxelId: spaceRootElement.dataset.knoxelId,
-            position: mouseMovePosition,
-          }
-        );
+        const droppedHostKnoxelId = activeGhost.hostKnoxelId;
+        const landingKnoxelId = spaceRootElement.dataset.knoxelId;
+        if (
+          droppedHostKnoxelId !== spacemapKnoxelId ||
+          landingKnoxelId === spacemapKnoxelId
+        )
+          dropGhostRect(
+            {
+              droppedKnoxelId: activeGhost.knoxelId,
+              droppedHostKnyteId: knoxels[droppedHostKnoxelId],
+              landingKnoxelId, position,
+            }
+          );
         terminateGhostRect();
       }
       setNavigationControlState({
