@@ -249,12 +249,14 @@ function addRect(desc)
 function addOriginsArrow(desc)
 {
   // desc: {id, initialRectId, terminalRectId}
-  const initialRect = document.getElementById(desc.initialRectId);
-  const terminalRect = document.getElementById(desc.terminalRectId);
-  const x1 = initialRect.getAttribute('x');
-  const y1 = initialRect.getAttribute('y');
-  const x2 = terminalRect.getAttribute('x');
-  const y2 = terminalRect.getAttribute('y');
+  const spaceRootKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
+  const arrowSpace = informationMap[spaceRootKnyteId].space;
+  const initialPos = arrowSpace[desc.initialRectId];
+  const terminalPos = arrowSpace[desc.terminalRectId];
+  const x1 = initialPos.x;
+  const y1 = initialPos.y;
+  const x2 = terminalPos.x;
+  const y2 = terminalPos.y;
   const arrow = document.createElementNS(svgNameSpace, 'line');
   arrow.id = desc.id;
   arrow.setAttribute('x1', x1);
@@ -274,12 +276,14 @@ function updateOriginsArrow(desc)
   // desc: {id}
   const endpoints = arrows[desc.id];
   const arrow = document.getElementById(desc.id);
-  const initialRect = document.getElementById(endpoints.initial);
-  const terminalRect = document.getElementById(endpoints.terminal);
-  const x1 = initialRect.getAttribute('x');
-  const y1 = initialRect.getAttribute('y');
-  const x2 = terminalRect.getAttribute('x');
-  const y2 = terminalRect.getAttribute('y');
+  const spaceRootKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
+  const arrowSpace = informationMap[spaceRootKnyteId].space;
+  const initialPos = arrowSpace[endpoints.initial];
+  const terminalPos = arrowSpace[endpoints.terminal];
+  const x1 = initialPos.x;
+  const y1 = initialPos.y;
+  const x2 = terminalPos.x;
+  const y2 = terminalPos.y;
   arrow.setAttribute('x1', x1);
   arrow.setAttribute('y1', y1);
   arrow.setAttribute('x2', x2);
