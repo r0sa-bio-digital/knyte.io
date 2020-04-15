@@ -11,6 +11,7 @@ let spacemapKnoxelId;
 const knytesCloud = {}; // core knyte id --> initial knyte id, terminal knyte id
 const informationMap = {}; // knyte id --> {color, space: {knoxel id --> position}}
 const knoxels = {}; // knoxel id --> knyte id
+const arrows = {}; // arrow id --> {initial: rect id, terminal: rect id}
 const spaceBackStack = []; // [previous space root knoxel id]
 const spaceForwardStack = []; // [next space root knoxel id]
 const visualTheme = {
@@ -203,6 +204,11 @@ function setSpaceRootKnoxel(desc)
     if (knoxelId === activeGhost.knoxelId)
       setGhostedMode({knoxelId, isGhosted: true});
   }
+  // clear or update arrows
+  if (!desc.refreshCall)
+    cleanupArrows();
+  else
+    updateArrows();
 }
 
 function addRect(desc)
@@ -260,6 +266,40 @@ function addOriginsArrow(desc)
   arrow.setAttribute('marker-start', 'url(#arrowTail)');
   arrow.setAttribute('marker-end', 'url(#arrowHead)');
   document.getElementById('arrows').appendChild(arrow);
+  arrows[desc.id] = {initial: desc.initialRectId, terminal: desc.terminalRectId};
+}
+
+function updateOriginsArrow(desc)
+{
+  // desc: {id}
+  const endpoints = arrows[desc.id];
+  const arrow = document.getElementById(desc.id);
+  const initialRect = document.getElementById(endpoints.initial);
+  const terminalRect = document.getElementById(endpoints.terminal);
+  const x1 = initialRect.getAttribute('x');
+  const y1 = initialRect.getAttribute('y');
+  const x2 = terminalRect.getAttribute('x');
+  const y2 = terminalRect.getAttribute('y');
+  arrow.setAttribute('x1', x1);
+  arrow.setAttribute('y1', y1);
+  arrow.setAttribute('x2', x2);
+  arrow.setAttribute('y2', y2);
+}
+
+function updateArrows()
+{
+  for (let id in arrows)
+    updateOriginsArrow({id});
+}
+
+function cleanupArrows()
+{
+  const spaceArrows = document.getElementById('arrows');
+  while (spaceArrows.firstChild)
+  {
+    delete arrows[spaceArrows.firstChild.id];
+    spaceArrows.firstChild.remove();
+  }
 }
 
 function addKnoxelRect(desc)
