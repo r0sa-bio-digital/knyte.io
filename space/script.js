@@ -639,14 +639,6 @@ function onLoadBody(e)
   const masterColor = visualTheme.rect.fillColor.getRandom();
   addKnyte({knyteId: masterKnyteId, initialKnyteId: knit.empty, terminalKnyteId: knit.empty, color: masterColor});
   addKnoxel({hostKnyteId: null, knyteId: masterKnyteId, knoxelId: masterKnoxelId, position: null});
-  // create mirror knyte
-  const mirrorKnyteId = knit.new();
-  const mirrorKnoxelId = knit.new();
-  const mirrorColor = visualTheme.rect.fillColor.getRandom();
-  addKnyte({knyteId: mirrorKnyteId, initialKnyteId: knit.empty, terminalKnyteId: knit.empty, color: mirrorColor});
-  const position = {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight};
-  addKnoxel({hostKnyteId: masterKnyteId, knyteId: mirrorKnyteId, knoxelId: mirrorKnoxelId, position});
-  addKnoxel({hostKnyteId: mirrorKnyteId, knyteId: masterKnyteId, knoxelId: masterKnoxelId, position});
   // create spacemap knyte
   const spacemapKnyteId = knit.new();
   spacemapKnoxelId = knit.new();
