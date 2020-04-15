@@ -138,6 +138,10 @@ function setSpaceRootKnoxel(desc)
     if (knoxelId === activeGhost.knoxelId)
       setGhostedMode({knoxelId, isGhosted: true});
   }
+  // control arrows display
+  const arrowsElement = document.getElementById('arrows');
+  arrowsElement.style.display = newKnyteId === knoxels[spacemapKnoxelId]
+    ? 'block' : 'none';
 }
 
 function addRect(desc)
@@ -196,6 +200,7 @@ function addOriginsArrow(desc)
   arrow.setAttribute('stroke-width', visualTheme.arrow.strokeWidth);
   arrow.setAttribute('marker-start', 'url(#arrowTail)');
   arrow.setAttribute('marker-end', 'url(#arrowHead)');
+  arrow.style.pointerEvents = 'none';
   document.getElementById('arrows').appendChild(arrow);
   arrows[desc.id] = {initialKnoxelId: desc.initialKnoxelId, terminalKnoxelId: desc.terminalKnoxelId};
 }
