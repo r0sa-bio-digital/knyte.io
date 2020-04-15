@@ -166,7 +166,7 @@ function setGhostedMode(desc)
 
 function setSpaceRootKnoxel(desc)
 {
-  // desc: {knoxelId}
+  // desc: {knoxelId, refreshCall}
   const priorKnoxelId = spaceRootElement.dataset.knoxelId;
   const newKnoxelId = desc.knoxelId;
   const newKnyteId = knoxels[newKnoxelId];
@@ -178,7 +178,7 @@ function setSpaceRootKnoxel(desc)
   if (newKnoxelId !== priorKnoxelId)
       mouseoverGhostKnoxelId = null;
   // build space map if needed
-  if (newKnoxelId === spacemapKnoxelId)
+  if (newKnoxelId === spacemapKnoxelId && !desc.refreshCall)
     buildSpaceMap();
   // set actual knoxel id and space color
   spaceRootElement.dataset.knoxelId = newKnoxelId;
@@ -483,7 +483,7 @@ function dropGhostRect(desc)
     y: desc.position.y + activeGhost.offset.y
   };
   informationMap[landingKnyteId].space[desc.droppedKnoxelId] = landingPosition;
-  setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+  setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId, refreshCall: true}); // TODO: optimise space refresh
 }
 
 function onKeyDownWindow(e)
