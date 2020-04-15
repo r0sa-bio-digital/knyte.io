@@ -592,6 +592,8 @@ function onKeyDownWindow(e)
         const ghostHostKnoxelId = spaceRootElement.dataset.knoxelId;
         if (ghostKnoxelId !== spacemapKnoxelId)
           spawnGhostRect({ghostKnoxelId, ghostHostKnoxelId, position});
+        else
+          alert('Can\'t move or copy space map knoxel.');
       }
       else
       {
@@ -601,6 +603,7 @@ function onKeyDownWindow(e)
           droppedHostKnoxelId !== spacemapKnoxelId ||
           landingKnoxelId === spacemapKnoxelId
         )
+        {
           dropGhostRect(
             {
               droppedKnoxelId: activeGhost.knoxelId,
@@ -608,7 +611,10 @@ function onKeyDownWindow(e)
               landingKnoxelId, position,
             }
           );
-        terminateGhostRect();
+          terminateGhostRect();
+        }
+        else
+          alert('Can\'t move knoxel from space map to anoher space.');
       }
       setNavigationControlState({
         backKnoxelId: spaceBackStack[spaceBackStack.length - 1],
