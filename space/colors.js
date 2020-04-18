@@ -1,6 +1,8 @@
 const visualThemeColors = {
   outline: '#160f19',
-  navigation: '#101010',
+  line: '#101010',
+  navigation: '#ffffdd',
+  control: '#101010',
   elements: [
     '#79e6d9',
     '#a4a4e4',
@@ -36,7 +38,6 @@ const visualThemeColors = {
     '#7460e1',
     '#0000ff',
     '#bb99ff',
-    '#ffffdd',
     '#282828',
     '#333333',
     '#404040',
