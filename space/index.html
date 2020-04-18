@@ -5,18 +5,18 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="space/style.css">
-    <script src="space/colors.js" defer></script>
-    <script src="space/script.js" defer></script>
+    <link rel="stylesheet" href="space2/style.css">
+    <script src="space2/colors.js" defer></script>
+    <script src="space2/script.js" defer></script>
   </head>  
   <body onload="onLoadBody(event);">
     <svg class="spaceRoot" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
       <defs>
         <marker id="arrowHead" markerWidth="5" markerHeight="4" refX="3" refY="2" orient="auto">
-          <polygon points="0 0, 5 2, 0 4" fill="#ffffff" />
+          <polygon points="0 0, 5 2, 0 4" fill="#101010" />
         </marker>
         <marker id="arrowTail" markerWidth="2" markerHeight="4" refX="1" refY="2" orient="auto">
-          <polygon points="1 0, 1 4" stroke="#ffffff" />
+          <polygon points="1 0, 1 4" stroke="#101010" />
         </marker>
       </defs>
       <g id="knoxels"></g>
@@ -25,32 +25,28 @@
     </svg>
     <div class="spaceBack">
       <svg class="backArrow" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-        <polygon id="backArrowShape" points="4,38 36,38 20,6" stroke-width="4" stroke="#101010" fill="#ffff00">
-        </polygon>
+        <polygon id="backArrowShape" points="4,38 36,38 20,6" stroke-width="4" stroke="#ffff00" fill="#ffff00" />
       </svg>
     </div>
     <div class="spaceForward">
       <svg class="forwardArrow" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-        <polygon id="forwardArrowShape" points="4,3 36,3 20,35" stroke-width="4" stroke="#101010" fill="#ffff00">
-        </polygon>
+        <polygon id="forwardArrowShape" points="4,3 36,3 20,35" stroke-width="4" stroke="#ffff00" fill="#ffff00" />
       </svg>
     </div>
     <div id="spaceMapButton" class="spaceMap">
       <svg class="mapIcon" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-        <polygon points="0,0 40,0 40,40 0,40" fill="#101010">
-        </polygon>
-        <circle cx="10" cy="10" r="6" fill="#ffff00"></circle>
-        <circle cx="30" cy="10" r="6" fill="#dc286f"></circle>
-        <circle cx="10" cy="30" r="6" fill="#36945b"></circle>
-        <circle cx="30" cy="30" r="6" fill="#5571f1"></circle>
+        <polygon id="mapShape" points="0,0 40,0 40,40 0,40" fill="#ffff00" />
+        <circle cx="10" cy="10" r="6" stroke="#160f19" stroke-width="2" fill="#d8b621"></circle>
+        <circle cx="30" cy="10" r="6" stroke="#160f19" stroke-width="2" fill="#dc286f"></circle>
+        <circle cx="10" cy="30" r="6" stroke="#160f19" stroke-width="2" fill="#36945b"></circle>
+        <circle cx="30" cy="30" r="6" stroke="#160f19" stroke-width="2" fill="#5571f1"></circle>
       </svg>
     </div>
     <div id="spaceHostButton" class="spaceHost">
       <svg class="hostIcon" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-        <polygon points="0,0 40,0 40,40 0,40" fill="#101010">
-        </polygon>
-        <circle cx="20" cy="20" r="6" fill="#ffff00"></circle>
-        <circle cx="25" cy="25" r="6" fill="#ffff00" stroke="#101010" stroke-width="2" opacity="0.5"></circle>
+        <polygon id="hostShape" points="2,2 38,2 38,38 2,38" stroke-width="4" stroke="#ffff00" fill="#ffff00" />
+        <circle cx="20" cy="20" r="6" fill="#d8b621" stroke="#160f19" stroke-width="2" stroke-dasharray="0 4" stroke-linecap="square"></circle>
+        <circle cx="25" cy="25" r="6" fill="#d8b621" stroke="#160f19" stroke-width="2" opacity="0.5"></circle>
       </svg>
     </div>
   </body>

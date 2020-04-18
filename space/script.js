@@ -35,6 +35,10 @@ const visualTheme = {
     strokeColor: visualThemeColors.line,
     strokeWidth: 3,
   },
+  navigation: {
+    strokeColor: visualThemeColors.control,
+    fillColor: visualThemeColors.navigation,
+  },
 };
 
 const knit = new function()
@@ -81,76 +85,12 @@ function addKnyte(desc)
 
 function addKnoxel(desc)
 {
-  // desc: {hostKnyteId, knyteId, knoxelId, position}
+  // desc: {hostKnyteId, knyteId, knoxelId, position, spacemap}
   knoxels[desc.knoxelId] = desc.knyteId;
   if (desc.hostKnyteId)
     informationMap[desc.hostKnyteId].space[desc.knoxelId] = desc.position;
-}
-
-function buildSpaceMap()
-{
-  // detect islands
-  const maxIterations = 4096;
-  let islands = [];
-  let processingKnoxels = {};
-  for (let knoxelId in knoxels)
-  {
-    if (knoxelId === spacemapKnoxelId || knoxelId === masterKnoxelId)
-      continue;
-    processingKnoxels[knoxelId] = true;
-  }
-  let island = {};
-  island[masterKnoxelId] = true;
-  for (let i = 0; i < maxIterations; ++i)
-  {
-    let islandSize = Object.keys(island).length;
-    for (let j = 0; j < maxIterations; ++j)
-    {
-      for (let knoxelId in island)
-      {
-        const knyteId = knoxels[knoxelId];
-        const space = informationMap[knyteId].space;
-        for (let newKnoxelId in space)
-          island[newKnoxelId] = true;
-        for (let checkKnoxelId in processingKnoxels)
-        {
-          const checkKnyteId = knoxels[checkKnoxelId];
-          const checkSpace = informationMap[checkKnyteId].space;
-          if (knoxelId in checkSpace)
-            island[checkKnoxelId] = true;
-        }
-      }
-      let newIslandSize = Object.keys(island).length;
-      if (islandSize < newIslandSize)
-        islandSize = newIslandSize;
-      else
-        break;
-    }
-    islands.push(island);
-    for (let knoxelId in island)
-      delete processingKnoxels[knoxelId];
-    const processingKnoxelsKeys = Object.keys(processingKnoxels);
-    if (processingKnoxelsKeys.length === 0)
-      break;
-    island = {};
-    island[processingKnoxelsKeys[0]] = true;
-  }
-  // construct space
-  const space = {};
-  const spacemapKnyteId = knoxels[spacemapKnoxelId];
-  let position = {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight};
-  for (let i = 0; i < islands.length; ++i)
-  {
-    const island = islands[i];
-    for (let knoxelId in island)
-    {
-      space[knoxelId] = {x: position.x, y: position.y};
-      position.y += 1.5 * visualTheme.rect.defaultHeight;
-    }
-    position.x += 2.0 * visualTheme.rect.defaultWidth;
-    position.y = visualTheme.rect.defaultHeight;
-  }
-  informationMap[spacemapKnyteId].space = space;
+  if (!desc.spacemap)
+    onKnoxelSpaceChanged();
 }
 
 function setGhostedMode(desc)
@@ -171,7 +111,7 @@ function setGhostedMode(desc)
 
 function setSpaceRootKnoxel(desc)
 {
-  // desc: {knoxelId, refreshCall}
+  // desc: {knoxelId}
   const priorKnoxelId = spaceRootElement.dataset.knoxelId;
   const newKnoxelId = desc.knoxelId;
   const newKnyteId = knoxels[newKnoxelId];
@@ -182,9 +122,6 @@ function setSpaceRootKnoxel(desc)
   // reset mouseover knoxel cause of changing space
   if (newKnoxelId !== priorKnoxelId)
       mouseoverGhostKnoxelId = null;
-  // build space map if needed
-  if (newKnoxelId === spacemapKnoxelId && !desc.refreshCall)
-    buildSpaceMap();
   // set actual knoxel id and space color
   spaceRootElement.dataset.knoxelId = newKnoxelId;
   spaceRootElement.style.backgroundColor = informationMap[newKnyteId].color;
@@ -204,15 +141,10 @@ function setSpaceRootKnoxel(desc)
     if (knoxelId === activeGhost.knoxelId)
       setGhostedMode({knoxelId, isGhosted: true});
   }
-  // clear or update arrows
-  if (!desc.refreshCall)
-  {
-    cleanupArrows();
-    if (newKnoxelId === spacemapKnoxelId)
-      createSpacemapArrows();
-  }
-  else
-    updateArrows();
+  // control arrows display
+  const arrowsElement = document.getElementById('arrows');
+  arrowsElement.style.display = newKnyteId === knoxels[spacemapKnoxelId]
+    ? 'block' : 'none';
 }
 
 function addRect(desc)
@@ -253,7 +185,7 @@ function addRect(desc)
 function addOriginsArrow(desc)
 {
   // desc: {id, initialKnoxelId, terminalKnoxelId}
-  const spaceRootKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
+  const spaceRootKnyteId = knoxels[spacemapKnoxelId];
   const arrowSpace = informationMap[spaceRootKnyteId].space;
   const initialPosition = arrowSpace[desc.initialKnoxelId];
   const terminalPosition = arrowSpace[desc.terminalKnoxelId];
@@ -271,6 +203,7 @@ function addOriginsArrow(desc)
   arrow.setAttribute('stroke-width', visualTheme.arrow.strokeWidth);
   arrow.setAttribute('marker-start', 'url(#arrowTail)');
   arrow.setAttribute('marker-end', 'url(#arrowHead)');
+  arrow.style.pointerEvents = 'none';
   document.getElementById('arrows').appendChild(arrow);
   arrows[desc.id] = {initialKnoxelId: desc.initialKnoxelId, terminalKnoxelId: desc.terminalKnoxelId};
 }
@@ -307,19 +240,6 @@ function cleanupArrows()
   {
     delete arrows[spaceArrows.firstChild.id];
     spaceArrows.firstChild.remove();
-  }
-}
-
-function createSpacemapArrows()
-{
-  const spacemapKnyteId = knoxels[spacemapKnoxelId];
-  const spacemapSpace = informationMap[spacemapKnyteId].space;
-  for (let knoxelId in spacemapSpace)
-  {
-    const knyteId = knoxels[knoxelId];
-    const space = informationMap[knyteId].space;
-    for (let nestedKnoxelId in space)
-      addOriginsArrow({id: knit.new(), initialKnoxelId: knoxelId, terminalKnoxelId: nestedKnoxelId});
   }
 }
 
@@ -457,7 +377,7 @@ function setNavigationControlState(desc)
     const color = informationMap[backKnyteId].color;
     spaceBackElement.style.display = 'block';
     const backArrowShape = document.getElementById('backArrowShape');
-    backArrowShape.setAttribute('stroke', visualThemeColors.navigation);
+    backArrowShape.setAttribute('stroke', visualTheme.navigation.strokeColor);
     backArrowShape.setAttribute('fill', color);
   }
   const forwardKnyteId = knoxels[desc.forwardKnoxelId];
@@ -470,16 +390,33 @@ function setNavigationControlState(desc)
     const color = informationMap[forwardKnyteId].color;
     spaceForwardElement.style.display = 'block';
     const forwardArrowShape = document.getElementById('forwardArrowShape');
-    forwardArrowShape.setAttribute('stroke', visualThemeColors.navigation);
+    forwardArrowShape.setAttribute('stroke', visualTheme.navigation.strokeColor);
     forwardArrowShape.setAttribute('fill', color);
   }
-  spaceMapElement.style.display = spaceRootElement.dataset.knoxelId !== spacemapKnoxelId
-    ? 'block'
-    : 'none';
-  spaceHostElement.style.display = activeGhost.hostKnoxelId && 
+  if (spaceRootElement.dataset.knoxelId !== spacemapKnoxelId)
+  {
+    const mapShape = document.getElementById('mapShape');
+    mapShape.setAttribute('fill', visualTheme.navigation.fillColor);
+    spaceMapElement.style.display = 'block';
+  }
+  else
+  {
+    spaceMapElement.style.display = 'none';
+  }
+  if (
+    spaceHostElement.style.display = activeGhost.hostKnoxelId && 
     activeGhost.hostKnoxelId !== spaceRootElement.dataset.knoxelId
-    ? 'block' 
-    : 'none';
+  )
+  {
+    const hostShape = document.getElementById('hostShape');
+    hostShape.setAttribute('stroke', visualTheme.navigation.strokeColor);
+    hostShape.setAttribute('fill', visualTheme.navigation.fillColor);
+    spaceHostElement.style.display = 'block';
+  }
+  else
+  {
+    spaceHostElement.style.display = 'none';
+  }
 }
 
 const activeGhost = {
@@ -568,10 +505,10 @@ function dropGhostRect(desc)
     x: desc.position.x + activeGhost.offset.x,
     y: desc.position.y + activeGhost.offset.y
   };
-  if (desc.landingKnoxelId !== spacemapKnoxelId)
-    delete informationMap[desc.droppedHostKnyteId].space[desc.droppedKnoxelId];
+  delete informationMap[desc.droppedHostKnyteId].space[desc.droppedKnoxelId];
   informationMap[landingKnyteId].space[desc.droppedKnoxelId] = landingPosition;
-  setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId, refreshCall: true}); // TODO: optimise space refresh
+  setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+  onKnoxelSpaceChanged();
 }
 
 function onKeyDownWindow(e)
@@ -579,7 +516,13 @@ function onKeyDownWindow(e)
   if (e.code === 'Escape')
   {
     if (activeGhost.knoxelId)
+    {
       terminateGhostRect();
+      setNavigationControlState({
+        backKnoxelId: spaceBackStack[spaceBackStack.length - 1],
+        forwardKnoxelId: spaceForwardStack[spaceForwardStack.length - 1]
+      });
+    }
   }
   else if (e.code === 'Space')
   {
@@ -590,36 +533,81 @@ function onKeyDownWindow(e)
       {
         const ghostKnoxelId = mouseoverGhostKnoxelId || spaceRootElement.dataset.knoxelId;
         const ghostHostKnoxelId = spaceRootElement.dataset.knoxelId;
-        if (ghostKnoxelId !== spacemapKnoxelId)
-          spawnGhostRect({ghostKnoxelId, ghostHostKnoxelId, position});
-        else
-          alert('Can\'t move or copy space map knoxel.');
+        spawnGhostRect({ghostKnoxelId, ghostHostKnoxelId, position});
       }
       else
       {
         const droppedHostKnoxelId = activeGhost.hostKnoxelId;
         const landingKnoxelId = spaceRootElement.dataset.knoxelId;
-        if (
-          droppedHostKnoxelId !== spacemapKnoxelId ||
-          landingKnoxelId === spacemapKnoxelId
-        )
-        {
-          dropGhostRect(
-            {
-              droppedKnoxelId: activeGhost.knoxelId,
-              droppedHostKnyteId: knoxels[droppedHostKnoxelId],
-              landingKnoxelId, position,
-            }
-          );
-          terminateGhostRect();
-        }
-        else
-          alert('Can\'t move knoxel from space map to anoher space.');
+        dropGhostRect(
+          {
+            droppedKnoxelId: activeGhost.knoxelId,
+            droppedHostKnyteId: knoxels[droppedHostKnoxelId],
+            landingKnoxelId, position,
+          }
+        );
+        terminateGhostRect();
       }
       setNavigationControlState({
         backKnoxelId: spaceBackStack[spaceBackStack.length - 1],
         forwardKnoxelId: spaceForwardStack[spaceForwardStack.length - 1]
       });
+    }
+  }
+}
+
+let readyForSpaceChangeHandling = false;
+
+function onKnoxelSpaceChanged()
+{
+  // rebuild spacemapKnoxelId space: add knoxels for all new knytes; recreate all arrows.
+  if (!readyForSpaceChangeHandling)
+    return;
+
+  // build new knytes map
+  const spacemapKnyteId = knoxels[spacemapKnoxelId];
+  const spacemapSpace = informationMap[spacemapKnyteId].space;
+  const spacemapKnytes = {};
+  const knyteIdToKnoxelIdMap = {};
+  for (let knoxelId in spacemapSpace)
+  {
+    const knyteId = knoxels[knoxelId];
+    spacemapKnytes[knyteId] = true;
+    if (!knyteIdToKnoxelIdMap[knyteId])
+      knyteIdToKnoxelIdMap[knyteId] = {};
+    knyteIdToKnoxelIdMap[knyteId][knoxelId] = true;
+  }
+  const newKnytes = {};
+  for (let knyteId in knytesCloud)
+    if (!(knyteId in spacemapKnytes))
+      newKnytes[knyteId] = true;
+  
+  // create new knoxel for every new knyte
+  const position = {x: 3 * visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight};
+  for (let knyteId in newKnytes)
+  {
+    const knoxelId = knit.new();
+    addKnoxel({hostKnyteId: spacemapKnyteId, knyteId, knoxelId, position, spacemap: true});
+    knyteIdToKnoxelIdMap[knyteId] = {};
+    knyteIdToKnoxelIdMap[knyteId][knoxelId] = true;
+  }
+  
+  // build arrows
+  cleanupArrows();
+  for (let knoxelId in knoxels)
+  {
+    const knyteId = knoxels[knoxelId];
+    if (knyteId === spacemapKnyteId)
+      continue;
+    const space = informationMap[knyteId].space;
+    for (let nestedKnoxelId in space)
+    {
+      const nestedKnyteId = knoxels[nestedKnoxelId];
+      const initialKnoxelIds = knyteIdToKnoxelIdMap[knyteId];
+      const terminalKnoxelIds = knyteIdToKnoxelIdMap[nestedKnyteId];
+      for (let initialKnoxelId in initialKnoxelIds)
+        for (let terminalKnoxelId in terminalKnoxelIds)
+          addOriginsArrow({id: knit.new(), initialKnoxelId, terminalKnoxelId});
     }
   }
 }
@@ -638,13 +626,15 @@ function onLoadBody(e)
   masterKnoxelId = knit.new();
   const masterColor = visualTheme.rect.fillColor.getRandom();
   addKnyte({knyteId: masterKnyteId, initialKnyteId: knit.empty, terminalKnyteId: knit.empty, color: masterColor});
-  addKnoxel({hostKnyteId: null, knyteId: masterKnyteId, knoxelId: masterKnoxelId, position: null});
   // create spacemap knyte
   const spacemapKnyteId = knit.new();
   spacemapKnoxelId = knit.new();
-  const spacemapColor = visualThemeColors.navigation;
+  const spacemapColor = visualTheme.navigation.fillColor;
   addKnyte({knyteId: spacemapKnyteId, initialKnyteId: knit.empty, terminalKnyteId: knit.empty, color: spacemapColor});
-  addKnoxel({hostKnyteId: null, knyteId: spacemapKnyteId, knoxelId: spacemapKnoxelId, position: null});
+  // create master and spacemap knoxels
+  const position = {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight};
+  addKnoxel({hostKnyteId: spacemapKnyteId, knyteId: masterKnyteId, knoxelId: masterKnoxelId, position});
+  addKnoxel({hostKnyteId: masterKnyteId, knyteId: spacemapKnyteId, knoxelId: spacemapKnoxelId, position});
   // setup event handlers
   spaceRootElement.addEventListener('click', onClickSpaceRoot, false);
   spaceRootElement.addEventListener('mousedown', onMouseDownSpaceRoot, false);
@@ -660,6 +650,9 @@ function onLoadBody(e)
   setSpaceRootKnoxel({knoxelId: masterKnoxelId});
   setNavigationControlState({});
   onResizeWindow();
+  // initialise spacemap
+  readyForSpaceChangeHandling = true;
+  onKnoxelSpaceChanged();
   
   console.log('ready');
 }
