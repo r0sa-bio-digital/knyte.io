@@ -1,4 +1,5 @@
 /* global visualThemeColors */
+/* global intersect */
 
 let svgNameSpace;
 let spaceRootElement;
@@ -185,15 +186,71 @@ function addRect(desc)
 
 function addOriginsArrow(desc)
 {
+  function collideAABBVsLine(aabb, line)
+  {
+		var box = new intersect.AABB(
+			new intersect.Point(aabb.position.x, aabb.position.y), 
+			new intersect.Point(0.5*aabb.dimension.w, 0.5*aabb.dimension.h)
+		);
+		var position = new intersect.Point(line.position1.x, line.position1.y);
+		var delta = new intersect.Point(
+			line.position2.x - line.position1.x, line.position2.y - line.position1.y
+		);
+		const hit = box.intersectSegment(position, delta); // returns null or intersect.Hit object
+    return hit ? hit.time : 0;
+  }
+  
   // desc: {id, initialKnoxelId, terminalKnoxelId}
   const spaceRootKnyteId = knoxels[spacemapKnoxelId];
   const arrowSpace = informationMap[spaceRootKnyteId].space;
   const initialPosition = arrowSpace[desc.initialKnoxelId];
   const terminalPosition = arrowSpace[desc.terminalKnoxelId];
-  const x1 = initialPosition.x + (desc.initialKnoxelId === desc.terminalKnoxelId ? -10 : 0);
-  const y1 = initialPosition.y;
-  const x2 = terminalPosition.x + (desc.initialKnoxelId === desc.terminalKnoxelId ? 6 : 0);
-  const y2 = terminalPosition.y;
+  let x1 = initialPosition.x;
+  let y1 = initialPosition.y;
+  let x2 = terminalPosition.x;
+  let y2 = terminalPosition.y;
+  if (desc.initialKnoxelId === desc.terminalKnoxelId)
+  {
+    x1 -= 10;
+    x2 += 6;
+  }
+  else
+  {
+    const direction = {
+      x: terminalPosition.x - initialPosition.x,
+      y: terminalPosition.y - initialPosition.y
+    };
+    const directionLengthSquared = direction.x*direction.x + direction.y*direction.y;
+    if (directionLengthSquared > 0.01)
+    {
+      const directionLength = Math.sqrt(directionLengthSquared);
+      const directionNormalised = {
+        x: direction.x / directionLength,
+        y: direction.y / directionLength
+      };
+      const w = visualTheme.rect.defaultWidth;
+      const h = visualTheme.rect.defaultHeight;
+      const initialTime = collideAABBVsLine(
+        {position: initialPosition, dimension: {w, h}},
+        {position1: terminalPosition, position2: initialPosition}
+      );
+      const terminalTime = collideAABBVsLine(
+        {position: terminalPosition, dimension: {w, h}},
+        {position1: initialPosition, position2: terminalPosition}
+      );
+      const rectStrokeOffset = 0.5*visualTheme.rect.strokeWidth;
+      const initialArrowStrokeOffset = 0.5*visualTheme.arrow.strokeWidth;
+      const terminalArrowStrokeOffset = 2.0*visualTheme.arrow.strokeWidth;
+      const arrowIntervalStrokeOffset = 0.5*visualTheme.arrow.strokeWidth;
+      const initialStrokeOffset = rectStrokeOffset + initialArrowStrokeOffset + arrowIntervalStrokeOffset;
+      x1 += ((1 - initialTime) * directionLength + initialStrokeOffset) * directionNormalised.x;
+      y1 += ((1 - initialTime) * directionLength + initialStrokeOffset) * directionNormalised.y;
+      const terminalStrokeOffset = rectStrokeOffset + terminalArrowStrokeOffset + arrowIntervalStrokeOffset;
+      x2 -= ((1 - terminalTime) * directionLength + terminalStrokeOffset) * directionNormalised.x;
+      y2 -= ((1 - terminalTime) * directionLength + terminalStrokeOffset) * directionNormalised.y;
+    }
+  }
+
   const arrow = document.createElementNS(svgNameSpace, 'line');
   arrow.id = desc.id;
   arrow.setAttribute('x1', x1);
