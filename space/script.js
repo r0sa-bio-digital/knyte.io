@@ -8,6 +8,7 @@ let spaceMapElement;
 let spaceHostElement;
 let masterKnoxelId;
 let spacemapKnoxelId;
+let handleSpacemapChanged = function() {};
 const knytesCloud = {}; // core knyte id --> {initialKnyteId, terminalKnyteId}
 const informationMap = {}; // knyte id --> {color, space: {knoxel id --> position}}
 const knoxels = {}; // knoxel id --> knyte id
@@ -90,7 +91,7 @@ function addKnoxel(desc)
   if (desc.hostKnyteId)
     informationMap[desc.hostKnyteId].space[desc.knoxelId] = desc.position;
   if (!desc.spacemap)
-    onKnoxelSpaceChanged();
+    handleSpacemapChanged();
 }
 
 function setGhostedMode(desc)
@@ -189,9 +190,9 @@ function addOriginsArrow(desc)
   const arrowSpace = informationMap[spaceRootKnyteId].space;
   const initialPosition = arrowSpace[desc.initialKnoxelId];
   const terminalPosition = arrowSpace[desc.terminalKnoxelId];
-  const x1 = initialPosition.x;
+  const x1 = initialPosition.x + (desc.initialKnoxelId === desc.terminalKnoxelId ? -10 : 0);
   const y1 = initialPosition.y;
-  const x2 = terminalPosition.x;
+  const x2 = terminalPosition.x + (desc.initialKnoxelId === desc.terminalKnoxelId ? 6 : 0);
   const y2 = terminalPosition.y;
   const arrow = document.createElementNS(svgNameSpace, 'line');
   arrow.id = desc.id;
@@ -508,7 +509,7 @@ function dropGhostRect(desc)
   delete informationMap[desc.droppedHostKnyteId].space[desc.droppedKnoxelId];
   informationMap[landingKnyteId].space[desc.droppedKnoxelId] = landingPosition;
   setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
-  onKnoxelSpaceChanged();
+  handleSpacemapChanged();
 }
 
 function onKeyDownWindow(e)
@@ -556,13 +557,9 @@ function onKeyDownWindow(e)
   }
 }
 
-let readyForSpaceChangeHandling = false;
-
-function onKnoxelSpaceChanged()
+function spacemapChangedHandler()
 {
   // rebuild spacemapKnoxelId space: add knoxels for all new knytes; recreate all arrows.
-  if (!readyForSpaceChangeHandling)
-    return;
 
   // build new knytes map
   const spacemapKnyteId = knoxels[spacemapKnoxelId];
@@ -594,6 +591,7 @@ function onKnoxelSpaceChanged()
   
   // build arrows
   cleanupArrows();
+  const arrowedKnoxelPairs = {};
   for (let knoxelId in knoxels)
   {
     const knyteId = knoxels[knoxelId];
@@ -607,7 +605,13 @@ function onKnoxelSpaceChanged()
       const terminalKnoxelIds = knyteIdToKnoxelIdMap[nestedKnyteId];
       for (let initialKnoxelId in initialKnoxelIds)
         for (let terminalKnoxelId in terminalKnoxelIds)
+        {
+          const knoxelPair = initialKnoxelId + '+' + terminalKnoxelId;
+          if (knoxelPair in arrowedKnoxelPairs)
+            continue;
           addOriginsArrow({id: knit.new(), initialKnoxelId, terminalKnoxelId});
+          arrowedKnoxelPairs[knoxelPair] = true;
+        }
     }
   }
 }
@@ -651,8 +655,8 @@ function onLoadBody(e)
   setNavigationControlState({});
   onResizeWindow();
   // initialise spacemap
-  readyForSpaceChangeHandling = true;
-  onKnoxelSpaceChanged();
+  handleSpacemapChanged = spacemapChangedHandler;
+  handleSpacemapChanged();
   
   console.log('ready');
 }
