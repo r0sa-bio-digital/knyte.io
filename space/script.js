@@ -314,37 +314,6 @@ function addKnoxelRect(desc)
   addRect({id: knoxelId, position, color});  
 }
 
-function removeKnoxelRect(desc)
-{
-  // desc: {removeKnoxelId, stayKnoxelId}
-  const knoxelId = desc.removeKnoxelId;
-  const knyteId = knoxels[knoxelId];
-  for (let hostKnoxelId in informationMap)
-  {
-    const space = informationMap[hostKnoxelId].space;
-    if (knoxelId in space)
-      delete space[knoxelId];
-  }
-  delete knoxels[knoxelId];
-  const arrowsToRemove = {};
-  for (let arrowId in arrows)
-  {
-    const arrow = arrows[arrowId];
-    if (arrow.initialKnoxelId === knoxelId || arrow.terminalKnoxelId === knoxelId)
-      arrowsToRemove[arrowId] = true;
-  }
-  for (let arrowId in arrowsToRemove)
-    delete arrows[arrowId];
-  for (let i = 0; i < spaceBackStack.length; ++i)
-    if (spaceBackStack[i] === knoxelId)
-      spaceBackStack[i] = desc.stayKnoxelId;
-  for (let i = 0; i < spaceForwardStack.length; ++i)
-    if (spaceForwardStack[i] === knoxelId)
-      spaceForwardStack[i] = desc.stayKnoxelId;
-  setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
-  handleSpacemapChanged();
-}
-
 function onClickRect(e)
 {
   if (!e.shiftKey && !e.altKey && !e.metaKey)
@@ -376,6 +345,59 @@ function onMouseOutRect(e)
     mouseoverGhostKnoxelId = null;
 }
 
+function divideKnoxel(desc)
+{
+  // desc: {knoxelId, position}
+  const knyteId = knoxels[desc.sourceKnoxelId];
+  addKnoxelRect({knyteId, position: desc.position});
+}
+
+function joinKnoxels(desc)
+{
+  // desc: {removeKnoxelId, stayKnoxelId}
+  replaceKnoxelInStacks(desc);
+  removeKnoxel({knoxelId: desc.removeKnoxelId});
+  setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+  handleSpacemapChanged();
+}
+
+function removeKnoxel(desc)
+{
+  // desc: {knoxelId}
+  
+  // cleanup space
+  const knyteId = knoxels[desc.knoxelId];
+  for (let hostKnoxelId in informationMap)
+  {
+    const space = informationMap[hostKnoxelId].space;
+    if (desc.knoxelId in space)
+      delete space[desc.knoxelId];
+  }
+  // cleanup knoxel
+  delete knoxels[desc.knoxelId];
+  // cleanup arrows
+  const arrowsToRemove = {};
+  for (let arrowId in arrows)
+  {
+    const arrow = arrows[arrowId];
+    if (arrow.initialKnoxelId === desc.knoxelId || arrow.terminalKnoxelId === desc.knoxelId)
+      arrowsToRemove[arrowId] = true;
+  }
+  for (let arrowId in arrowsToRemove)
+    delete arrows[arrowId];
+}
+
+function replaceKnoxelInStacks(desc)
+{
+  // desc: {removeKnoxelId, stayKnoxelId}
+  for (let i = 0; i < spaceBackStack.length; ++i)
+    if (spaceBackStack[i] === desc.removeKnoxelId)
+      spaceBackStack[i] = desc.stayKnoxelId;
+  for (let i = 0; i < spaceForwardStack.length; ++i)
+    if (spaceForwardStack[i] === desc.removeKnoxelId)
+      spaceForwardStack[i] = desc.stayKnoxelId;
+}
+
 function onClickSpaceRoot(e)
 {
   const position = {x: e.offsetX, y: e.offsetY};
@@ -389,10 +411,7 @@ function onClickSpaceRoot(e)
   else if (!e.shiftKey && e.altKey && !e.metaKey)
   {
     if (activeGhost.knoxelId)
-    {
-      const knyteId = knoxels[activeGhost.knoxelId];
-      addKnoxelRect({knyteId, position});
-    }
+      divideKnoxel({sourceKnoxelId: activeGhost.knoxelId, position});
   }
 }
 
@@ -660,7 +679,7 @@ function onKeyDownWindow(e)
           const removeKnoxelId = activeGhost.knoxelId;
           const stayKnoxelId = mouseoverGhostKnoxelId;
           terminateGhostRect();
-          removeKnoxelRect({removeKnoxelId, stayKnoxelId});
+          joinKnoxels({removeKnoxelId, stayKnoxelId});
           setNavigationControlState({
             backKnoxelId: spaceBackStack[spaceBackStack.length - 1],
             forwardKnoxelId: spaceForwardStack[spaceForwardStack.length - 1]
