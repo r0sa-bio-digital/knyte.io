@@ -366,13 +366,15 @@ function removeKnoxel(desc)
   // desc: {knoxelId}
   
   // cleanup space
-  const knyteId = knoxels[desc.knoxelId];
-  for (let hostKnoxelId in informationMap)
-  {
-    const space = informationMap[hostKnoxelId].space;
-    if (desc.knoxelId in space)
-      delete space[desc.knoxelId];
-  }
+  let hostKnyteId;
+  for (let knyteId in informationMap)
+    if (desc.knoxelId in informationMap[knyteId].space)
+    {
+      hostKnyteId = knyteId;
+      break;
+    }
+  const space = informationMap[hostKnyteId].space;
+  delete space[desc.knoxelId];
   // cleanup knoxel
   delete knoxels[desc.knoxelId];
   // cleanup arrows
@@ -400,18 +402,34 @@ function replaceKnoxelInStacks(desc)
 
 function onClickSpaceRoot(e)
 {
-  const position = {x: e.offsetX, y: e.offsetY};
+  const mousePosition = {x: e.offsetX, y: e.offsetY};
   if (!e.shiftKey && !e.altKey && e.metaKey)
   {
     const knyteId = knit.new();
     const color = visualTheme.rect.fillColor.getRandom();
     addKnyte({knyteId, initialKnyteId: knit.empty, terminalKnyteId: knit.empty, color});
-    addKnoxelRect({knyteId, position});
+    addKnoxelRect({knyteId, position: mousePosition});
   }
   else if (!e.shiftKey && e.altKey && !e.metaKey)
   {
-    if (activeGhost.knoxelId)
-      divideKnoxel({sourceKnoxelId: activeGhost.knoxelId, position});
+    const overKnoxelId = mouseoverGhostKnoxelId
+      ? mouseoverGhostKnoxelId
+      : spaceRootElement.dataset.knoxelId;
+    let hostKnyteId;
+    for (let knyteId in informationMap)
+      if (overKnoxelId in informationMap[knyteId].space)
+      {
+        hostKnyteId = knyteId;
+        break;
+      }
+    const sourcePosition = informationMap[hostKnyteId].space[overKnoxelId];
+    const position = mouseoverGhostKnoxelId
+      ? {
+        x: sourcePosition.x + visualTheme.rect.defaultWidth,
+        y: sourcePosition.y + visualTheme.rect.defaultHeight
+      }
+      : mousePosition;
+    divideKnoxel({sourceKnoxelId: overKnoxelId, position});
   }
 }
 
