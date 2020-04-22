@@ -665,10 +665,11 @@ function onMouseUpSpaceRoot(e)
 
 function dropGhostRect(desc)
 {
-  // desc: {droppedKnoxelId, droppedHostKnyteId, landingKnoxelId, position}
-  const landingKnyteId = knoxels[desc.landingKnoxelId];
+  // desc: {droppedKnoxelId, droppedHostKnyteId, position}
+  const landingKnoxelId = spaceRootElement.dataset.knoxelId;  
+  const landingKnyteId = knoxels[landingKnoxelId];
   if (
-    desc.droppedKnoxelId === desc.landingKnoxelId &&
+    desc.droppedKnoxelId === landingKnoxelId &&
     !(desc.droppedKnoxelId in informationMap[landingKnyteId].space)
   )
     return;
@@ -739,12 +740,11 @@ function onKeyDownWindow(e)
       else
       {
         const droppedHostKnoxelId = activeGhost.hostKnoxelId;
-        const landingKnoxelId = spaceRootElement.dataset.knoxelId;
         dropGhostRect(
           {
             droppedKnoxelId: activeGhost.knoxelId,
             droppedHostKnyteId: knoxels[droppedHostKnoxelId],
-            landingKnoxelId, position,
+            position,
           }
         );
         terminateGhostRect();
