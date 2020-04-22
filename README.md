@@ -35,11 +35,20 @@
   * shortcuts
     * cmd + click - создать новый knyte и knoxel для него в указанной точке пространства
     * click в knoxel - перейти в пространство knoxel'я
-    * space без ghost'а - создать ghost для выбранного knoxel'я. пространство - это тоже knoxel. ghost существует в screenspace'e и привязан к курсору.
-    * alt + click с ghost'ом - создать knoxel для выбранного ghost knyte'а
-    * space c ghost'ом - переместить ghost knoxel в выбранную позицию выбранного пространства
-    * escape c ghost'ом - сбросить ghost
+    * space
+      * без ghost'а - создать ghost для выбранного knoxel'я
+        * пространство - это тоже knoxel. ghost существует в screenspace'e и привязан к курсору.
+      * c ghost'ом - переместить ghost knoxel в выбранную позицию выбранного пространства
+    * enter
+      * без bubble'а - создать bubble для выбранного knoxel'я
+        * пространство - это тоже knoxel. bubble существует в screenspace'e и привязан к курсору.
+      * с bubble'ом на knoxel'е того же knyte'а - объединить 2 knoxel'я в 1
+      * с bubble'ом в другом месте - создать ещё 1 knoxel для выбранного knyte'а
+    * escape
+      * c ghost'ом - сбросить ghost
+      * c bubble'ом - сбросить bubble
   * buttons
     * space map - переход в пространство всех knoxel'ей, сгруппированных по связным островам
     * space back - возврат в предыдущее пространство
     * space forward - повторный вход в следующее пространство
+    * space host - переход в пространство, где расположен ghosted knoxel
