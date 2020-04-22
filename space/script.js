@@ -375,18 +375,20 @@ function joinKnoxels(desc)
   removeKnoxel({knoxelId: desc.removeKnoxelId});
 }
 
+function getHostKnyteIdByKnoxelId(knoxelId)
+{
+  for (let knyteId in informationMap)
+    if (knoxelId in informationMap[knyteId].space)
+      return knyteId;
+  return null;
+}
+
 function removeKnoxel(desc)
 {
   // desc: {knoxelId}
   
   // cleanup space
-  let hostKnyteId;
-  for (let knyteId in informationMap)
-    if (desc.knoxelId in informationMap[knyteId].space)
-    {
-      hostKnyteId = knyteId;
-      break;
-    }
+  let hostKnyteId = getHostKnyteIdByKnoxelId(desc.knoxelId);
   const space = informationMap[hostKnyteId].space;
   delete space[desc.knoxelId];
   // cleanup knoxel
@@ -524,8 +526,7 @@ function setNavigationControlState(desc)
     spaceMapElement.style.display = 'none';
   }
   if (
-    spaceHostElement.style.display = activeGhost.hostKnoxelId && 
-    activeGhost.hostKnoxelId !== spaceRootElement.dataset.knoxelId
+    activeGhost.knoxelId && activeGhost.hostKnoxelId !== spaceRootElement.dataset.knoxelId
   )
   {
     const hostShape = document.getElementById('hostShape');
@@ -542,6 +543,7 @@ function setNavigationControlState(desc)
 const activeGhost = {
   knoxelId: null,
   hostKnoxelId: null,
+  hostKnyteId: null,
   offset: {x: 0, y: 0},
   element: null,
 };
@@ -551,6 +553,7 @@ function spawnGhostRect(desc)
   // desc: {knoxelId, hostKnoxelId, position}
   activeGhost.knoxelId = desc.knoxelId;
   activeGhost.hostKnoxelId = desc.hostKnoxelId;
+  activeGhost.hostKnyteId = getHostKnyteIdByKnoxelId(desc.knoxelId);
   const knyteId = knoxels[desc.knoxelId];
   const color = informationMap[knyteId].color;
   const id = desc.knoxelId + '.ghost';
@@ -587,6 +590,7 @@ function terminateGhostRect()
     setGhostedMode({knoxelId: activeGhost.knoxelId, isGhosted: false});
   activeGhost.knoxelId = null;
   activeGhost.hostKnoxelId = null;
+  activeGhost.hostKnyteId = null;
   activeGhost.offset = {x: 0, y: 0};
   activeGhost.element = null;
 }
@@ -600,9 +604,8 @@ const activeBubble = {
 
 function spawnBubbleRect(desc)
 {
-  // desc: {knoxelId, hostKnoxelId, position}
+  // desc: {knoxelId, position}
   activeBubble.knoxelId = desc.knoxelId;
-  activeBubble.hostKnoxelId = desc.hostKnoxelId;
   const knyteId = knoxels[desc.knoxelId];
   const color = informationMap[knyteId].color;
   const id = desc.knoxelId + '.bubble';
@@ -615,7 +618,8 @@ function spawnBubbleRect(desc)
   }
   else
   {
-    const hostKnoxelSpace = informationMap[knoxels[desc.hostKnoxelId]].space;
+    const hostKnyteId = getHostKnyteIdByKnoxelId(desc.knoxelId);
+    const hostKnoxelSpace = informationMap[hostKnyteId].space;
     const knoxelPosition = hostKnoxelSpace[desc.knoxelId];
     activeBubble.offset = {
       x: knoxelPosition.x - desc.position.x, 
@@ -751,11 +755,10 @@ function onKeyDownWindow(e)
       }
       else
       {
-        const droppedHostKnoxelId = activeGhost.hostKnoxelId;
         dropGhostRect(
           {
             droppedKnoxelId: activeGhost.knoxelId,
-            droppedHostKnyteId: knoxels[droppedHostKnoxelId],
+            droppedHostKnyteId: activeGhost.hostKnyteId,
             position,
           }
         );
@@ -775,8 +778,7 @@ function onKeyDownWindow(e)
       if (!activeBubble.knoxelId)
       {
         const knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
-        const hostKnoxelId = spaceRootElement.dataset.knoxelId;
-        spawnBubbleRect({knoxelId, hostKnoxelId, position});
+        spawnBubbleRect({knoxelId, position});
       }
       else
       {
