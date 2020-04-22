@@ -308,11 +308,11 @@ function cleanupArrows()
 
 function addKnoxelRect(desc)
 {
-  // desc: {knyteId, position}
+  // desc: {knyteId, hostKnoxelId, position}
   const position = activeGhost.knoxelId
     ? {x: desc.position.x + activeGhost.offset.x, y: desc.position.y + activeGhost.offset.y}
     : desc.position;
-  const hostKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
+  const hostKnyteId = knoxels[desc.hostKnoxelId];
   const knoxelId = knit.new();
   const color = informationMap[desc.knyteId].color;
   addKnoxel({hostKnyteId, knyteId: desc.knyteId, knoxelId, position});
@@ -352,9 +352,9 @@ function onMouseOutRect(e)
 
 function divideKnoxel(desc)
 {
-  // desc: {sourceKnoxelId, position}
-  const knyteId = knoxels[desc.sourceKnoxelId];
-  addKnoxelRect({knyteId, position: desc.position});
+  // desc: {dividedKnoxelId, hostKnoxelId, position}
+  const knyteId = knoxels[desc.dividedKnoxelId];
+  addKnoxelRect({knyteId, hostKnoxelId: desc.hostKnoxelId, position: desc.position});
 }
 
 function joinKnoxels(desc)
@@ -362,7 +362,6 @@ function joinKnoxels(desc)
   // desc: {removeKnoxelId, stayKnoxelId}
   replaceKnoxelInStacks(desc);
   removeKnoxel({knoxelId: desc.removeKnoxelId});
-  setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
   handleSpacemapChanged();
 }
 
@@ -413,7 +412,7 @@ function onClickSpaceRoot(e)
     const knyteId = knit.new();
     const color = visualTheme.rect.fillColor.getRandom();
     addKnyte({knyteId, initialKnyteId: knit.empty, terminalKnyteId: knit.empty, color});
-    addKnoxelRect({knyteId, position: mousePosition});
+    addKnoxelRect({knyteId, hostKnoxelId: spaceRootElement.dataset.knoxelId, position: mousePosition});
   }
 }
 
@@ -693,7 +692,7 @@ function divideActiveBubble(desc)
     x: desc.position.x + activeBubble.offset.x,
     y: desc.position.y + activeBubble.offset.y
   };
-  divideKnoxel({sourceKnoxelId: dividedKnoxelId, position});
+  divideKnoxel({dividedKnoxelId, hostKnoxelId: spaceRootElement.dataset.knoxelId, position});
   setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
 }
 
@@ -702,6 +701,7 @@ function joinActiveBubble(desc)
   // desc: {joinedKnoxelId}
   const stayKnoxelId = activeBubble.knoxelId;
   joinKnoxels({removeKnoxelId: desc.joinedKnoxelId, stayKnoxelId});
+  setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
 }
 
 function onKeyDownWindow(e)
