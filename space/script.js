@@ -785,15 +785,19 @@ function onKeyDownWindow(e)
         const bubbleKnyteId = knoxels[activeBubble.knoxelId];
         const overKnoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
         const overKnyteId = knoxels[overKnoxelId];
-        if (overKnyteId !== bubbleKnyteId)
-          divideActiveBubble({position});
-        else if (
+        if (
+          overKnyteId === bubbleKnyteId &&
           overKnoxelId !== activeBubble.knoxelId && 
           overKnoxelId !== spaceRootElement.dataset.knoxelId
         )
           joinActiveBubble({joinedKnoxelId: overKnoxelId});
-        else
+        else if (
+          overKnoxelId === activeBubble.knoxelId ||
+          activeBubble.knoxelId === spaceRootElement.dataset.knoxelId
+        )
           terminateBubbleRect();
+        else
+          divideActiveBubble({position});
       }
       setNavigationControlState({
         backKnoxelId: spaceBackStack[spaceBackStack.length - 1],
