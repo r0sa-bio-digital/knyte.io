@@ -21,7 +21,7 @@ const visualTheme = {
     strokeColor: visualThemeColors.outline,
     strokeWidth: 4,
     selfcontained: {
-      rx: 8
+      strokeWidth: 2
     },
     fillColor: {
       getRandom: function() {
@@ -191,11 +191,10 @@ function addRect(desc)
   rect.setAttribute('height', h);
   rect.setAttribute('fill', desc.color);
   rect.setAttribute('stroke', visualTheme.rect.strokeColor);
-  rect.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
-  if (desc.selfcontained)
-  {
-    rect.setAttribute('rx', visualTheme.rect.selfcontained.rx);
-  }
+  rect.setAttribute(
+    'stroke-width', 
+    desc.selfcontained ? visualTheme.rect.selfcontained.strokeWidth : visualTheme.rect.strokeWidth
+  );
   if (desc.ghost)
   {
     rect.setAttribute('opacity', 0.5);
