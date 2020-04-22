@@ -173,14 +173,15 @@ function addRect(desc)
   }
   else if (desc.bubble)
   {
+    rect.setAttribute('opacity', 0.5);
+    rect.setAttribute('stroke-dasharray', '0 16');
+    rect.setAttribute('stroke-linecap', 'square');
     rect.style.pointerEvents = 'none';
     document.getElementById('bubbles').appendChild(rect);
   }
   else
   {
     rect.addEventListener('click', onClickRect, false);
-    rect.addEventListener('mouseover', onMouseOverRect, false);
-    rect.addEventListener('mouseout', onMouseOutRect, false);
     document.getElementById('knoxels').appendChild(rect);
   }
 }
@@ -330,17 +331,6 @@ function onClickRect(e)
     }
     e.stopPropagation(); // to prevent onClickSpaceRoot call
   }
-}
-
-let mouseMovePosition = {x: 0, y: 0};
-let mouseMovePagePosition = {x: 0, y: 0};
-
-function onMouseOverRect(e)
-{
-}
-
-function onMouseOutRect(e)
-{
 }
 
 function divideKnoxel(desc)
@@ -622,6 +612,9 @@ function terminateBubbleRect()
 function onMouseDownSpaceRoot(e)
 {
 }
+
+let mouseMovePosition = {x: 0, y: 0};
+let mouseMovePagePosition = {x: 0, y: 0};
 
 function onMouseMoveSpaceRoot(e)
 {
