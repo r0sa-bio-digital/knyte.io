@@ -119,9 +119,6 @@ function setSpaceRootKnoxel(desc)
   const spaceRootKnoxels = document.getElementById('knoxels');
   while (spaceRootKnoxels.firstChild)
     spaceRootKnoxels.firstChild.remove();
-  // reset mouseover knoxel cause of changing space
-  if (newKnoxelId !== priorKnoxelId)
-      mouseoverKnoxelId = null;
   // set actual knoxel id and space color
   spaceRootElement.dataset.knoxelId = newKnoxelId;
   spaceRootElement.style.backgroundColor = informationMap[newKnyteId].color;
@@ -156,6 +153,7 @@ function addRect(desc)
   const y = desc.position.y - h/2;
   const rect = document.createElementNS(svgNameSpace, 'rect');
   rect.id = desc.id;
+  rect.classList.value = 'mouseOverRect';
   rect.setAttribute('x', x);
   rect.setAttribute('y', y);
   rect.setAttribute('width', w);
@@ -334,18 +332,15 @@ function onClickRect(e)
   }
 }
 
-let mouseoverKnoxelId = null;
 let mouseMovePosition = {x: 0, y: 0};
+let mouseMovePagePosition = {x: 0, y: 0};
 
 function onMouseOverRect(e)
 {
-  mouseoverKnoxelId = e.target.id;
 }
 
 function onMouseOutRect(e)
 {
-  if (e.target.id === mouseoverKnoxelId)
-    mouseoverKnoxelId = null;
 }
 
 function divideKnoxel(desc)
@@ -631,6 +626,7 @@ function onMouseDownSpaceRoot(e)
 function onMouseMoveSpaceRoot(e)
 {
   mouseMovePosition = {x: e.offsetX, y: e.offsetY};
+  mouseMovePagePosition = {x: e.pageX, y: e.pageY};
   if (!activeGhost.knoxelId && !activeBubble.knoxelId)
     return;
   const w = visualTheme.rect.defaultWidth;
@@ -641,16 +637,6 @@ function onMouseMoveSpaceRoot(e)
   {
     activeGhost.element.setAttribute('x', x);
     activeGhost.element.setAttribute('y', y);
-
-    // TODO: remove after bubble-mode complete
-    /*
-    const knyteId = knoxels[activeGhost.knoxelId];
-    const overKnyteId = knoxels[mouseoverKnoxelId];
-    activeGhost.element.setAttribute(
-      'stroke-width',
-      activeGhost.knoxelId !== mouseoverKnoxelId && knyteId === overKnyteId ? 1 : visualTheme.rect.strokeWidth
-    );
-    */
   }
   if (activeBubble.knoxelId)
   {
@@ -707,6 +693,9 @@ function joinActiveBubble(desc)
 
 function onKeyDownWindow(e)
 {
+  const mouseoverElement = document.elementFromPoint(mouseMovePagePosition.x, mouseMovePagePosition.y);
+  const mouseoverKnoxelId = mouseoverElement.classList.value === 'mouseOverRect'
+    ? mouseoverElement.id : null;
   if (e.code === 'Escape')
   {
     if (activeGhost.knoxelId)
