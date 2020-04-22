@@ -118,7 +118,10 @@ function setBubbledMode(desc)
   {
     const knoxelId = knoxelElement.id;
     const knyteId = knoxels[knoxelId];
-    if (knoxelId !== desc.knoxelId && knyteId === desc.knyteId)
+    if (
+      knoxelId !== spaceRootElement.dataset.knoxelId &&
+      knoxelId !== desc.knoxelId && knyteId === desc.knyteId
+    )
     {
       if (desc.isBubbled)
       {
@@ -793,7 +796,8 @@ function onKeyDownWindow(e)
           joinActiveBubble({joinedKnoxelId: overKnoxelId});
         else if (
           overKnoxelId === activeBubble.knoxelId ||
-          activeBubble.knoxelId === spaceRootElement.dataset.knoxelId
+          activeBubble.knoxelId === spaceRootElement.dataset.knoxelId ||
+          overKnyteId === bubbleKnyteId && overKnoxelId === spaceRootElement.dataset.knoxelId
         )
           terminateBubbleRect();
         else
