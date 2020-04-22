@@ -773,7 +773,10 @@ function onKeyDownWindow(e)
         const overKnyteId = knoxels[overKnoxelId];
         if (overKnyteId !== bubbleKnyteId)
           divideActiveBubble({position});
-        else if (overKnoxelId !== activeBubble.knoxelId)
+        else if (
+          overKnoxelId !== activeBubble.knoxelId && 
+          overKnoxelId !== spaceRootElement.dataset.knoxelId
+        )
           joinActiveBubble({joinedKnoxelId: overKnoxelId});
         else
           terminateBubbleRect();
