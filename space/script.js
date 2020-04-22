@@ -109,6 +109,32 @@ function setGhostedMode(desc)
   }
 }
 
+function setBubbledMode(desc)
+{
+  // desc: {knoxelId, knyteId, isBubbled}
+  const spaceRootKnoxels = document.getElementById('knoxels');
+  let knoxelElement = spaceRootKnoxels.firstChild;
+  while (knoxelElement)
+  {
+    const knoxelId = knoxelElement.id;
+    const knyteId = knoxels[knoxelId];
+    if (knoxelId !== desc.knoxelId && knyteId === desc.knyteId)
+    {
+      if (desc.isBubbled)
+      {
+        knoxelElement.setAttribute('stroke-dasharray', '0 16');
+        knoxelElement.setAttribute('stroke-linecap', 'square');
+      }
+      else
+      {
+        knoxelElement.removeAttribute('stroke-dasharray');
+        knoxelElement.removeAttribute('stroke-linecap');
+      }
+    }
+    knoxelElement = knoxelElement.nextElementSibling;
+  }
+}
+
 function setSpaceRootKnoxel(desc)
 {
   // desc: {knoxelId}
@@ -138,6 +164,8 @@ function setSpaceRootKnoxel(desc)
     if (knoxelId === activeGhost.knoxelId)
       setGhostedMode({knoxelId, isGhosted: true});
   }
+  // restore bubble-mode view
+  setBubbledMode({knoxelId: activeBubble.knoxelId, knyteId: knoxels[activeBubble.knoxelId], isBubbled: true});
   // control arrows display
   const arrowsElement = document.getElementById('arrows');
   arrowsElement.style.display = newKnyteId === knoxels[spacemapKnoxelId]
@@ -598,11 +626,13 @@ function spawnBubbleRect(desc)
       'translate(' + activeBubble.offset.x + ' ' + activeBubble.offset.y + ')'
     );
   }
+  setBubbledMode({knoxelId: desc.knoxelId, knyteId, isBubbled: true});
 }
 
 function terminateBubbleRect()
 {
   activeBubble.element.remove();
+  setBubbledMode({knoxelId: activeBubble.knoxelId, knyteId: knoxels[activeBubble.knoxelId], isBubbled: false});
   activeBubble.knoxelId = null;
   activeBubble.hostKnoxelId = null;
   activeBubble.offset = {x: 0, y: 0};
