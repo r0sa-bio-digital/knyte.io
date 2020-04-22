@@ -87,12 +87,10 @@ function addKnyte(desc)
 
 function addKnoxel(desc)
 {
-  // desc: {hostKnyteId, knyteId, knoxelId, position, spacemap}
+  // desc: {hostKnyteId, knyteId, knoxelId, position}
   knoxels[desc.knoxelId] = desc.knyteId;
   if (desc.hostKnyteId)
     informationMap[desc.hostKnyteId].space[desc.knoxelId] = desc.position;
-  if (!desc.spacemap)
-    handleSpacemapChanged();
 }
 
 function setGhostedMode(desc)
@@ -355,6 +353,7 @@ function divideKnoxel(desc)
   // desc: {dividedKnoxelId, hostKnoxelId, position}
   const knyteId = knoxels[desc.dividedKnoxelId];
   addKnoxelRect({knyteId, hostKnoxelId: desc.hostKnoxelId, position: desc.position});
+  handleSpacemapChanged();
 }
 
 function joinKnoxels(desc)
@@ -362,7 +361,6 @@ function joinKnoxels(desc)
   // desc: {removeKnoxelId, stayKnoxelId}
   replaceKnoxelInStacks(desc);
   removeKnoxel({knoxelId: desc.removeKnoxelId});
-  handleSpacemapChanged();
 }
 
 function removeKnoxel(desc)
@@ -413,6 +411,7 @@ function onClickSpaceRoot(e)
     const color = visualTheme.rect.fillColor.getRandom();
     addKnyte({knyteId, initialKnyteId: knit.empty, terminalKnyteId: knit.empty, color});
     addKnoxelRect({knyteId, hostKnoxelId: spaceRootElement.dataset.knoxelId, position: mousePosition});
+    handleSpacemapChanged();
   }
 }
 
@@ -701,6 +700,7 @@ function joinActiveBubble(desc)
   // desc: {joinedKnoxelId}
   const stayKnoxelId = activeBubble.knoxelId;
   joinKnoxels({removeKnoxelId: desc.joinedKnoxelId, stayKnoxelId});
+  handleSpacemapChanged();
   setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
 }
 
@@ -813,7 +813,7 @@ function spacemapChangedHandler()
   for (let knyteId in newKnytes)
   {
     const knoxelId = knit.new();
-    addKnoxel({hostKnyteId: spacemapKnyteId, knyteId, knoxelId, position, spacemap: true});
+    addKnoxel({hostKnyteId: spacemapKnyteId, knyteId, knoxelId, position});
     knyteIdToKnoxelIdMap[knyteId] = {};
     knyteIdToKnoxelIdMap[knyteId][knoxelId] = true;
   }
