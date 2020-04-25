@@ -260,6 +260,14 @@ const knoxelRect = new function()
     else
       console.error('failed moving for knoxelId ' + desc.element.id);
   };
+  
+  this.getRootByTarget = function(targetElement)
+  {
+    let element = targetElement;
+    while (!element.id)
+      element = element.parentElement;
+    return element;
+  };
 };
 
 function setGhostedMode(desc)
@@ -450,13 +458,14 @@ function addKnoxelRect(desc)
 
 function onClickRect(e)
 {
+  const targetKnoxelElement = knoxelRect.getRootByTarget(e.target);
   if (!e.shiftKey && !e.altKey && !e.metaKey)
   {
-    if (e.target.id !== spaceRootElement.dataset.knoxelId)
+    if (targetKnoxelElement.id !== spaceRootElement.dataset.knoxelId)
     {
       spaceBackStack.push(spaceRootElement.dataset.knoxelId);
       spaceForwardStack.length = 0;
-      setSpaceRootKnoxel({knoxelId: e.target.id});
+      setSpaceRootKnoxel({knoxelId: targetKnoxelElement.id});
       setNavigationControlState({
         backKnoxelId: spaceBackStack[spaceBackStack.length - 1]
       });
