@@ -104,17 +104,19 @@ const knoxelRect = new function()
       let w = visualTheme.rect.defaultWidth;
       let h = visualTheme.rect.defaultHeight;
       const rects = [];
-
       if (type === 'recursive')
       {
-        // implement level1
         const m = 2*visualTheme.rect.strokeWidth;
         const knyteId = knoxels[knoxelId];
         const space = informationMap[knyteId].space;
         for (let nestedKnoxelId in space)
         {
-          const nestedW = visualTheme.rect.defaultWidth;
-          const nestedH = visualTheme.rect.defaultHeight;
+          let nestedType = 'recursive';
+          if (knoxels[nestedKnoxelId] === knoxels[spacemapKnoxelId])
+            nestedType = 'spacemap';
+          const d = getFigureDimensions(nestedKnoxelId, nestedType);
+          const nestedW = d.w;
+          const nestedH = d.h;
           const {x, y} = space[nestedKnoxelId];
           const nestedKnyteId = knoxels[nestedKnoxelId];
           const color = informationMap[nestedKnyteId].color;
@@ -122,13 +124,15 @@ const knoxelRect = new function()
             w = x + nestedW/2 + m;
           if (h < y + nestedH/2 + m)
             h = y + nestedH/2 + m;
-          rects.push(
-            {x: x - nestedW/2, y: y - nestedH/2, w: nestedW, h: nestedH, color}
-          );
+          const r = {x: x - nestedW/2, y: y - nestedH/2, w: nestedW, h: nestedH, color};
+          rects.push(r);
+          for (let i = 0; i < d.rects.length; ++i)
+          {
+            const rr = d.rects[i];
+            rects.push({x: r.x + rr.x, y: r.y + rr.y, w: rr.w, h: rr.h, color: rr.color});
+          }
         }
       }
-      
-      // TODO: implement levelN
       return {w, h, rects};
     }
     
@@ -246,7 +250,7 @@ const knoxelRect = new function()
         rectGroup.addEventListener('click', onClickRect, false);
         document.getElementById('knoxels').appendChild(rectGroup);
       }
-      return rectGroup.id;      
+      return rectGroup.id;
     }
     
     let type = 'recursive';
