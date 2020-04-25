@@ -216,7 +216,7 @@ const knoxelRect = new function()
       return rectGroup.id;
     }
 
-    if (desc.knoxelId === spacemapKnoxelId)
+    if (knoxels[desc.knoxelId] === knoxels[spacemapKnoxelId])
       return level0(desc);
     else
       return level0(desc); // level1(desc); // TODO: use it
@@ -242,20 +242,24 @@ const knoxelRect = new function()
     }
   };
   
+  this.getElementSize = function(element)
+  {
+    const size = element.getBoundingClientRect();
+    return {w: size.width, h: size.height};
+  };
+  
   this.moveElement = function(desc)
   {
     // desc: {element, x, y}
+    const {w, h} = this.getElementSize(desc.element);
+    const x = desc.x - w/2;
+    const y = desc.y - h/2;
     if (desc.element.tagName === 'g')
-    {
-      // TODO: implement w/2, h/2 position correction
-      desc.element.setAttribute('transform', 'translate(' + desc.x + ' ' + desc.y + ')');
-    }
+      desc.element.setAttribute('transform', 'translate(' + x + ' ' + y + ')');
     else if (desc.element.tagName === 'rect')
     {
-      const w = parseFloat(desc.element.getAttribute('width'));
-      const h = parseFloat(desc.element.getAttribute('height'));
-      desc.element.setAttribute('x', desc.x - w/2);
-      desc.element.setAttribute('y', desc.y - h/2);
+      desc.element.setAttribute('x', x);
+      desc.element.setAttribute('y', y);
     }
     else
       console.error('failed moving for knoxelId ' + desc.element.id);
@@ -264,7 +268,7 @@ const knoxelRect = new function()
   this.getRootByTarget = function(targetElement)
   {
     let element = targetElement;
-    while (!element.id)
+    while (!element.id && element !== spaceRootElement)
       element = element.parentElement;
     return element;
   };
@@ -322,8 +326,15 @@ function setSpaceRootKnoxel(desc)
   setBubbledMode({knoxelId: activeBubble.knoxelId, knyteId: knoxels[activeBubble.knoxelId], isBubbled: true});
   // control arrows display
   const arrowsElement = document.getElementById('arrows');
-  arrowsElement.style.display = newKnyteId === knoxels[spacemapKnoxelId]
-    ? 'block' : 'none';
+  if (newKnyteId === knoxels[spacemapKnoxelId])
+  {
+    handleSpacemapChanged(); // TODO: optimise arrows endpoints update
+    arrowsElement.style.display = 'block';
+  }
+  else
+  {
+    arrowsElement.style.display = 'none';
+  }
 }
 
 function addOriginsArrow(desc)
@@ -372,12 +383,16 @@ function addOriginsArrow(desc)
       };
       const w = visualTheme.rect.defaultWidth;
       const h = visualTheme.rect.defaultHeight;
+      const initialElement = document.getElementById(desc.initialKnoxelId);
+      const initialDimension = initialElement ? knoxelRect.getElementSize(initialElement) : {w, h};
       const initialTime = collideAABBVsLine(
-        {position: initialPosition, dimension: {w, h}},
+        {position: initialPosition, dimension: initialDimension},
         {position1: terminalPosition, position2: initialPosition}
       );
+      const terminalElement = document.getElementById(desc.terminalKnoxelId);
+      const terminalDimension = terminalElement ? knoxelRect.getElementSize(terminalElement) : {w, h};
       const terminalTime = collideAABBVsLine(
-        {position: terminalPosition, dimension: {w, h}},
+        {position: terminalPosition, dimension: terminalDimension},
         {position1: initialPosition, position2: terminalPosition}
       );
       const rectStrokeOffset = 0.5*visualTheme.rect.strokeWidth;
@@ -827,7 +842,8 @@ function joinActiveBubble(desc)
 
 function onKeyDownWindow(e)
 {
-  const mouseoverElement = document.elementFromPoint(mouseMovePagePosition.x, mouseMovePagePosition.y);
+  const mouseoverTarget = document.elementFromPoint(mouseMovePagePosition.x, mouseMovePagePosition.y);
+  const mouseoverElement = knoxelRect.getRootByTarget(mouseoverTarget);
   const mouseoverKnoxelId = mouseoverElement.classList.value === 'mouseOverRect'
     ? mouseoverElement.id : null;
   if (e.code === 'Escape')
