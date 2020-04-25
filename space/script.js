@@ -7,7 +7,6 @@ let spaceBackElement;
 let spaceForwardElement;
 let spaceMapElement;
 let spaceHostElement;
-let masterKnoxelId;
 let spacemapKnoxelId;
 let handleSpacemapChanged = function() {};
 const knytesCloud = {}; // core knyte id --> {initialKnyteId, terminalKnyteId}
@@ -549,6 +548,8 @@ function joinKnoxels(desc)
   // desc: {removeKnoxelId, stayKnoxelId}
   replaceKnoxelInStacks(desc);
   removeKnoxel({knoxelId: desc.removeKnoxelId});
+  if (desc.removeKnoxelId === spacemapKnoxelId)
+    spacemapKnoxelId = desc.stayKnoxelId;
 }
 
 function getHostKnyteIdByKnoxelId(knoxelId)
@@ -1046,7 +1047,7 @@ function onLoadBody(e)
   svgNameSpace = spaceRootElement.getAttribute('xmlns');
   // create master knyte
   const masterKnyteId = knit.new();
-  masterKnoxelId = knit.new();
+  const masterKnoxelId = knit.new();
   const masterColor = visualTheme.rect.fillColor.getRandom();
   addKnyte({knyteId: masterKnyteId, initialKnyteId: knit.empty, terminalKnyteId: knit.empty, color: masterColor});
   // create spacemap knyte
