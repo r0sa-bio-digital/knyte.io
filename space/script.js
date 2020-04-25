@@ -241,6 +241,20 @@ const knoxelRect = new function()
       rectElement.removeAttribute('stroke-linecap');
     }
   };
+  
+  this.moveElement = function(desc)
+  {
+    // desc: {element, x, y}
+    if (desc.element.tagName === 'g')
+      desc.element.setAttribute('transform', 'translate(' + desc.x + ' ' + desc.y + ')');
+    else if (desc.element.tagName === 'rect')
+    {
+      desc.element.setAttribute('x', desc.x);
+      desc.element.setAttribute('y', desc.y);
+    }
+    else
+      console.error('failed moving for knoxelId ' + desc.element.id);
+  };
 };
 
 function setGhostedMode(desc)
@@ -744,15 +758,9 @@ function onMouseMoveSpaceRoot(e)
   const x = mouseMovePosition.x - w/2;
   const y = mouseMovePosition.y - h/2;
   if (activeGhost.knoxelId)
-  {
-    activeGhost.element.setAttribute('x', x);
-    activeGhost.element.setAttribute('y', y);
-  }
+    knoxelRect.moveElement({element: activeGhost.element, x, y});
   if (activeBubble.knoxelId)
-  {
-    activeBubble.element.setAttribute('x', x);
-    activeBubble.element.setAttribute('y', y);
-  }
+    knoxelRect.moveElement({element: activeBubble.element, x, y});
 }
 
 function onMouseUpSpaceRoot(e)
