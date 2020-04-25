@@ -246,11 +246,16 @@ const knoxelRect = new function()
   {
     // desc: {element, x, y}
     if (desc.element.tagName === 'g')
+    {
+      // TODO: implement w/2, h/2 position correction
       desc.element.setAttribute('transform', 'translate(' + desc.x + ' ' + desc.y + ')');
+    }
     else if (desc.element.tagName === 'rect')
     {
-      desc.element.setAttribute('x', desc.x);
-      desc.element.setAttribute('y', desc.y);
+      const w = parseFloat(desc.element.getAttribute('width'));
+      const h = parseFloat(desc.element.getAttribute('height'));
+      desc.element.setAttribute('x', desc.x - w/2);
+      desc.element.setAttribute('y', desc.y - h/2);
     }
     else
       console.error('failed moving for knoxelId ' + desc.element.id);
@@ -674,10 +679,8 @@ function spawnGhostRect(desc)
       x: knoxelPosition.x - desc.position.x, 
       y: knoxelPosition.y - desc.position.y
     };
-    const w = visualTheme.rect.defaultWidth;
-    const h = visualTheme.rect.defaultHeight;
-    const x = mouseMovePosition.x - w/2 + activeGhost.offset.x;
-    const y = mouseMovePosition.y - h/2 + activeGhost.offset.y;
+    const x = mouseMovePosition.x + activeGhost.offset.x;
+    const y = mouseMovePosition.y + activeGhost.offset.y;
     knoxelRect.moveElement({element: activeGhost.element, x, y});
     setGhostedMode({knoxelId: desc.knoxelId, isGhosted: true});
   }
@@ -724,10 +727,8 @@ function spawnBubbleRect(desc)
       x: knoxelPosition.x - desc.position.x, 
       y: knoxelPosition.y - desc.position.y
     };
-    const w = visualTheme.rect.defaultWidth;
-    const h = visualTheme.rect.defaultHeight;
-    const x = mouseMovePosition.x - w/2 + activeBubble.offset.x;
-    const y = mouseMovePosition.y - h/2 + activeBubble.offset.y;
+    const x = mouseMovePosition.x + activeBubble.offset.x;
+    const y = mouseMovePosition.y + activeBubble.offset.y;
     knoxelRect.moveElement({element: activeBubble.element, x, y});
   }
   setBubbledMode({knoxelId: desc.knoxelId, knyteId, isBubbled: true});
@@ -755,18 +756,16 @@ function onMouseMoveSpaceRoot(e)
   mouseMovePagePosition = {x: e.pageX, y: e.pageY};
   if (!activeGhost.knoxelId && !activeBubble.knoxelId)
     return;
-  const w = visualTheme.rect.defaultWidth;
-  const h = visualTheme.rect.defaultHeight;
   if (activeGhost.knoxelId)
   {
-    const x = mouseMovePosition.x - w/2 + activeGhost.offset.x;
-    const y = mouseMovePosition.y - h/2 + activeGhost.offset.y;
+    const x = mouseMovePosition.x + activeGhost.offset.x;
+    const y = mouseMovePosition.y + activeGhost.offset.y;
     knoxelRect.moveElement({element: activeGhost.element, x, y});
   }
   if (activeBubble.knoxelId)
   {
-    const x = mouseMovePosition.x - w/2 + activeBubble.offset.x;
-    const y = mouseMovePosition.y - h/2 + activeBubble.offset.y;
+    const x = mouseMovePosition.x + activeBubble.offset.x;
+    const y = mouseMovePosition.y + activeBubble.offset.y;
     knoxelRect.moveElement({element: activeBubble.element, x, y});
   }
 }
