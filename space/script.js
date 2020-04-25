@@ -220,23 +220,53 @@ const knoxelRect = new function()
       return level0(desc);
     else
       return level0(desc); // level1(desc); // TODO: use it
+  };
+  
+  this.setGhosted = function(desc)
+  {
+    // desc: {knoxelId, isGhosted}
+    let rectElement = document.getElementById(desc.knoxelId);
+    if (rectElement.tagName === 'g')
+      rectElement = rectElement.firstElementChild;
+    if (rectElement.tagName !== 'rect')
+      console.error('failed ghosting for knoxelId ' + desc.knoxelId);
+    if (desc.isGhosted)
+    {
+      rectElement.setAttribute('stroke-dasharray', '0 16');
+      rectElement.setAttribute('stroke-linecap', 'square');
+    }
+    else
+    {
+      rectElement.removeAttribute('stroke-dasharray');
+      rectElement.removeAttribute('stroke-linecap');
+    }
+  };
+  
+  this.setBubbled = function(desc)
+  {
+    // desc: {knoxelId, isBubbled}
+    let rectElement = document.getElementById(desc.knoxelId);
+    if (rectElement.tagName === 'g')
+      rectElement = rectElement.firstElementChild;
+    if (rectElement.tagName !== 'rect')
+      console.error('failed bubbling for knoxelId ' + desc.knoxelId);
+    if (desc.isBubbled)
+    {
+      rectElement.setAttribute('stroke-dasharray', '0 16');
+      rectElement.setAttribute('stroke-linecap', 'square');
+    }
+    else
+    {
+      rectElement.removeAttribute('stroke-dasharray');
+      rectElement.removeAttribute('stroke-linecap');
+    }
   }
 };
 
 function setGhostedMode(desc)
 {
   // desc: {knoxelId, isGhosted}
-  const knoxelElement = document.getElementById(desc.knoxelId);
-  if (desc.isGhosted)
-  {
-    knoxelElement.setAttribute('stroke-dasharray', '0 16');
-    knoxelElement.setAttribute('stroke-linecap', 'square');
-  }
-  else
-  {
-    knoxelElement.removeAttribute('stroke-dasharray');
-    knoxelElement.removeAttribute('stroke-linecap');
-  }
+  knoxelRect.setGhosted(desc);
 }
 
 function setBubbledMode(desc)
@@ -252,18 +282,7 @@ function setBubbledMode(desc)
       knoxelId !== spaceRootElement.dataset.knoxelId &&
       knoxelId !== desc.knoxelId && knyteId === desc.knyteId
     )
-    {
-      if (desc.isBubbled)
-      {
-        knoxelElement.setAttribute('stroke-dasharray', '0 16');
-        knoxelElement.setAttribute('stroke-linecap', 'square');
-      }
-      else
-      {
-        knoxelElement.removeAttribute('stroke-dasharray');
-        knoxelElement.removeAttribute('stroke-linecap');
-      }
-    }
+      knoxelRect.setBubbled({knoxelId, isBubbled: desc.isBubbled});
     knoxelElement = knoxelElement.nextElementSibling;
   }
 }
