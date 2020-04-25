@@ -674,10 +674,11 @@ function spawnGhostRect(desc)
       x: knoxelPosition.x - desc.position.x, 
       y: knoxelPosition.y - desc.position.y
     };
-    activeGhost.element.setAttribute(
-      'transform', 
-      'translate(' + activeGhost.offset.x + ' ' + activeGhost.offset.y + ')'
-    );
+    const w = visualTheme.rect.defaultWidth;
+    const h = visualTheme.rect.defaultHeight;
+    const x = mouseMovePosition.x - w/2 + activeGhost.offset.x;
+    const y = mouseMovePosition.y - h/2 + activeGhost.offset.y;
+    knoxelRect.moveElement({element: activeGhost.element, x, y});
     setGhostedMode({knoxelId: desc.knoxelId, isGhosted: true});
   }
 }
@@ -723,10 +724,11 @@ function spawnBubbleRect(desc)
       x: knoxelPosition.x - desc.position.x, 
       y: knoxelPosition.y - desc.position.y
     };
-    activeBubble.element.setAttribute(
-      'transform', 
-      'translate(' + activeBubble.offset.x + ' ' + activeBubble.offset.y + ')'
-    );
+    const w = visualTheme.rect.defaultWidth;
+    const h = visualTheme.rect.defaultHeight;
+    const x = mouseMovePosition.x - w/2 + activeBubble.offset.x;
+    const y = mouseMovePosition.y - h/2 + activeBubble.offset.y;
+    knoxelRect.moveElement({element: activeBubble.element, x, y});
   }
   setBubbledMode({knoxelId: desc.knoxelId, knyteId, isBubbled: true});
 }
@@ -755,12 +757,18 @@ function onMouseMoveSpaceRoot(e)
     return;
   const w = visualTheme.rect.defaultWidth;
   const h = visualTheme.rect.defaultHeight;
-  const x = mouseMovePosition.x - w/2;
-  const y = mouseMovePosition.y - h/2;
   if (activeGhost.knoxelId)
+  {
+    const x = mouseMovePosition.x - w/2 + activeGhost.offset.x;
+    const y = mouseMovePosition.y - h/2 + activeGhost.offset.y;
     knoxelRect.moveElement({element: activeGhost.element, x, y});
+  }
   if (activeBubble.knoxelId)
+  {
+    const x = mouseMovePosition.x - w/2 + activeBubble.offset.x;
+    const y = mouseMovePosition.y - h/2 + activeBubble.offset.y;
     knoxelRect.moveElement({element: activeBubble.element, x, y});
+  }
 }
 
 function onMouseUpSpaceRoot(e)
