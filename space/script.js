@@ -99,49 +99,6 @@ const knoxelRect = new function()
   {
     // desc: {knoxelId, position, color, ghost, bubble, selfcontained}
 
-    function level0(desc)
-    {
-      const w = visualTheme.rect.defaultWidth;
-      const h = visualTheme.rect.defaultHeight;
-      const x = desc.position.x - w/2;
-      const y = desc.position.y - h/2;
-      const rect = document.createElementNS(svgNameSpace, 'rect');
-      rect.id = desc.knoxelId;
-      rect.classList.value = 'mouseOverRect';
-      rect.setAttribute('x', x);
-      rect.setAttribute('y', y);
-      rect.setAttribute('width', w);
-      rect.setAttribute('height', h);
-      rect.setAttribute('fill', desc.color);
-      rect.setAttribute('stroke', visualTheme.rect.strokeColor);
-      rect.setAttribute(
-        'stroke-width', 
-        desc.selfcontained ? visualTheme.rect.selfcontained.strokeWidth : visualTheme.rect.strokeWidth
-      );
-      if (desc.ghost)
-      {
-        rect.id += '.ghost';
-        rect.setAttribute('opacity', 0.5);
-        rect.style.pointerEvents = 'none';
-        document.getElementById('ghosts').appendChild(rect);
-      }
-      else if (desc.bubble)
-      {
-        rect.id += '.bubble';
-        rect.setAttribute('opacity', 0.5);
-        rect.setAttribute('stroke-dasharray', '0 16');
-        rect.setAttribute('stroke-linecap', 'square');
-        rect.style.pointerEvents = 'none';
-        document.getElementById('bubbles').appendChild(rect);
-      }
-      else
-      {
-        rect.addEventListener('click', onClickRect, false);
-        document.getElementById('knoxels').appendChild(rect);
-      }
-      return rect.id;
-    }
-
     function level1(desc)
     {
       const knyteId = knoxels[desc.knoxelId];
@@ -171,7 +128,6 @@ const knoxelRect = new function()
       rectRoot.setAttribute('height', rootH);
       rectRoot.setAttribute('fill', desc.color);
       rectRoot.setAttribute('stroke', visualTheme.rect.strokeColor);
-      rectRoot.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
       rectRoot.setAttribute('stroke-width', desc.selfcontained
         ? visualTheme.rect.selfcontained.strokeWidth : visualTheme.rect.strokeWidth);
       rectGroup.appendChild(rectRoot);
@@ -218,8 +174,102 @@ const knoxelRect = new function()
       return rectGroup.id;
     }
 
+    function levelIcon(desc, type)
+    {
+      const knyteId = knoxels[desc.knoxelId];
+      const space = informationMap[knyteId].space;
+      let rootW = visualTheme.rect.defaultWidth;
+      let rootH = visualTheme.rect.defaultWidth;
+      const rootX = desc.position.x - rootW/2;
+      const rootY = desc.position.y - rootH/2;
+      const rectGroup = document.createElementNS(svgNameSpace, 'g');
+      rectGroup.id = desc.knoxelId;
+      rectGroup.classList.value = 'mouseOverRect';
+      rectGroup.setAttribute('transform', 'translate(' + rootX + ' ' + rootY + ')');
+      const rectRoot = document.createElementNS(svgNameSpace, 'rect');
+      rectRoot.setAttribute('x', 0);
+      rectRoot.setAttribute('y', 0);
+      rectRoot.setAttribute('width', rootW);
+      rectRoot.setAttribute('height', rootH);
+      rectRoot.setAttribute('fill', desc.color);
+      rectRoot.setAttribute('stroke', visualTheme.rect.strokeColor);
+      rectRoot.setAttribute('stroke-width', desc.selfcontained
+        ? visualTheme.rect.selfcontained.strokeWidth : visualTheme.rect.strokeWidth);
+      rectGroup.appendChild(rectRoot);
+      if (type === 'spacemap')
+      {
+        const circle1 = document.createElementNS(svgNameSpace, 'circle');
+        circle1.setAttribute('cx', 10);
+        circle1.setAttribute('cy', 10);
+        circle1.setAttribute('r', 4);
+        circle1.setAttribute('stroke', '#160f19');
+        circle1.setAttribute('stroke-width', 2);
+        circle1.setAttribute('fill', '#d8b621');
+        const circle2 = document.createElementNS(svgNameSpace, 'circle');
+        circle2.setAttribute('cx', 22);
+        circle2.setAttribute('cy', 10);
+        circle2.setAttribute('r', 4);
+        circle2.setAttribute('stroke', '#160f19');
+        circle2.setAttribute('stroke-width', 2);
+        circle2.setAttribute('fill', '#dc286f');
+        const circle3 = document.createElementNS(svgNameSpace, 'circle');
+        circle3.setAttribute('cx', 10);
+        circle3.setAttribute('cy', 22);
+        circle3.setAttribute('r', 4);
+        circle3.setAttribute('stroke', '#160f19');
+        circle3.setAttribute('stroke-width', 2);
+        circle3.setAttribute('fill', '#36945b');
+        const circle4 = document.createElementNS(svgNameSpace, 'circle');
+        circle4.setAttribute('cx', 22);
+        circle4.setAttribute('cy', 22);
+        circle4.setAttribute('r', 4);
+        circle4.setAttribute('stroke', '#160f19');
+        circle4.setAttribute('stroke-width', 2);
+        circle4.setAttribute('fill', '#5571f1');
+        rectGroup.appendChild(circle1);
+        rectGroup.appendChild(circle2);
+        rectGroup.appendChild(circle3);
+        rectGroup.appendChild(circle4);
+      }
+      else if (type === 'selfviewed')
+      {
+        const circle = document.createElementNS(svgNameSpace, 'circle');
+        circle.setAttribute('cx', 16);
+        circle.setAttribute('cy', 16);
+        circle.setAttribute('r', 8);
+        circle.setAttribute('stroke', '#160f19');
+        circle.setAttribute('stroke-width', 2);
+        circle.setAttribute('fill', 'transparent');
+        rectGroup.appendChild(circle);
+      }
+      if (desc.ghost)
+      {
+        rectGroup.id += '.ghost';
+        rectGroup.setAttribute('opacity', 0.5);
+        rectGroup.style.pointerEvents = 'none';
+        document.getElementById('ghosts').appendChild(rectGroup);
+      }
+      else if (desc.bubble)
+      {
+        rectGroup.id += '.bubble';
+        rectGroup.setAttribute('opacity', 0.5);
+        rectRoot.setAttribute('stroke-dasharray', '0 16');
+        rectRoot.setAttribute('stroke-linecap', 'square');
+        rectRoot.style.pointerEvents = 'none';
+        document.getElementById('bubbles').appendChild(rectGroup);
+      }
+      else
+      {
+        rectGroup.addEventListener('click', onClickRect, false);
+        document.getElementById('knoxels').appendChild(rectGroup);
+      }
+      return rectGroup.id;
+    }
+
     if (knoxels[desc.knoxelId] === knoxels[spacemapKnoxelId])
-      return level0(desc);
+      return levelIcon(desc, 'spacemap');
+    else if (knoxels[desc.knoxelId] === knoxels[spaceRootElement.dataset.knoxelId])
+      return levelIcon(desc, 'selfviewed');
     else
       return level1(desc);
   };
@@ -228,9 +278,9 @@ const knoxelRect = new function()
   {
     // desc: {knoxelId, isDotted}
     let rectElement = document.getElementById(desc.knoxelId);
-    if (rectElement.tagName === 'g')
+    if (rectElement.tagName === 'g' && rectElement.firstElementChild.tagName === 'rect')
       rectElement = rectElement.firstElementChild;
-    if (rectElement.tagName !== 'rect')
+    else
       console.error('failed ghosting for knoxelId ' + desc.knoxelId);
     if (desc.isDotted)
     {
@@ -258,11 +308,6 @@ const knoxelRect = new function()
     const y = desc.y - h/2;
     if (desc.element.tagName === 'g')
       desc.element.setAttribute('transform', 'translate(' + x + ' ' + y + ')');
-    else if (desc.element.tagName === 'rect')
-    {
-      desc.element.setAttribute('x', x);
-      desc.element.setAttribute('y', y);
-    }
     else
       console.error('failed moving for knoxelId ' + desc.element.id);
   };
