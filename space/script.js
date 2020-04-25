@@ -100,6 +100,8 @@ const knoxelRect = new function()
 
     function getFigureDimensions(knoxelId, knyteTrace)
     {
+      let ofx = 0;
+      let ofy = 0;
       let w = visualTheme.rect.defaultWidth;
       let h = visualTheme.rect.defaultHeight;
       let flat = false;
@@ -112,7 +114,8 @@ const knoxelRect = new function()
         type = 'selfviewed';
       if (type === 'recursive')
       {
-        const m = 2*visualTheme.rect.strokeWidth;
+        const mx = visualTheme.rect.defaultWidth/2;
+        const my = visualTheme.rect.defaultHeight/2;
         const space = informationMap[knyteId].space;
         const nestedKnyteTrace = Object.assign({}, knyteTrace);
         nestedKnyteTrace[knyteId] = true;
@@ -129,11 +132,15 @@ const knoxelRect = new function()
           const nestedH = d.h;
           const {x, y} = space[nestedKnoxelId];
           const color = informationMap[nestedKnyteId].color;
-          if (w < x + nestedW/2 + m)
-            w = x + nestedW/2 + m;
-          if (h < y + nestedH/2 + m)
-            h = y + nestedH/2 + m;
-          const r = {x: x - nestedW/2, y: y - nestedH/2, w: nestedW, h: nestedH, color, type: nestedType};
+          if (w < x + nestedW/2 + mx)
+            w = x + nestedW/2 + mx;
+          if (h < y + nestedH/2 + my)
+            h = y + nestedH/2 + my;
+          if (ofx > x - nestedW/2 - mx)
+            ofx = x - nestedW/2 - mx;
+          if (ofy > y - nestedH/2 - my)
+            ofy = y - nestedH/2 - my;
+          const r = {x: x - nestedW/2 - ofx, y: y - nestedH/2 - ofy, w: nestedW, h: nestedH, color, type: nestedType};
           rects.push(r);
           if (!d.flat)
             for (let i = 0; i < d.rects.length; ++i)
@@ -142,6 +149,8 @@ const knoxelRect = new function()
               rects.push({x: r.x + rr.x, y: r.y + rr.y, w: rr.w, h: rr.h, color: rr.color, type: rr.type});
             }
         }
+        w -= ofx;
+        h -= ofy;
       }
       else
       {
