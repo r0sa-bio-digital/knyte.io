@@ -219,7 +219,7 @@ const knoxelRect = new function()
     if (knoxels[desc.knoxelId] === knoxels[spacemapKnoxelId])
       return level0(desc);
     else
-      return level0(desc); // level1(desc); // TODO: use it
+      return level1(desc);
   };
   
   this.setDotted = function(desc)
