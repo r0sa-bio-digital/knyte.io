@@ -172,6 +172,8 @@ const knoxelRect = new function()
       rectRoot.setAttribute('fill', desc.color);
       rectRoot.setAttribute('stroke', visualTheme.rect.strokeColor);
       rectRoot.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
+      rectRoot.setAttribute('stroke-width', desc.selfcontained
+        ? visualTheme.rect.selfcontained.strokeWidth : visualTheme.rect.strokeWidth);
       rectGroup.appendChild(rectRoot);
       for (let nestedKnoxelId in space)
       {
