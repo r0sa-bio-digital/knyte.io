@@ -99,106 +99,70 @@ const knoxelRect = new function()
   {
     // desc: {knoxelId, position, ghost, bubble, selfcontained}
 
-    function level1(desc)
+    function getFigureDimensions(knoxelId, type)
     {
-      const knyteId = knoxels[desc.knoxelId];
-      const color = informationMap[knyteId].color;
-      const space = informationMap[knyteId].space;
-      let rootW = visualTheme.rect.defaultWidth;
-      let rootH = visualTheme.rect.defaultWidth;
-      for (let nestedKnoxelId in space)
-      {
-        const w = visualTheme.rect.defaultWidth;
-        const h = visualTheme.rect.defaultHeight;
-        const position = space[nestedKnoxelId];
-        if (rootW < position.x + w)
-          rootW = position.x + w;
-        if (rootH < position.y + h)
-          rootH = position.y + h;
-      }
-      const rootX = desc.position.x - rootW/2;
-      const rootY = desc.position.y - rootH/2;
-      const rectGroup = document.createElementNS(svgNameSpace, 'g');
-      rectGroup.id = desc.knoxelId;
-      rectGroup.classList.value = 'mouseOverRect';
-      rectGroup.setAttribute('transform', 'translate(' + rootX + ' ' + rootY + ')');
-      const rectRoot = document.createElementNS(svgNameSpace, 'rect');
-      rectRoot.setAttribute('x', 0);
-      rectRoot.setAttribute('y', 0);
-      rectRoot.setAttribute('width', rootW);
-      rectRoot.setAttribute('height', rootH);
-      rectRoot.setAttribute('fill', color);
-      rectRoot.setAttribute('stroke', visualTheme.rect.strokeColor);
-      rectRoot.setAttribute('stroke-width', desc.selfcontained
-        ? visualTheme.rect.selfcontained.strokeWidth : visualTheme.rect.strokeWidth);
-      rectGroup.appendChild(rectRoot);
-      for (let nestedKnoxelId in space)
-      {
-        const w = visualTheme.rect.defaultWidth;
-        const h = visualTheme.rect.defaultHeight;
-        const position = space[nestedKnoxelId];
-        const knyteId = knoxels[nestedKnoxelId];
-        const color = informationMap[knyteId].color;
-        const x = position.x - w/2;
-        const y = position.y - h/2;
-        const rect = document.createElementNS(svgNameSpace, 'rect');
-        rect.setAttribute('x', x);
-        rect.setAttribute('y', y);
-        rect.setAttribute('width', w);
-        rect.setAttribute('height', h);
-        rect.setAttribute('fill', color);
-        rect.setAttribute('stroke', visualTheme.rect.strokeColor);
-        rect.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
-        rectGroup.appendChild(rect);
-      }
-      if (desc.ghost)
-      {
-        rectGroup.id += '.ghost';
-        rectGroup.setAttribute('opacity', 0.5);
-        rectGroup.style.pointerEvents = 'none';
-        document.getElementById('ghosts').appendChild(rectGroup);
-      }
-      else if (desc.bubble)
-      {
-        rectGroup.id += '.bubble';
-        rectGroup.setAttribute('opacity', 0.5);
-        rectRoot.setAttribute('stroke-dasharray', '0 16');
-        rectRoot.setAttribute('stroke-linecap', 'square');
-        rectRoot.style.pointerEvents = 'none';
-        document.getElementById('bubbles').appendChild(rectGroup);
-      }
-      else
-      {
-        rectGroup.addEventListener('click', onClickRect, false);
-        document.getElementById('knoxels').appendChild(rectGroup);
-      }
-      return rectGroup.id;
-    }
+      let w = visualTheme.rect.defaultWidth;
+      let h = visualTheme.rect.defaultHeight;
+      const rects = [];
 
-    function levelIcon(desc, type)
+      if (type === 'recursive')
+      {
+        // implement level1
+        const m = 2*visualTheme.rect.strokeWidth;
+        const knyteId = knoxels[knoxelId];
+        const space = informationMap[knyteId].space;
+        for (let nestedKnoxelId in space)
+        {
+          const nestedW = visualTheme.rect.defaultWidth;
+          const nestedH = visualTheme.rect.defaultHeight;
+          const {x, y} = space[nestedKnoxelId];
+          const nestedKnyteId = knoxels[nestedKnoxelId];
+          const color = informationMap[nestedKnyteId].color;
+          if (w < x + nestedW/2 + m)
+            w = x + nestedW/2 + m;
+          if (h < y + nestedH/2 + m)
+            h = y + nestedH/2 + m;
+          rects.push(
+            {x: x - nestedW/2, y: y - nestedH/2, w: nestedW, h: nestedH, color}
+          );
+        }
+      }
+      
+      // TODO: implement levelN
+      return {w, h, rects};
+    }
+    
+    function createShapes(type, rects)
     {
-      const knyteId = knoxels[desc.knoxelId];
-      const color = informationMap[knyteId].color;
-      const space = informationMap[knyteId].space;
-      let rootW = visualTheme.rect.defaultWidth;
-      let rootH = visualTheme.rect.defaultWidth;
-      const rootX = desc.position.x - rootW/2;
-      const rootY = desc.position.y - rootH/2;
-      const rectGroup = document.createElementNS(svgNameSpace, 'g');
-      rectGroup.id = desc.knoxelId;
-      rectGroup.classList.value = 'mouseOverRect';
-      rectGroup.setAttribute('transform', 'translate(' + rootX + ' ' + rootY + ')');
-      const rectRoot = document.createElementNS(svgNameSpace, 'rect');
-      rectRoot.setAttribute('x', 0);
-      rectRoot.setAttribute('y', 0);
-      rectRoot.setAttribute('width', rootW);
-      rectRoot.setAttribute('height', rootH);
-      rectRoot.setAttribute('fill', color);
-      rectRoot.setAttribute('stroke', visualTheme.rect.strokeColor);
-      rectRoot.setAttribute('stroke-width', desc.selfcontained
-        ? visualTheme.rect.selfcontained.strokeWidth : visualTheme.rect.strokeWidth);
-      rectGroup.appendChild(rectRoot);
-      if (type === 'spacemap')
+      const result = [];
+      if (type === 'recursive')
+      {
+        for (let i = 0; i < rects.length; ++i)
+        {
+          const r = rects[i];
+          const rect = document.createElementNS(svgNameSpace, 'rect');
+          rect.setAttribute('x', r.x);
+          rect.setAttribute('y', r.y);
+          rect.setAttribute('width', r.w);
+          rect.setAttribute('height', r.h);
+          rect.setAttribute('fill', r.color);
+          rect.setAttribute('stroke', visualTheme.rect.strokeColor);
+          rect.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
+          result.push(rect);
+        }
+      }
+      else if (type === 'selfviewed')
+      {
+        const circle = document.createElementNS(svgNameSpace, 'circle');
+        circle.setAttribute('cx', 16);
+        circle.setAttribute('cy', 16);
+        circle.setAttribute('r', 8);
+        circle.setAttribute('stroke', '#160f19');
+        circle.setAttribute('stroke-width', 2);
+        circle.setAttribute('fill', 'transparent');
+        result.push(circle);
+      }
+      else if (type === 'spacemap')
       {
         const circle1 = document.createElementNS(svgNameSpace, 'circle');
         circle1.setAttribute('cx', 10);
@@ -228,22 +192,39 @@ const knoxelRect = new function()
         circle4.setAttribute('stroke', '#160f19');
         circle4.setAttribute('stroke-width', 2);
         circle4.setAttribute('fill', '#5571f1');
-        rectGroup.appendChild(circle1);
-        rectGroup.appendChild(circle2);
-        rectGroup.appendChild(circle3);
-        rectGroup.appendChild(circle4);
+        result.push(circle1);
+        result.push(circle2);
+        result.push(circle3);
+        result.push(circle4);
       }
-      else if (type === 'selfviewed')
-      {
-        const circle = document.createElementNS(svgNameSpace, 'circle');
-        circle.setAttribute('cx', 16);
-        circle.setAttribute('cy', 16);
-        circle.setAttribute('r', 8);
-        circle.setAttribute('stroke', '#160f19');
-        circle.setAttribute('stroke-width', 2);
-        circle.setAttribute('fill', 'transparent');
-        rectGroup.appendChild(circle);
-      }
+      return result;
+    }
+    
+    function createFigure(desc, type)
+    {
+      const knyteId = knoxels[desc.knoxelId];
+      const color = informationMap[knyteId].color;
+      const space = informationMap[knyteId].space;
+      const {w, h, rects} = getFigureDimensions(desc.knoxelId, type);
+      const x = desc.position.x - w/2;
+      const y = desc.position.y - h/2;
+      const rectGroup = document.createElementNS(svgNameSpace, 'g');
+      rectGroup.id = desc.knoxelId;
+      rectGroup.classList.value = 'mouseOverRect';
+      rectGroup.setAttribute('transform', 'translate(' + x + ' ' + y + ')');
+      const rectRoot = document.createElementNS(svgNameSpace, 'rect');
+      rectRoot.setAttribute('x', 0);
+      rectRoot.setAttribute('y', 0);
+      rectRoot.setAttribute('width', w);
+      rectRoot.setAttribute('height', h);
+      rectRoot.setAttribute('fill', color);
+      rectRoot.setAttribute('stroke', visualTheme.rect.strokeColor);
+      rectRoot.setAttribute('stroke-width', desc.selfcontained
+        ? visualTheme.rect.selfcontained.strokeWidth : visualTheme.rect.strokeWidth);
+      rectGroup.appendChild(rectRoot);
+      const shapes = createShapes(type, rects);
+      for (let i = 0; i < shapes.length; ++i)
+        rectGroup.appendChild(shapes[i]);
       if (desc.ghost)
       {
         rectGroup.id += '.ghost';
@@ -265,15 +246,15 @@ const knoxelRect = new function()
         rectGroup.addEventListener('click', onClickRect, false);
         document.getElementById('knoxels').appendChild(rectGroup);
       }
-      return rectGroup.id;
+      return rectGroup.id;      
     }
-
+    
+    let type = 'recursive';
     if (knoxels[desc.knoxelId] === knoxels[spacemapKnoxelId])
-      return levelIcon(desc, 'spacemap');
+      type = 'spacemap';
     else if (knoxels[desc.knoxelId] === knoxels[spaceRootElement.dataset.knoxelId])
-      return levelIcon(desc, 'selfviewed');
-    else
-      return level1(desc);
+      type = 'selfviewed';
+    return createFigure(desc, type);
   };
   
   this.setDotted = function(desc)
