@@ -99,21 +99,29 @@ const knoxelRect = new function()
   {
     // desc: {knoxelId, position, ghost, bubble, selfcontained}
 
-    function getFigureDimensions(knoxelId, type)
+    function getFigureDimensions(knoxelId)
     {
       let w = visualTheme.rect.defaultWidth;
       let h = visualTheme.rect.defaultHeight;
+      let flat = false;
       const rects = [];
+      const knyteId = knoxels[knoxelId];
+      let type = 'recursive';
+      if (knyteId === knoxels[spacemapKnoxelId])
+        type = 'spacemap';
+      else if (knyteId === knoxels[spaceRootElement.dataset.knoxelId])
+        type = 'selfviewed';
       if (type === 'recursive')
       {
         const m = 2*visualTheme.rect.strokeWidth;
-        const knyteId = knoxels[knoxelId];
         const space = informationMap[knyteId].space;
         for (let nestedKnoxelId in space)
         {
           let nestedType = 'recursive';
           if (knoxels[nestedKnoxelId] === knoxels[spacemapKnoxelId])
             nestedType = 'spacemap';
+          else if (knoxels[nestedKnoxelId] === knoxels[spaceRootElement.dataset.knoxelId])
+            nestedType = 'selfviewed';
           const d = getFigureDimensions(nestedKnoxelId, nestedType);
           const nestedW = d.w;
           const nestedH = d.h;
@@ -124,26 +132,34 @@ const knoxelRect = new function()
             w = x + nestedW/2 + m;
           if (h < y + nestedH/2 + m)
             h = y + nestedH/2 + m;
-          const r = {x: x - nestedW/2, y: y - nestedH/2, w: nestedW, h: nestedH, color};
+          const r = {x: x - nestedW/2, y: y - nestedH/2, w: nestedW, h: nestedH, color, type: nestedType};
           rects.push(r);
-          for (let i = 0; i < d.rects.length; ++i)
-          {
-            const rr = d.rects[i];
-            rects.push({x: r.x + rr.x, y: r.y + rr.y, w: rr.w, h: rr.h, color: rr.color});
-          }
+          if (!d.flat)
+            for (let i = 0; i < d.rects.length; ++i)
+            {
+              const rr = d.rects[i];
+              rects.push({x: r.x + rr.x, y: r.y + rr.y, w: rr.w, h: rr.h, color: rr.color, type: rr.type});
+            }
         }
       }
-      return {w, h, rects};
+      else
+      {
+        const color = informationMap[knyteId].color;
+        const r = {x: 0, y: 0, w, h, color, type};
+        rects.push(r);
+        flat = true;
+      }
+      return {w, h, rects, flat};
     }
     
-    function createShapes(type, rects)
+    function createShapes(rects, flat)
     {
       const result = [];
-      if (type === 'recursive')
+      for (let i = 0; i < rects.length; ++i)
       {
-        for (let i = 0; i < rects.length; ++i)
+        const r = rects[i];
+        if (!flat)
         {
-          const r = rects[i];
           const rect = document.createElementNS(svgNameSpace, 'rect');
           rect.setAttribute('x', r.x);
           rect.setAttribute('y', r.y);
@@ -154,62 +170,67 @@ const knoxelRect = new function()
           rect.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
           result.push(rect);
         }
-      }
-      else if (type === 'selfviewed')
-      {
-        const circle = document.createElementNS(svgNameSpace, 'circle');
-        circle.setAttribute('cx', 16);
-        circle.setAttribute('cy', 16);
-        circle.setAttribute('r', 8);
-        circle.setAttribute('stroke', '#160f19');
-        circle.setAttribute('stroke-width', 2);
-        circle.setAttribute('fill', 'transparent');
-        result.push(circle);
-      }
-      else if (type === 'spacemap')
-      {
-        const circle1 = document.createElementNS(svgNameSpace, 'circle');
-        circle1.setAttribute('cx', 10);
-        circle1.setAttribute('cy', 10);
-        circle1.setAttribute('r', 4);
-        circle1.setAttribute('stroke', '#160f19');
-        circle1.setAttribute('stroke-width', 2);
-        circle1.setAttribute('fill', '#d8b621');
-        const circle2 = document.createElementNS(svgNameSpace, 'circle');
-        circle2.setAttribute('cx', 22);
-        circle2.setAttribute('cy', 10);
-        circle2.setAttribute('r', 4);
-        circle2.setAttribute('stroke', '#160f19');
-        circle2.setAttribute('stroke-width', 2);
-        circle2.setAttribute('fill', '#dc286f');
-        const circle3 = document.createElementNS(svgNameSpace, 'circle');
-        circle3.setAttribute('cx', 10);
-        circle3.setAttribute('cy', 22);
-        circle3.setAttribute('r', 4);
-        circle3.setAttribute('stroke', '#160f19');
-        circle3.setAttribute('stroke-width', 2);
-        circle3.setAttribute('fill', '#36945b');
-        const circle4 = document.createElementNS(svgNameSpace, 'circle');
-        circle4.setAttribute('cx', 22);
-        circle4.setAttribute('cy', 22);
-        circle4.setAttribute('r', 4);
-        circle4.setAttribute('stroke', '#160f19');
-        circle4.setAttribute('stroke-width', 2);
-        circle4.setAttribute('fill', '#5571f1');
-        result.push(circle1);
-        result.push(circle2);
-        result.push(circle3);
-        result.push(circle4);
+        if (r.type === 'selfviewed')
+        {
+          const circle = document.createElementNS(svgNameSpace, 'circle');
+          circle.setAttribute('cx', 16 + r.x);
+          circle.setAttribute('cy', 16 + r.y);
+          circle.setAttribute('r', 8);
+          circle.setAttribute('stroke', '#160f19');
+          circle.setAttribute('stroke-width', 2);
+          circle.setAttribute('fill', 'transparent');
+          circle.style.pointerEvents = 'none';
+          result.push(circle);
+        }
+        else if (r.type === 'spacemap')
+        {
+          const circle1 = document.createElementNS(svgNameSpace, 'circle');
+          circle1.setAttribute('cx', 10 + r.x);
+          circle1.setAttribute('cy', 10 + r.y);
+          circle1.setAttribute('r', 4);
+          circle1.setAttribute('stroke', '#160f19');
+          circle1.setAttribute('stroke-width', 2);
+          circle1.setAttribute('fill', '#d8b621');
+          circle1.style.pointerEvents = 'none';
+          const circle2 = document.createElementNS(svgNameSpace, 'circle');
+          circle2.setAttribute('cx', 22 + r.x);
+          circle2.setAttribute('cy', 10 + r.y);
+          circle2.setAttribute('r', 4);
+          circle2.setAttribute('stroke', '#160f19');
+          circle2.setAttribute('stroke-width', 2);
+          circle2.setAttribute('fill', '#dc286f');
+          circle2.style.pointerEvents = 'none';
+          const circle3 = document.createElementNS(svgNameSpace, 'circle');
+          circle3.setAttribute('cx', 10 + r.x);
+          circle3.setAttribute('cy', 22 + r.y);
+          circle3.setAttribute('r', 4);
+          circle3.setAttribute('stroke', '#160f19');
+          circle3.setAttribute('stroke-width', 2);
+          circle3.setAttribute('fill', '#36945b');
+          circle3.style.pointerEvents = 'none';
+          const circle4 = document.createElementNS(svgNameSpace, 'circle');
+          circle4.setAttribute('cx', 22 + r.x);
+          circle4.setAttribute('cy', 22 + r.y);
+          circle4.setAttribute('r', 4);
+          circle4.setAttribute('stroke', '#160f19');
+          circle4.setAttribute('stroke-width', 2);
+          circle4.setAttribute('fill', '#5571f1');
+          circle4.style.pointerEvents = 'none';
+          result.push(circle1);
+          result.push(circle2);
+          result.push(circle3);
+          result.push(circle4);
+        }
       }
       return result;
     }
     
-    function createFigure(desc, type)
+    function createFigure(desc)
     {
       const knyteId = knoxels[desc.knoxelId];
       const color = informationMap[knyteId].color;
       const space = informationMap[knyteId].space;
-      const {w, h, rects} = getFigureDimensions(desc.knoxelId, type);
+      const {w, h, rects, flat} = getFigureDimensions(desc.knoxelId);
       const x = desc.position.x - w/2;
       const y = desc.position.y - h/2;
       const rectGroup = document.createElementNS(svgNameSpace, 'g');
@@ -226,7 +247,7 @@ const knoxelRect = new function()
       rectRoot.setAttribute('stroke-width', desc.selfcontained
         ? visualTheme.rect.selfcontained.strokeWidth : visualTheme.rect.strokeWidth);
       rectGroup.appendChild(rectRoot);
-      const shapes = createShapes(type, rects);
+      const shapes = createShapes(rects, flat);
       for (let i = 0; i < shapes.length; ++i)
         rectGroup.appendChild(shapes[i]);
       if (desc.ghost)
@@ -253,12 +274,7 @@ const knoxelRect = new function()
       return rectGroup.id;
     }
     
-    let type = 'recursive';
-    if (knoxels[desc.knoxelId] === knoxels[spacemapKnoxelId])
-      type = 'spacemap';
-    else if (knoxels[desc.knoxelId] === knoxels[spaceRootElement.dataset.knoxelId])
-      type = 'selfviewed';
-    return createFigure(desc, type);
+    return createFigure(desc);
   };
   
   this.setDotted = function(desc)
