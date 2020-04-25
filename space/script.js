@@ -97,11 +97,12 @@ const knoxelRect = new function()
 {
   this.add = function(desc)
   {
-    // desc: {knoxelId, position, color, ghost, bubble, selfcontained}
+    // desc: {knoxelId, position, ghost, bubble, selfcontained}
 
     function level1(desc)
     {
       const knyteId = knoxels[desc.knoxelId];
+      const color = informationMap[knyteId].color;
       const space = informationMap[knyteId].space;
       let rootW = visualTheme.rect.defaultWidth;
       let rootH = visualTheme.rect.defaultWidth;
@@ -126,7 +127,7 @@ const knoxelRect = new function()
       rectRoot.setAttribute('y', 0);
       rectRoot.setAttribute('width', rootW);
       rectRoot.setAttribute('height', rootH);
-      rectRoot.setAttribute('fill', desc.color);
+      rectRoot.setAttribute('fill', color);
       rectRoot.setAttribute('stroke', visualTheme.rect.strokeColor);
       rectRoot.setAttribute('stroke-width', desc.selfcontained
         ? visualTheme.rect.selfcontained.strokeWidth : visualTheme.rect.strokeWidth);
@@ -177,6 +178,7 @@ const knoxelRect = new function()
     function levelIcon(desc, type)
     {
       const knyteId = knoxels[desc.knoxelId];
+      const color = informationMap[knyteId].color;
       const space = informationMap[knyteId].space;
       let rootW = visualTheme.rect.defaultWidth;
       let rootH = visualTheme.rect.defaultWidth;
@@ -191,7 +193,7 @@ const knoxelRect = new function()
       rectRoot.setAttribute('y', 0);
       rectRoot.setAttribute('width', rootW);
       rectRoot.setAttribute('height', rootH);
-      rectRoot.setAttribute('fill', desc.color);
+      rectRoot.setAttribute('fill', color);
       rectRoot.setAttribute('stroke', visualTheme.rect.strokeColor);
       rectRoot.setAttribute('stroke-width', desc.selfcontained
         ? visualTheme.rect.selfcontained.strokeWidth : visualTheme.rect.strokeWidth);
@@ -364,8 +366,7 @@ function setSpaceRootKnoxel(desc)
   {
     const selfcontained = knoxelId === spaceRootElement.dataset.knoxelId;
     const position = nestedKnoxels[knoxelId];
-    const color = informationMap[knoxels[knoxelId]].color;
-    knoxelRect.add({knoxelId, position, color, selfcontained});
+    knoxelRect.add({knoxelId, position, selfcontained});
     if (knoxelId === activeGhost.knoxelId)
       setGhostedMode({knoxelId, isGhosted: true});
   }
@@ -513,9 +514,8 @@ function addKnoxelRect(desc)
     : desc.position;
   const hostKnyteId = knoxels[desc.hostKnoxelId];
   const knoxelId = knit.new();
-  const color = informationMap[desc.knyteId].color;
   addKnoxel({hostKnyteId, knyteId: desc.knyteId, knoxelId, position});
-  knoxelRect.add({knoxelId, position, color});  
+  knoxelRect.add({knoxelId, position});
 }
 
 function onClickRect(e)
@@ -731,11 +731,9 @@ function spawnGhostRect(desc)
   activeGhost.knoxelId = desc.knoxelId;
   activeGhost.spawnSpaceRootKnoxelId = desc.spawnSpaceRootKnoxelId;
   activeGhost.hostKnyteId = getHostKnyteIdByKnoxelId(desc.knoxelId);
-  const knyteId = knoxels[desc.knoxelId];
-  const color = informationMap[knyteId].color;
   const selfcontained = desc.knoxelId === spaceRootElement.dataset.knoxelId;
   const spawnSpaceRootKnoxelSpace = informationMap[knoxels[desc.spawnSpaceRootKnoxelId]].space;
-  const id = knoxelRect.add({knoxelId: desc.knoxelId, position: desc.position, color, ghost: true});
+  const id = knoxelRect.add({knoxelId: desc.knoxelId, position: desc.position, ghost: true});
   activeGhost.element = document.getElementById(id);
   if (selfcontained)
   {
@@ -781,9 +779,8 @@ function spawnBubbleRect(desc)
   // desc: {knoxelId, position}
   activeBubble.knoxelId = desc.knoxelId;
   const knyteId = knoxels[desc.knoxelId];
-  const color = informationMap[knyteId].color;
   const selfcontained = desc.knoxelId === spaceRootElement.dataset.knoxelId;
-  const id = knoxelRect.add({knoxelId: desc.knoxelId, position: desc.position, color, bubble: true});
+  const id = knoxelRect.add({knoxelId: desc.knoxelId, position: desc.position, bubble: true});
   activeBubble.element = document.getElementById(id);
   if (selfcontained)
   {
