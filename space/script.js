@@ -219,13 +219,82 @@ function addRect(desc)
   
   function addRectLevel1(desc)
   {
-    return addRectLevel0(desc); // TODO: implement level 1 representation
+    const knyteId = knoxels[desc.knoxelId];
+    const space = informationMap[knyteId].space;
+    let rootW = visualTheme.rect.defaultWidth;
+    let rootH = visualTheme.rect.defaultWidth;
+    for (let nestedKnoxelId in space)
+    {
+      const w = visualTheme.rect.defaultWidth;
+      const h = visualTheme.rect.defaultHeight;
+      const position = space[nestedKnoxelId];
+      if (rootW < position.x + w)
+        rootW = position.x + w;
+      if (rootH < position.y + h)
+        rootH = position.y + h;
+    }
+    const rootX = desc.position.x - rootW/2;
+    const rootY = desc.position.y - rootH/2;
+    const rectGroup = document.createElementNS(svgNameSpace, 'g');
+    rectGroup.id = desc.knoxelId;
+    rectGroup.classList.value = 'mouseOverRect';
+    rectGroup.setAttribute('transform', 'translate(' + rootX + ' ' + rootY + ')');
+    const rectRoot = document.createElementNS(svgNameSpace, 'rect');
+    rectRoot.setAttribute('x', 0);
+    rectRoot.setAttribute('y', 0);
+    rectRoot.setAttribute('width', rootW);
+    rectRoot.setAttribute('height', rootH);
+    rectRoot.setAttribute('fill', desc.color);
+    rectRoot.setAttribute('stroke', visualTheme.rect.strokeColor);
+    rectRoot.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
+    rectGroup.appendChild(rectRoot);
+    for (let nestedKnoxelId in space)
+    {
+      const w = visualTheme.rect.defaultWidth;
+      const h = visualTheme.rect.defaultHeight;
+      const position = space[nestedKnoxelId];
+      const knyteId = knoxels[nestedKnoxelId];
+      const color = informationMap[knyteId].color;
+      const x = position.x - w/2;
+      const y = position.y - h/2;
+      const rect = document.createElementNS(svgNameSpace, 'rect');
+      rect.setAttribute('x', x);
+      rect.setAttribute('y', y);
+      rect.setAttribute('width', w);
+      rect.setAttribute('height', h);
+      rect.setAttribute('fill', color);
+      rect.setAttribute('stroke', visualTheme.rect.strokeColor);
+      rect.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
+      rectGroup.appendChild(rect);
+    }
+    if (desc.ghost)
+    {
+      rectGroup.id += '.ghost';
+      rectGroup.setAttribute('opacity', 0.5);
+      rectGroup.style.pointerEvents = 'none';
+      document.getElementById('ghosts').appendChild(rectGroup);
+    }
+    else if (desc.bubble)
+    {
+      rectGroup.id += '.bubble';
+      rectGroup.setAttribute('opacity', 0.5);
+      rectRoot.setAttribute('stroke-dasharray', '0 16');
+      rectRoot.setAttribute('stroke-linecap', 'square');
+      rectRoot.style.pointerEvents = 'none';
+      document.getElementById('bubbles').appendChild(rectGroup);
+    }
+    else
+    {
+      rectGroup.addEventListener('click', onClickRect, false);
+      document.getElementById('knoxels').appendChild(rectGroup);
+    }
+    return rectGroup.id;
   }
 
-  if (desc.knoxelId === spacemapKnoxelId || spaceRootElement.dataset.knoxelId === spacemapKnoxelId)
+  if (desc.knoxelId === spacemapKnoxelId)
     return addRectLevel0(desc);
   else
-    return addRectLevel1(desc);
+    return addRectLevel0(desc); // addRectLevel1(desc); // TODO: use it
 }
 
 function addOriginsArrow(desc)
