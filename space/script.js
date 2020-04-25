@@ -100,10 +100,9 @@ const knoxelRect = new function()
 
     function getFigureDimensions(knoxelId, knyteTrace)
     {
-      let ofx = 0;
-      let ofy = 0;
       let w = visualTheme.rect.defaultWidth;
       let h = visualTheme.rect.defaultHeight;
+      let left = 1000000, right = -1000000, top = 1000000, bottom = -1000000;
       let flat = false;
       const rects = [];
       const knyteId = knoxels[knoxelId];
@@ -132,15 +131,19 @@ const knoxelRect = new function()
           const nestedH = d.h;
           const {x, y} = space[nestedKnoxelId];
           const color = informationMap[nestedKnyteId].color;
-          if (w < x + nestedW/2 + mx)
-            w = x + nestedW/2 + mx;
-          if (h < y + nestedH/2 + my)
-            h = y + nestedH/2 + my;
-          if (ofx > x - nestedW/2 - mx)
-            ofx = x - nestedW/2 - mx;
-          if (ofy > y - nestedH/2 - my)
-            ofy = y - nestedH/2 - my;
-          const r = {x: x - nestedW/2 - ofx, y: y - nestedH/2 - ofy, w: nestedW, h: nestedH, color, type: nestedType};
+          const nestedLeft = x - nestedW/2 - mx;
+          const nestedRight = x + nestedW/2 + mx;
+          const nestedTop = y - nestedH/2 - my;
+          const nestedBottom = y + nestedH/2 + my;
+          if (left > nestedLeft)
+            left = nestedLeft;
+          if (right < nestedRight)
+            right = nestedRight;
+          if (top > nestedTop)
+            top = nestedTop;
+          if (bottom < nestedBottom)
+            bottom = nestedBottom;
+          const r = {x: x - nestedW/2, y: y - nestedH/2, w: nestedW, h: nestedH, color, type: nestedType};
           rects.push(r);
           if (!d.flat)
             for (let i = 0; i < d.rects.length; ++i)
@@ -149,8 +152,16 @@ const knoxelRect = new function()
               rects.push({x: r.x + rr.x, y: r.y + rr.y, w: rr.w, h: rr.h, color: rr.color, type: rr.type});
             }
         }
-        w -= ofx;
-        h -= ofy;
+        if (left < right && top < bottom)
+        {
+          w = right - left;
+          h = bottom - top;
+          for (let i = 0; i < rects.length; ++i)
+          {
+            rects[i].x -= left;
+            rects[i].y -= top;
+          }
+        }
       }
       else
       {
