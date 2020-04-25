@@ -98,7 +98,7 @@ const knoxelRect = new function()
   {
     // desc: {knoxelId, position, ghost, bubble, selfcontained}
 
-    function getFigureDimensions(knoxelId)
+    function getFigureDimensions(knoxelId, knyteTrace)
     {
       let w = visualTheme.rect.defaultWidth;
       let h = visualTheme.rect.defaultHeight;
@@ -108,24 +108,26 @@ const knoxelRect = new function()
       let type = 'recursive';
       if (knyteId === knoxels[spacemapKnoxelId])
         type = 'spacemap';
-      else if (knyteId === knoxels[spaceRootElement.dataset.knoxelId])
+      else if (knyteId in knyteTrace)
         type = 'selfviewed';
       if (type === 'recursive')
       {
         const m = 2*visualTheme.rect.strokeWidth;
         const space = informationMap[knyteId].space;
+        const nestedKnyteTrace = Object.assign({}, knyteTrace);
+        nestedKnyteTrace[knyteId] = true;
         for (let nestedKnoxelId in space)
         {
+          const nestedKnyteId = knoxels[nestedKnoxelId];
           let nestedType = 'recursive';
-          if (knoxels[nestedKnoxelId] === knoxels[spacemapKnoxelId])
+          if (nestedKnyteId === knoxels[spacemapKnoxelId])
             nestedType = 'spacemap';
-          else if (knoxels[nestedKnoxelId] === knoxels[spaceRootElement.dataset.knoxelId])
+          else if (nestedKnyteId in nestedKnyteTrace)
             nestedType = 'selfviewed';
-          const d = getFigureDimensions(nestedKnoxelId, nestedType);
+          const d = getFigureDimensions(nestedKnoxelId, nestedKnyteTrace);
           const nestedW = d.w;
           const nestedH = d.h;
           const {x, y} = space[nestedKnoxelId];
-          const nestedKnyteId = knoxels[nestedKnoxelId];
           const color = informationMap[nestedKnyteId].color;
           if (w < x + nestedW/2 + m)
             w = x + nestedW/2 + m;
@@ -229,7 +231,9 @@ const knoxelRect = new function()
       const knyteId = knoxels[desc.knoxelId];
       const color = informationMap[knyteId].color;
       const space = informationMap[knyteId].space;
-      const {w, h, rects, flat} = getFigureDimensions(desc.knoxelId);
+      const knyteTrace = {};
+      knyteTrace[knoxels[spaceRootElement.dataset.knoxelId]] = true;
+      const {w, h, rects, flat} = getFigureDimensions(desc.knoxelId, knyteTrace);
       const x = desc.position.x - w/2;
       const y = desc.position.y - h/2;
       const rectGroup = document.createElementNS(svgNameSpace, 'g');
