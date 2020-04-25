@@ -156,14 +156,9 @@ function setSpaceRootKnoxel(desc)
   for (let knoxelId in nestedKnoxels)
   {
     const selfcontained = knoxelId === spaceRootElement.dataset.knoxelId;
-    addRect(
-      {
-        id: knoxelId,
-        position: nestedKnoxels[knoxelId],
-        color: informationMap[knoxels[knoxelId]].color,
-        selfcontained,
-      }
-    );
+    const position = nestedKnoxels[knoxelId];
+    const color = informationMap[knoxels[knoxelId]].color;
+    addRect({knoxelId, position, color, selfcontained});
     if (knoxelId === activeGhost.knoxelId)
       setGhostedMode({knoxelId, isGhosted: true});
   }
@@ -177,43 +172,60 @@ function setSpaceRootKnoxel(desc)
 
 function addRect(desc)
 {
-  // desc: {id, position, color, ghost, bubble, selfcontained}
-  const w = visualTheme.rect.defaultWidth;
-  const h = visualTheme.rect.defaultHeight;
-  const x = desc.position.x - w/2;
-  const y = desc.position.y - h/2;
-  const rect = document.createElementNS(svgNameSpace, 'rect');
-  rect.id = desc.id;
-  rect.classList.value = 'mouseOverRect';
-  rect.setAttribute('x', x);
-  rect.setAttribute('y', y);
-  rect.setAttribute('width', w);
-  rect.setAttribute('height', h);
-  rect.setAttribute('fill', desc.color);
-  rect.setAttribute('stroke', visualTheme.rect.strokeColor);
-  rect.setAttribute(
-    'stroke-width', 
-    desc.selfcontained ? visualTheme.rect.selfcontained.strokeWidth : visualTheme.rect.strokeWidth
-  );
-  if (desc.ghost)
+  // desc: {knoxelId, position, color, ghost, bubble, selfcontained}
+
+  function addRectLevel0(desc)
   {
-    rect.setAttribute('opacity', 0.5);
-    rect.style.pointerEvents = 'none';
-    document.getElementById('ghosts').appendChild(rect);
+    const w = visualTheme.rect.defaultWidth;
+    const h = visualTheme.rect.defaultHeight;
+    const x = desc.position.x - w/2;
+    const y = desc.position.y - h/2;
+    const rect = document.createElementNS(svgNameSpace, 'rect');
+    rect.id = desc.knoxelId;
+    rect.classList.value = 'mouseOverRect';
+    rect.setAttribute('x', x);
+    rect.setAttribute('y', y);
+    rect.setAttribute('width', w);
+    rect.setAttribute('height', h);
+    rect.setAttribute('fill', desc.color);
+    rect.setAttribute('stroke', visualTheme.rect.strokeColor);
+    rect.setAttribute(
+      'stroke-width', 
+      desc.selfcontained ? visualTheme.rect.selfcontained.strokeWidth : visualTheme.rect.strokeWidth
+    );
+    if (desc.ghost)
+    {
+      rect.id += '.ghost';
+      rect.setAttribute('opacity', 0.5);
+      rect.style.pointerEvents = 'none';
+      document.getElementById('ghosts').appendChild(rect);
+    }
+    else if (desc.bubble)
+    {
+      rect.id += '.bubble';
+      rect.setAttribute('opacity', 0.5);
+      rect.setAttribute('stroke-dasharray', '0 16');
+      rect.setAttribute('stroke-linecap', 'square');
+      rect.style.pointerEvents = 'none';
+      document.getElementById('bubbles').appendChild(rect);
+    }
+    else
+    {
+      rect.addEventListener('click', onClickRect, false);
+      document.getElementById('knoxels').appendChild(rect);
+    }
+    return rect.id;
   }
-  else if (desc.bubble)
+  
+  function addRectLevel1(desc)
   {
-    rect.setAttribute('opacity', 0.5);
-    rect.setAttribute('stroke-dasharray', '0 16');
-    rect.setAttribute('stroke-linecap', 'square');
-    rect.style.pointerEvents = 'none';
-    document.getElementById('bubbles').appendChild(rect);
+    return addRectLevel0(desc); // TODO: implement level 1 representation
   }
+
+  if (desc.knoxelId === spacemapKnoxelId || spaceRootElement.dataset.knoxelId === spacemapKnoxelId)
+    return addRectLevel0(desc);
   else
-  {
-    rect.addEventListener('click', onClickRect, false);
-    document.getElementById('knoxels').appendChild(rect);
-  }
+    return addRectLevel1(desc);
 }
 
 function addOriginsArrow(desc)
@@ -343,7 +355,7 @@ function addKnoxelRect(desc)
   const knoxelId = knit.new();
   const color = informationMap[desc.knyteId].color;
   addKnoxel({hostKnyteId, knyteId: desc.knyteId, knoxelId, position});
-  addRect({id: knoxelId, position, color});  
+  addRect({knoxelId, position, color});  
 }
 
 function onClickRect(e)
@@ -560,10 +572,9 @@ function spawnGhostRect(desc)
   activeGhost.hostKnyteId = getHostKnyteIdByKnoxelId(desc.knoxelId);
   const knyteId = knoxels[desc.knoxelId];
   const color = informationMap[knyteId].color;
-  const id = desc.knoxelId + '.ghost';
   const selfcontained = desc.knoxelId === spaceRootElement.dataset.knoxelId;
   const spawnSpaceRootKnoxelSpace = informationMap[knoxels[desc.spawnSpaceRootKnoxelId]].space;
-  addRect({id, position: desc.position, color, ghost: true});
+  const id = addRect({knoxelId: desc.knoxelId, position: desc.position, color, ghost: true});
   activeGhost.element = document.getElementById(id);
   if (selfcontained)
   {
@@ -611,9 +622,8 @@ function spawnBubbleRect(desc)
   activeBubble.knoxelId = desc.knoxelId;
   const knyteId = knoxels[desc.knoxelId];
   const color = informationMap[knyteId].color;
-  const id = desc.knoxelId + '.bubble';
   const selfcontained = desc.knoxelId === spaceRootElement.dataset.knoxelId;
-  addRect({id, position: desc.position, color, bubble: true});
+  const id = addRect({knoxelId: desc.knoxelId, position: desc.position, color, bubble: true});
   activeBubble.element = document.getElementById(id);
   if (selfcontained)
   {
