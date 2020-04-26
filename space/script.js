@@ -327,9 +327,9 @@ const knoxelRect = new function()
       {
         rectGroup.id += '.bubble';
         rectGroup.setAttribute('opacity', 0.5);
+        rectGroup.style.pointerEvents = 'none';
         rectRoot.setAttribute('stroke-dasharray', '0 16');
         rectRoot.setAttribute('stroke-linecap', 'square');
-        rectRoot.style.pointerEvents = 'none';
         document.getElementById('bubbles').appendChild(rectGroup);
       }
       else
@@ -796,15 +796,14 @@ const activeGhost = {
 
 function spawnGhostRect(desc)
 {
-  // desc: {knoxelId, spawnSpaceRootKnoxelId, position}
+  // desc: {knoxelId, spawnSpaceRootKnoxelId, position, selfcontained}
   activeGhost.knoxelId = desc.knoxelId;
   activeGhost.spawnSpaceRootKnoxelId = desc.spawnSpaceRootKnoxelId;
   activeGhost.hostKnyteId = getHostKnyteIdByKnoxelId(desc.knoxelId);
-  const selfcontained = desc.knoxelId === spaceRootElement.dataset.knoxelId;
   const spawnSpaceRootKnoxelSpace = informationMap[knoxels[desc.spawnSpaceRootKnoxelId]].space;
   const id = knoxelRect.add({knoxelId: desc.knoxelId, position: desc.position, ghost: true});
   activeGhost.element = document.getElementById(id);
-  if (selfcontained)
+  if (desc.selfcontained)
   {
     activeGhost.offset = {x: 0, y: 0};
     if (desc.knoxelId in spawnSpaceRootKnoxelSpace)
@@ -845,13 +844,12 @@ const activeBubble = {
 
 function spawnBubbleRect(desc)
 {
-  // desc: {knoxelId, position}
+  // desc: {knoxelId, position, selfcontained}
   activeBubble.knoxelId = desc.knoxelId;
   const knyteId = knoxels[desc.knoxelId];
-  const selfcontained = desc.knoxelId === spaceRootElement.dataset.knoxelId;
   const id = knoxelRect.add({knoxelId: desc.knoxelId, position: desc.position, bubble: true});
   activeBubble.element = document.getElementById(id);
-  if (selfcontained)
+  if (desc.selfcontained)
   {
     activeBubble.offset = {x: 0, y: 0};
   }
@@ -985,9 +983,15 @@ function onKeyDownWindow(e)
       const position = mouseMovePosition;
       if (!activeGhost.knoxelId)
       {
-        const knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
+        let knoxelId = mouseoverKnoxelId;
+        let selfcontained = false;
+        if (!knoxelId)
+        {
+          knoxelId = spaceRootElement.dataset.knoxelId;
+          selfcontained = true;
+        }
         const spawnSpaceRootKnoxelId = spaceRootElement.dataset.knoxelId;
-        spawnGhostRect({knoxelId, spawnSpaceRootKnoxelId, position});
+        spawnGhostRect({knoxelId, spawnSpaceRootKnoxelId, position, selfcontained});
       }
       else
       {
@@ -1013,8 +1017,14 @@ function onKeyDownWindow(e)
       const position = mouseMovePosition;
       if (!activeBubble.knoxelId)
       {
-        const knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
-        spawnBubbleRect({knoxelId, position});
+        let knoxelId = mouseoverKnoxelId;
+        let selfcontained = false;
+        if (!knoxelId)
+        {
+          knoxelId = spaceRootElement.dataset.knoxelId;
+          selfcontained = true;
+        }
+        spawnBubbleRect({knoxelId, position, selfcontained});
       }
       else
       {
