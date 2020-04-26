@@ -20,7 +20,7 @@ const visualTheme = {
     strokeColor: visualThemeColors.outline,
     strokeWidth: 4,
     selfcontained: {
-      strokeWidth: 2
+      dashLength: 8
     },
     fillColor: {
       getRandom: function() {
@@ -267,9 +267,46 @@ const knoxelRect = new function()
       rectRoot.setAttribute('height', h);
       rectRoot.setAttribute('fill', color);
       rectRoot.setAttribute('stroke', visualTheme.rect.strokeColor);
-      rectRoot.setAttribute('stroke-width', desc.selfcontained
-        ? visualTheme.rect.selfcontained.strokeWidth : visualTheme.rect.strokeWidth);
+      rectRoot.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
       rectGroup.appendChild(rectRoot);
+      if (desc.selfcontained)
+      {
+        const dirLength = Math.sqrt(w*w + h*h);
+        const dir = {x: w/dirLength, y: h/dirLength};
+        const d = visualTheme.rect.selfcontained.dashLength;
+        const selfcontainedLine1 = document.createElementNS(svgNameSpace, 'line');
+        selfcontainedLine1.setAttribute('x1', -d*dir.x);
+        selfcontainedLine1.setAttribute('y1', -d*dir.y);
+        selfcontainedLine1.setAttribute('x2', 0);
+        selfcontainedLine1.setAttribute('y2', 0);
+        selfcontainedLine1.setAttribute('stroke', visualTheme.rect.strokeColor);
+        selfcontainedLine1.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
+        const selfcontainedLine2 = document.createElementNS(svgNameSpace, 'line');
+        selfcontainedLine2.setAttribute('x1', w);
+        selfcontainedLine2.setAttribute('y1', h);
+        selfcontainedLine2.setAttribute('x2', (d+dirLength)*dir.x);
+        selfcontainedLine2.setAttribute('y2', (d+dirLength)*dir.y);
+        selfcontainedLine2.setAttribute('stroke', visualTheme.rect.strokeColor);
+        selfcontainedLine2.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
+        const selfcontainedLine3 = document.createElementNS(svgNameSpace, 'line');
+        selfcontainedLine3.setAttribute('x1', -d*dir.x);
+        selfcontainedLine3.setAttribute('y1', (d+dirLength)*dir.y);
+        selfcontainedLine3.setAttribute('x2', 0);
+        selfcontainedLine3.setAttribute('y2', h);
+        selfcontainedLine3.setAttribute('stroke', visualTheme.rect.strokeColor);
+        selfcontainedLine3.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
+        const selfcontainedLine4 = document.createElementNS(svgNameSpace, 'line');
+        selfcontainedLine4.setAttribute('x1', w);
+        selfcontainedLine4.setAttribute('y1', 0);
+        selfcontainedLine4.setAttribute('x2', (d+dirLength)*dir.x);
+        selfcontainedLine4.setAttribute('y2', -d*dir.y);
+        selfcontainedLine4.setAttribute('stroke', visualTheme.rect.strokeColor);
+        selfcontainedLine4.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
+        rectGroup.appendChild(selfcontainedLine1);
+        rectGroup.appendChild(selfcontainedLine2);
+        rectGroup.appendChild(selfcontainedLine3);
+        rectGroup.appendChild(selfcontainedLine4);
+      }
       const shapes = createShapes(rects, flat);
       for (let i = 0; i < shapes.length; ++i)
         rectGroup.appendChild(shapes[i]);
