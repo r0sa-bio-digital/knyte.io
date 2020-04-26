@@ -22,6 +22,12 @@ const visualTheme = {
     selfcontained: {
       dashLength: 8
     },
+    recursive: {
+      strokeWidth: 2
+    },
+    pictograph: {
+      strokeWidth: 2
+    },
     fillColor: {
       getRandom: function() {
         const colors = visualThemeColors.elements;
@@ -188,7 +194,7 @@ const knoxelRect = new function()
           rect.setAttribute('height', r.h);
           rect.setAttribute('fill', r.color);
           rect.setAttribute('stroke', visualTheme.rect.strokeColor);
-          rect.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
+          rect.setAttribute('stroke-width', visualTheme.rect.recursive.strokeWidth);
           result.push(rect);
         }
         if (r.type === 'selfviewed')
@@ -198,7 +204,7 @@ const knoxelRect = new function()
           circle.setAttribute('cy', 16 + r.y);
           circle.setAttribute('r', 8);
           circle.setAttribute('stroke', '#160f19');
-          circle.setAttribute('stroke-width', 2);
+          circle.setAttribute('stroke-width', visualTheme.rect.pictograph.strokeWidth);
           circle.setAttribute('fill', 'transparent');
           circle.style.pointerEvents = 'none';
           result.push(circle);
@@ -210,7 +216,7 @@ const knoxelRect = new function()
           circle1.setAttribute('cy', 10 + r.y);
           circle1.setAttribute('r', 4);
           circle1.setAttribute('stroke', '#160f19');
-          circle1.setAttribute('stroke-width', 2);
+          circle1.setAttribute('stroke-width', visualTheme.rect.pictograph.strokeWidth);
           circle1.setAttribute('fill', '#d8b621');
           circle1.style.pointerEvents = 'none';
           const circle2 = document.createElementNS(svgNameSpace, 'circle');
@@ -218,7 +224,7 @@ const knoxelRect = new function()
           circle2.setAttribute('cy', 10 + r.y);
           circle2.setAttribute('r', 4);
           circle2.setAttribute('stroke', '#160f19');
-          circle2.setAttribute('stroke-width', 2);
+          circle2.setAttribute('stroke-width', visualTheme.rect.pictograph.strokeWidth);
           circle2.setAttribute('fill', '#dc286f');
           circle2.style.pointerEvents = 'none';
           const circle3 = document.createElementNS(svgNameSpace, 'circle');
@@ -226,7 +232,7 @@ const knoxelRect = new function()
           circle3.setAttribute('cy', 22 + r.y);
           circle3.setAttribute('r', 4);
           circle3.setAttribute('stroke', '#160f19');
-          circle3.setAttribute('stroke-width', 2);
+          circle3.setAttribute('stroke-width', visualTheme.rect.pictograph.strokeWidth);
           circle3.setAttribute('fill', '#36945b');
           circle3.style.pointerEvents = 'none';
           const circle4 = document.createElementNS(svgNameSpace, 'circle');
@@ -234,7 +240,7 @@ const knoxelRect = new function()
           circle4.setAttribute('cy', 22 + r.y);
           circle4.setAttribute('r', 4);
           circle4.setAttribute('stroke', '#160f19');
-          circle4.setAttribute('stroke-width', 2);
+          circle4.setAttribute('stroke-width', visualTheme.rect.pictograph.strokeWidth);
           circle4.setAttribute('fill', '#5571f1');
           circle4.style.pointerEvents = 'none';
           result.push(circle1);
