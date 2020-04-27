@@ -313,6 +313,18 @@ const knoxelRect = new function()
         rectGroup.appendChild(selfcontainedLine3);
         rectGroup.appendChild(selfcontainedLine4);
       }
+      if (false) // stress test for svg+foreignobject
+      {
+        const info = document.createElementNS(svgNameSpace, 'foreignObject');
+        info.setAttribute('x', 0);
+        info.setAttribute('y', 0);
+        info.setAttribute('width', w);
+        info.setAttribute('height', h);
+        const div = document.createElement('div');     
+        div.innerHTML = 'W';
+        info.appendChild(div);
+        rectGroup.appendChild(info);
+      }
       const shapes = createShapes(rects, flat);
       for (let i = 0; i < shapes.length; ++i)
         rectGroup.appendChild(shapes[i]);
