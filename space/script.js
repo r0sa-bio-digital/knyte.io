@@ -10,7 +10,7 @@ let spaceHostElement;
 let spacemapKnoxelId;
 let handleSpacemapChanged = function() {};
 const knytesCloud = {}; // core knyte id --> {initialKnyteId, terminalKnyteId}
-const informationMap = {}; // knyte id --> {color, space: {knoxel id --> position}}
+const informationMap = {}; // knyte id --> {color, space: {knoxel id --> position}, record}
 const knoxels = {}; // knoxel id --> knyte id
 const arrows = {}; // arrow id --> {initialKnoxelId, terminalKnoxelId}
 const spaceBackStack = []; // [previous space root knoxel id]
@@ -325,9 +325,23 @@ const knoxelRect = new function()
         info.appendChild(div);
         rectGroup.appendChild(info);
       }
-      const shapes = createShapes(rects, flat);
-      for (let i = 0; i < shapes.length; ++i)
-        rectGroup.appendChild(shapes[i]);
+      const record = informationMap[knyteId].record;
+      if (record)
+      {
+        const info = document.createElementNS(svgNameSpace, 'foreignObject');
+        info.setAttribute('x', 0);
+        info.setAttribute('y', 0);
+        info.setAttribute('width', w);
+        info.setAttribute('height', h);
+        info.innerHTML = record;
+        rectGroup.appendChild(info);
+      }
+      else
+      {
+        const shapes = createShapes(rects, flat);
+        for (let i = 0; i < shapes.length; ++i)
+          rectGroup.appendChild(shapes[i]);
+      }
       if (desc.ghost)
       {
         rectGroup.id += '.ghost';
