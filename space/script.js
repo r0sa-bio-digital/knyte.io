@@ -255,11 +255,14 @@ const knoxelRect = new function()
     function createFigure(desc)
     {
       const knyteId = knoxels[desc.knoxelId];
-      const color = informationMap[knyteId].color;
-      const space = informationMap[knyteId].space;
+      const {color, space, record, size} = informationMap[knyteId];
       const knyteTrace = {};
       knyteTrace[knoxels[spaceRootElement.dataset.knoxelId]] = true;
-      const {w, h, rects, flat} = getFigureDimensions(desc.knoxelId, knyteTrace);
+      const defaultW = visualTheme.rect.defaultWidth;
+      const defaultH = visualTheme.rect.defaultHeight;
+      const {w, h, rects, flat} = (record && size)
+        ? {w: Math.max(size.w, defaultW), h: Math.max(size.h, defaultH), rects: [], flat: true}
+        : getFigureDimensions(desc.knoxelId, knyteTrace);
       const x = desc.position.x - w/2;
       const y = desc.position.y - h/2;
       const rectGroup = document.createElementNS(svgNameSpace, 'g');
@@ -325,8 +328,6 @@ const knoxelRect = new function()
         info.appendChild(div);
         rectGroup.appendChild(info);
       }
-      const record = informationMap[knyteId].record;
-      const size = informationMap[knyteId].size;
       if (record && size)
       {
         const info = document.createElementNS(svgNameSpace, 'foreignObject');
