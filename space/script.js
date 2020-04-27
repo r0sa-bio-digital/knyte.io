@@ -595,7 +595,7 @@ function onClickRect(e)
       spaceBackStack.push(spaceRootElement.dataset.knoxelId);
       spaceForwardStack.length = 0;
       setSpaceRootKnoxel({knoxelId: targetKnoxelElement.id});
-      refreshGhostRect({position: mouseMovePosition});
+      refreshActiveRect({position: mouseMovePosition});
       setNavigationControlState({
         backKnoxelId: spaceBackStack[spaceBackStack.length - 1]
       });
@@ -682,7 +682,7 @@ function onClickSpaceMap(e)
   spaceBackStack.push(spaceRootElement.dataset.knoxelId);
   spaceForwardStack.length = 0;
   setSpaceRootKnoxel({knoxelId: spacemapKnoxelId});
-  refreshGhostRect({position: mouseMovePosition});
+  refreshActiveRect({position: mouseMovePosition});
   setNavigationControlState({
     backKnoxelId: spaceBackStack[spaceBackStack.length - 1]
   });
@@ -695,7 +695,7 @@ function onClickSpaceHost(e)
   spaceBackStack.push(spaceRootElement.dataset.knoxelId);
   spaceForwardStack.length = 0;
   setSpaceRootKnoxel({knoxelId: activeGhost.spawnSpaceRootKnoxelId});
-  refreshGhostRect({position: mouseMovePosition});
+  refreshActiveRect({position: mouseMovePosition});
   setNavigationControlState({
     backKnoxelId: spaceBackStack[spaceBackStack.length - 1]
   });
@@ -708,7 +708,7 @@ function onClickSpaceBack(e)
   if (backKnoxelId)
   {
     setSpaceRootKnoxel({knoxelId: backKnoxelId});
-    refreshGhostRect({position: mouseMovePosition});
+    refreshActiveRect({position: mouseMovePosition});
     setNavigationControlState({
       backKnoxelId: spaceBackStack[spaceBackStack.length - 1],
       forwardKnoxelId: spaceForwardStack[spaceForwardStack.length - 1]
@@ -723,7 +723,7 @@ function onClickSpaceForward(e)
   if (forwardKnoxelId)
   {
     setSpaceRootKnoxel({knoxelId: forwardKnoxelId});
-    refreshGhostRect({position: mouseMovePosition});
+    refreshActiveRect({position: mouseMovePosition});
     setNavigationControlState({
       backKnoxelId: spaceBackStack[spaceBackStack.length - 1],
       forwardKnoxelId: spaceForwardStack[spaceForwardStack.length - 1]
@@ -791,6 +791,30 @@ function setNavigationControlState(desc)
   }
 }
 
+function createActiveRect(desc)
+{
+  // desc: {knoxelId, position, ghost, bubble}
+  const id = knoxelRect.add(desc);
+  return document.getElementById(id);
+}
+
+function refreshActiveRect(desc)
+{
+  // desc: {position}
+  if (activeGhost.knoxelId)
+  {
+    activeGhost.element.remove();
+    activeGhost.element = createActiveRect({knoxelId: activeGhost.knoxelId, position: desc.position, ghost: true});
+    activeGhost.offset = {x: 0, y: 0};
+  }
+  if (activeBubble.knoxelId)
+  {
+    activeBubble.element.remove();
+    activeBubble.element = createActiveRect({knoxelId: activeBubble.knoxelId, position: desc.position, bubble: true});
+    activeBubble.offset = {x: 0, y: 0};
+  }
+}
+
 const activeGhost = {
   knoxelId: null,
   spawnSpaceRootKnoxelId: null,
@@ -798,13 +822,6 @@ const activeGhost = {
   offset: {x: 0, y: 0},
   element: null,
 };
-
-function createActiveRect(desc)
-{
-  // desc: {knoxelId, position, ghost, bubble}
-  const id = knoxelRect.add(desc);
-  return document.getElementById(id);
-}
 
 function spawnGhostRect(desc)
 {
@@ -846,16 +863,6 @@ function terminateGhostRect()
   activeGhost.element = null;
 }
 
-function refreshGhostRect(desc)
-{
-  if (!activeGhost.knoxelId)
-    return;
-  // desc: position
-  activeGhost.element.remove();
-  activeGhost.element = createActiveRect({knoxelId: activeGhost.knoxelId, position: desc.position, ghost: true});
-  activeGhost.offset = {x: 0, y: 0};
-}
-
 const activeBubble = {
   knoxelId: null,
   offset: {x: 0, y: 0},
@@ -867,8 +874,7 @@ function spawnBubbleRect(desc)
   // desc: {knoxelId, position, selfcontained}
   activeBubble.knoxelId = desc.knoxelId;
   const knyteId = knoxels[desc.knoxelId];
-  const id = knoxelRect.add({knoxelId: desc.knoxelId, position: desc.position, bubble: true});
-  activeBubble.element = document.getElementById(id);
+  activeBubble.element = createActiveRect({knoxelId: desc.knoxelId, position: desc.position, bubble: true});
   if (desc.selfcontained)
   {
     activeBubble.offset = {x: 0, y: 0};
@@ -878,10 +884,9 @@ function spawnBubbleRect(desc)
     const hostKnyteId = getHostKnyteIdByKnoxelId(desc.knoxelId);
     const hostKnoxelSpace = informationMap[hostKnyteId].space;
     const knoxelPosition = hostKnoxelSpace[desc.knoxelId];
-    activeBubble.offset = {
-      x: knoxelPosition.x - desc.position.x, 
-      y: knoxelPosition.y - desc.position.y
-    };
+    const ox = knoxelPosition.x - desc.position.x;
+    const oy = knoxelPosition.y - desc.position.y;
+    activeBubble.offset = {x: ox, y: oy};
     const x = mouseMovePosition.x + activeBubble.offset.x;
     const y = mouseMovePosition.y + activeBubble.offset.y;
     knoxelRect.moveElement({element: activeBubble.element, x, y});
