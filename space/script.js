@@ -316,25 +316,6 @@ const knoxelRect = new function()
         rectGroup.appendChild(selfcontainedLine3);
         rectGroup.appendChild(selfcontainedLine4);
       }
-      if (false) // stress test for svg+foreignobject
-      {
-        const info = document.createElementNS(svgNameSpace, 'foreignObject');
-        const strokeW = visualTheme.rect.strokeWidth;
-        info.setAttribute('x', strokeW/2);
-        info.setAttribute('y', strokeW/2);
-        info.setAttribute('width', w - strokeW);
-        info.setAttribute('height', h - strokeW);
-        const div = document.createElement('div');
-        //div.style.height = '100%';
-        div.style.backgroundColor = 'white';
-        div.style.display = 'flex';
-        div.style.justifyContent = 'center';
-        div.style.alignItems = 'center';
-        div.innerHTML = 'W';
-        info.appendChild(div);
-        //info.innerHTML = 'W';
-        rectGroup.appendChild(info);
-      }
       if (record && size)
       {
         const info = document.createElementNS(svgNameSpace, 'foreignObject');
