@@ -442,7 +442,7 @@ const knoxelSpaceRoot = new function()
     spaceRootElement.style.backgroundColor = color;
     const spaceRootRecord = document.getElementById('record');
     const foreignObject = spaceRootRecord.getElementsByTagName('foreignObject')[0];
-    foreignObject.innerHTML = record;
+    foreignObject.innerHTML = record ? record : '';
     const {w, h, leftTop} = knoxelRect.getSize(knoxelId);
     const strokeW = visualTheme.rect.strokeWidth;
     foreignObject.setAttribute('x', leftTop.x + strokeW/2);
