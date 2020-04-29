@@ -146,7 +146,7 @@ const knoxelRect = new function()
           const nestedW = d.w;
           const nestedH = d.h;
           const {x, y} = space[nestedKnoxelId];
-          const color = informationMap[nestedKnyteId].color;
+          const {color, record} = informationMap[nestedKnyteId];
           const nestedLeft = x - nestedW/2 - mx;
           const nestedRight = x + nestedW/2 + mx;
           const nestedTop = y - nestedH/2 - my;
@@ -159,13 +159,13 @@ const knoxelRect = new function()
             top = nestedTop;
           if (bottom < nestedBottom)
             bottom = nestedBottom;
-          const r = {x: x - nestedW/2, y: y - nestedH/2, w: nestedW, h: nestedH, color, type: nestedType};
+          const r = {x: x - nestedW/2, y: y - nestedH/2, w: nestedW, h: nestedH, color, record, type: nestedType};
           rects.push(r);
           if (!d.flat)
             for (let i = 0; i < d.rects.length; ++i)
             {
               const rr = d.rects[i];
-              rects.push({x: r.x + rr.x, y: r.y + rr.y, w: rr.w, h: rr.h, color: rr.color, type: rr.type});
+              rects.push({x: r.x + rr.x, y: r.y + rr.y, w: rr.w, h: rr.h, color: rr.color, record: rr.record, type: rr.type});
             }
         }
         if (left < right && top < bottom)
@@ -181,8 +181,8 @@ const knoxelRect = new function()
       }
       else
       {
-        const color = informationMap[knyteId].color;
-        const r = {x: 0, y: 0, w, h, color, type};
+        const {color, record} = informationMap[knyteId];
+        const r = {x: 0, y: 0, w, h, color, record, type};
         rects.push(r);
         flat = true;
       }
@@ -197,15 +197,29 @@ const knoxelRect = new function()
         const r = rects[i];
         if (!flat)
         {
+          const rectGroup = document.createElementNS(svgNameSpace, 'g');
+          rectGroup.setAttribute('transform', 'translate(' + r.x + ' ' + r.y + ')');
           const rect = document.createElementNS(svgNameSpace, 'rect');
-          rect.setAttribute('x', r.x);
-          rect.setAttribute('y', r.y);
+          rect.setAttribute('x', 0);
+          rect.setAttribute('y', 0);
           rect.setAttribute('width', r.w);
           rect.setAttribute('height', r.h);
           rect.setAttribute('fill', r.color);
           rect.setAttribute('stroke', visualTheme.rect.strokeColor);
           rect.setAttribute('stroke-width', visualTheme.rect.recursive.strokeWidth);
-          result.push(rect);
+          rectGroup.appendChild(rect);
+          if (r.record)
+          {
+            const info = document.createElementNS(svgNameSpace, 'foreignObject');
+            const strokeW = visualTheme.rect.strokeWidth;
+            info.setAttribute('x', strokeW/2);
+            info.setAttribute('y', strokeW/2);
+            info.setAttribute('width', r.w - strokeW);
+            info.setAttribute('height', r.h - strokeW);
+            info.innerHTML = r.record;
+            rectGroup.appendChild(info);
+          }
+          result.push(rectGroup);
         }
         if (r.type === 'selfviewed')
         {
