@@ -652,6 +652,10 @@ function onClickRect(e)
   const targetKnoxelElement = knoxelRect.getRootByTarget(e.target);
   if (!e.shiftKey && !e.altKey && !e.metaKey)
   {
+    // place knoxel selection here
+  }
+  else if (e.shiftKey && !e.altKey && !e.metaKey)
+  {
     if (targetKnoxelElement.id !== spaceRootElement.dataset.knoxelId)
     {
       spaceBackStack.push(spaceRootElement.dataset.knoxelId);
@@ -663,6 +667,14 @@ function onClickRect(e)
       });
     }
     e.stopPropagation(); // to prevent onClickSpaceRoot call
+  }
+  else if (!e.shiftKey && e.altKey && !e.metaKey)
+  {
+    // place knoxel content edit here
+    const foreignObject = targetKnoxelElement.getElementsByTagName('foreignObject')[0];
+    const editableElement = foreignObject.firstElementChild;
+    editableElement.contentEditable = true;
+    editableElement.focus();
   }
 }
 
