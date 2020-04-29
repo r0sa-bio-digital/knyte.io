@@ -435,6 +435,26 @@ const knoxelRect = new function()
   };
 };
 
+const knoxelSpaceRoot = new function()
+{
+  this.update = function()
+  {
+    const knoxelId = spaceRootElement.dataset.knoxelId;
+    const knyteId = knoxels[knoxelId];
+    const {color, record} = informationMap[knyteId];
+    spaceRootElement.style.backgroundColor = color;
+    const spaceRootRecord = document.getElementById('record');
+    const foreignObject = spaceRootRecord.getElementsByTagName('foreignObject')[0];
+    foreignObject.innerHTML = record;
+    const {w, h, leftTop} = knoxelRect.getSize(knoxelId);
+    const strokeW = visualTheme.rect.strokeWidth;
+    foreignObject.setAttribute('x', leftTop.x + strokeW/2);
+    foreignObject.setAttribute('y', leftTop.y + strokeW/2);
+    foreignObject.setAttribute('width', w - strokeW);
+    foreignObject.setAttribute('height', h - strokeW);
+  };
+}
+
 function setGhostedMode(desc)
 {
   // desc: {knoxelId, isGhosted}
@@ -464,25 +484,15 @@ function setSpaceRootKnoxel(desc)
   // desc: {knoxelId}
   const priorKnoxelId = spaceRootElement.dataset.knoxelId;
   const newKnoxelId = desc.knoxelId;
-  const newKnyteId = knoxels[newKnoxelId];
   // clear children rects
   const spaceRootKnoxels = document.getElementById('knoxels');
   while (spaceRootKnoxels.firstChild)
     spaceRootKnoxels.firstChild.remove();
   // set actual knoxel id, space color and information record
   spaceRootElement.dataset.knoxelId = newKnoxelId;
-  const {color, record} = informationMap[newKnyteId];
-  spaceRootElement.style.backgroundColor = color;
-  const spaceRootRecord = document.getElementById('record');
-  const foreignObject = spaceRootRecord.getElementsByTagName('foreignObject')[0];
-  foreignObject.innerHTML = record;
-  const {w, h, leftTop} = knoxelRect.getSize(newKnoxelId);
-  const strokeW = visualTheme.rect.strokeWidth;
-  foreignObject.setAttribute('x', leftTop.x + strokeW/2);
-  foreignObject.setAttribute('y', leftTop.y + strokeW/2);
-  foreignObject.setAttribute('width', w - strokeW);
-  foreignObject.setAttribute('height', h - strokeW);
+  knoxelSpaceRoot.update();
   // restore all nested rects
+  const newKnyteId = knoxels[newKnoxelId];
   const nestedKnoxels = informationMap[newKnyteId].space;
   for (let knoxelId in nestedKnoxels)
   {
@@ -726,6 +736,7 @@ function onClickSpaceRoot(e)
     const color = visualTheme.rect.fillColor.getRandom();
     addKnyte({knyteId, initialKnyteId: knit.empty, terminalKnyteId: knit.empty, color});
     addKnoxelRect({knyteId, hostKnoxelId: spaceRootElement.dataset.knoxelId, position: mousePosition});
+    knoxelSpaceRoot.update();
     handleSpacemapChanged();
   }
 }
