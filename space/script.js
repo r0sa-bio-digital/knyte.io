@@ -111,12 +111,6 @@ const knoxelRect = new function()
     let h = visualTheme.rect.defaultHeight;
     const leftTop = {x: 0, y: 0};
     const knyteId = knoxels[knoxelId];
-    const {size} = informationMap[knyteId];
-    if (w < size.w)
-      w = size.w;
-    if (h < size.h)
-      h = size.h;
-    let left = 1000000, right = -1000000, top = 1000000, bottom = -1000000;
     let flat = false;
     const rects = [];
     let type = 'recursive';
@@ -126,6 +120,13 @@ const knoxelRect = new function()
       type = 'selfviewed';
     if (type === 'recursive')
     {
+      const {size} = informationMap[knyteId];
+      if (size)
+      {
+        w = Math.max(w, size.w);
+        h = Math.max(h, size.h);
+      }
+      let left = 1000000, right = -1000000, top = 1000000, bottom = -1000000;
       const mx = visualTheme.rect.defaultWidth/2;
       const my = visualTheme.rect.defaultHeight/2;
       const space = informationMap[knyteId].space;
@@ -197,10 +198,10 @@ const knoxelRect = new function()
       const result = [];
       for (let i = 0; i < rects.length; ++i)
       {
+        const rectGroup = document.createElementNS(svgNameSpace, 'g');
         const r = rects[i];
         if (!flat)
         {
-          const rectGroup = document.createElementNS(svgNameSpace, 'g');
           rectGroup.setAttribute('transform', 'translate(' + r.x + ' ' + r.y + ')');
           const rect = document.createElementNS(svgNameSpace, 'rect');
           rect.setAttribute('x', 0);
@@ -211,70 +212,70 @@ const knoxelRect = new function()
           rect.setAttribute('stroke', visualTheme.rect.strokeColor);
           rect.setAttribute('stroke-width', visualTheme.rect.recursive.strokeWidth);
           rectGroup.appendChild(rect);
-          if (r.record)
-          {
-            const info = document.createElementNS(svgNameSpace, 'foreignObject');
-            const strokeW = visualTheme.rect.strokeWidth;
-            info.setAttribute('x', strokeW/2);
-            info.setAttribute('y', strokeW/2);
-            info.setAttribute('width', r.w - strokeW);
-            info.setAttribute('height', r.h - strokeW);
-            info.innerHTML = r.record;
-            rectGroup.appendChild(info);
-          }
-          result.push(rectGroup);
+        }
+        if (r.type === 'recursive' && r.record)
+        {
+          const info = document.createElementNS(svgNameSpace, 'foreignObject');
+          const strokeW = visualTheme.rect.strokeWidth;
+          info.setAttribute('x', strokeW/2);
+          info.setAttribute('y', strokeW/2);
+          info.setAttribute('width', r.w - strokeW);
+          info.setAttribute('height', r.h - strokeW);
+          info.innerHTML = r.record;
+          rectGroup.appendChild(info);
         }
         if (r.type === 'selfviewed')
         {
           const circle = document.createElementNS(svgNameSpace, 'circle');
-          circle.setAttribute('cx', 16 + r.x);
-          circle.setAttribute('cy', 16 + r.y);
+          circle.setAttribute('cx', 16);
+          circle.setAttribute('cy', 16);
           circle.setAttribute('r', 8);
           circle.setAttribute('stroke', '#160f19');
           circle.setAttribute('stroke-width', visualTheme.rect.pictograph.strokeWidth);
           circle.setAttribute('fill', 'transparent');
           circle.style.pointerEvents = 'none';
-          result.push(circle);
+          rectGroup.appendChild(circle);
         }
         else if (r.type === 'spacemap')
         {
           const circle1 = document.createElementNS(svgNameSpace, 'circle');
-          circle1.setAttribute('cx', 10 + r.x);
-          circle1.setAttribute('cy', 10 + r.y);
+          circle1.setAttribute('cx', 10);
+          circle1.setAttribute('cy', 10);
           circle1.setAttribute('r', 4);
           circle1.setAttribute('stroke', '#160f19');
           circle1.setAttribute('stroke-width', visualTheme.rect.pictograph.strokeWidth);
           circle1.setAttribute('fill', '#d8b621');
           circle1.style.pointerEvents = 'none';
           const circle2 = document.createElementNS(svgNameSpace, 'circle');
-          circle2.setAttribute('cx', 22 + r.x);
-          circle2.setAttribute('cy', 10 + r.y);
+          circle2.setAttribute('cx', 22);
+          circle2.setAttribute('cy', 10);
           circle2.setAttribute('r', 4);
           circle2.setAttribute('stroke', '#160f19');
           circle2.setAttribute('stroke-width', visualTheme.rect.pictograph.strokeWidth);
           circle2.setAttribute('fill', '#dc286f');
           circle2.style.pointerEvents = 'none';
           const circle3 = document.createElementNS(svgNameSpace, 'circle');
-          circle3.setAttribute('cx', 10 + r.x);
-          circle3.setAttribute('cy', 22 + r.y);
+          circle3.setAttribute('cx', 10);
+          circle3.setAttribute('cy', 22);
           circle3.setAttribute('r', 4);
           circle3.setAttribute('stroke', '#160f19');
           circle3.setAttribute('stroke-width', visualTheme.rect.pictograph.strokeWidth);
           circle3.setAttribute('fill', '#36945b');
           circle3.style.pointerEvents = 'none';
           const circle4 = document.createElementNS(svgNameSpace, 'circle');
-          circle4.setAttribute('cx', 22 + r.x);
-          circle4.setAttribute('cy', 22 + r.y);
+          circle4.setAttribute('cx', 22);
+          circle4.setAttribute('cy', 22);
           circle4.setAttribute('r', 4);
           circle4.setAttribute('stroke', '#160f19');
           circle4.setAttribute('stroke-width', visualTheme.rect.pictograph.strokeWidth);
           circle4.setAttribute('fill', '#5571f1');
           circle4.style.pointerEvents = 'none';
-          result.push(circle1);
-          result.push(circle2);
-          result.push(circle3);
-          result.push(circle4);
+          rectGroup.appendChild(circle1);
+          rectGroup.appendChild(circle2);
+          rectGroup.appendChild(circle3);
+          rectGroup.appendChild(circle4);
         }
+        result.push(rectGroup);
       }
       return result;
     }
@@ -339,7 +340,7 @@ const knoxelRect = new function()
         rectGroup.appendChild(selfcontainedLine3);
         rectGroup.appendChild(selfcontainedLine4);
       }
-      if (record)
+      if (record && !flat)
       {
         const info = document.createElementNS(svgNameSpace, 'foreignObject');
         const strokeW = visualTheme.rect.strokeWidth;
@@ -350,11 +351,9 @@ const knoxelRect = new function()
         info.innerHTML = record;
         rectGroup.appendChild(info);
       }
-      {
-        const shapes = createShapes(rects, flat);
-        for (let i = 0; i < shapes.length; ++i)
-          rectGroup.appendChild(shapes[i]);
-      }
+      const shapes = createShapes(rects, flat);
+      for (let i = 0; i < shapes.length; ++i)
+        rectGroup.appendChild(shapes[i]);
       if (desc.ghost)
       {
         rectGroup.id += '.ghost';
