@@ -90,7 +90,7 @@ function addKnyte(desc)
   informationMap[desc.knyteId] = {color: desc.color, space: {}};
   if (true) // debug content // TODO: remove after basic system implementation
   {
-    informationMap[desc.knyteId].record = '<div style="display: flex; height: 100%; justify-content: center; align-items: center;">My Text</div>';
+    informationMap[desc.knyteId].record = '<div style="display: flex; height: 100%; justify-content: center; align-items: center;"><div><div>My Text</div></div></div>';
     informationMap[desc.knyteId].size = {w: 64, h: 20};
   }
 }
@@ -647,6 +647,28 @@ function addKnoxelRect(desc)
   knoxelRect.add({knoxelId, position});
 }
 
+let pauseNavigationButtons = false;
+
+function onBlurContentEditable(e)
+{
+  e.target.contentEditable = false;
+  e.target.removeEventListener('blur', onBlurContentEditable);
+  const targetKnoxelElement = knoxelRect.getRootByTarget(e.target);
+  if (targetKnoxelElement === spaceRootElement)
+  {
+    const knyteId = knoxels[spaceRootElement.dataset.knoxelId];
+    const foreignObject = document.getElementById('record').getElementsByTagName('foreignObject')[0];
+    informationMap[knyteId].record = foreignObject.innerHTML;
+  }
+  else
+  {
+    const knyteId = knoxels[targetKnoxelElement.id];
+    const foreignObject = targetKnoxelElement.getElementsByTagName('foreignObject')[0];
+    informationMap[knyteId].record = foreignObject.innerHTML;
+  }
+  pauseNavigationButtons = false;
+}
+
 function onClickRect(e)
 {
   const targetKnoxelElement = knoxelRect.getRootByTarget(e.target);
@@ -670,11 +692,12 @@ function onClickRect(e)
   }
   else if (!e.shiftKey && e.altKey && !e.metaKey)
   {
-    // place knoxel content edit here
     const foreignObject = targetKnoxelElement.getElementsByTagName('foreignObject')[0];
     const editableElement = foreignObject.firstElementChild;
     editableElement.contentEditable = true;
     editableElement.focus();
+    editableElement.addEventListener('blur', onBlurContentEditable);
+    pauseNavigationButtons = true;
   }
 }
 
@@ -739,6 +762,7 @@ function replaceKnoxelInStacks(desc)
 function onClickSpaceRoot(e)
 {
   const mousePosition = {x: e.clientX, y: e.clientY};
+  const mousePagePosition = {x: e.pageX, y: e.pageY};
   if (!e.shiftKey && !e.altKey && e.metaKey)
   {
     const knyteId = knit.new();
@@ -747,6 +771,21 @@ function onClickSpaceRoot(e)
     addKnoxelRect({knyteId, hostKnoxelId: spaceRootElement.dataset.knoxelId, position: mousePosition});
     knoxelSpaceRoot.update();
     handleSpacemapChanged();
+  }
+  else if (!e.shiftKey && e.altKey && !e.metaKey)
+  {
+    const mouseoverTarget = document.elementFromPoint(mousePagePosition.x, mousePagePosition.y);
+    const mouseoverElement = knoxelRect.getRootByTarget(mouseoverTarget);
+    const mouseoverKnoxelId = mouseoverElement.classList.value === 'mouseOverRect'
+      ? mouseoverElement.id : null;
+    if (mouseoverKnoxelId)
+      return;
+    const foreignObject = document.getElementById('record').getElementsByTagName('foreignObject')[0];
+    const editableElement = foreignObject.firstElementChild;
+    editableElement.contentEditable = true;
+    editableElement.focus();
+    editableElement.addEventListener('blur', onBlurContentEditable);
+    pauseNavigationButtons = true;
   }
 }
 
@@ -1053,6 +1092,8 @@ function joinActiveBubble(desc)
 
 function onKeyDownWindow(e)
 {
+  if (pauseNavigationButtons)
+    return;
   const mouseoverTarget = document.elementFromPoint(mouseMovePagePosition.x, mouseMovePagePosition.y);
   const mouseoverElement = knoxelRect.getRootByTarget(mouseoverTarget);
   const mouseoverKnoxelId = mouseoverElement.classList.value === 'mouseOverRect'
