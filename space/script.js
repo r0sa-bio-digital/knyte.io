@@ -111,7 +111,6 @@ const knoxelRect = new function()
     let h = visualTheme.rect.defaultHeight;
     const leftTop = {x: 0, y: 0};
     const knyteId = knoxels[knoxelId];
-    let flat = false;
     const rects = [];
     let type = 'recursive';
     if (knyteId === knoxels[spacemapKnoxelId])
@@ -159,7 +158,7 @@ const knoxelRect = new function()
           bottom = nestedBottom;
         const r = {x: x - nestedW/2, y: y - nestedH/2, w: nestedW, h: nestedH, color, record, type: nestedType};
         rects.push(r);
-        if (!d.flat)
+        if (d.type === 'recursive')
           for (let i = 0; i < d.rects.length; ++i)
           {
             const rr = d.rects[i];
@@ -184,23 +183,22 @@ const knoxelRect = new function()
       const {color, record} = informationMap[knyteId];
       const r = {x: 0, y: 0, w, h, color, record, type};
       rects.push(r);
-      flat = true;
     }
-    return {w, h, leftTop, rects, flat};
+    return {w, h, leftTop, rects, type};
   }
 
   this.add = function(desc)
   {
     // desc: {knoxelId, position, ghost, bubble, selfcontained}
 
-    function createShapes(rects, flat)
+    function createShapes(rects, rootType)
     {
       const result = [];
       for (let i = 0; i < rects.length; ++i)
       {
         const rectGroup = document.createElementNS(svgNameSpace, 'g');
         const r = rects[i];
-        if (!flat)
+        if (rootType === 'recursive')
         {
           rectGroup.setAttribute('transform', 'translate(' + r.x + ' ' + r.y + ')');
           const rect = document.createElementNS(svgNameSpace, 'rect');
@@ -212,17 +210,17 @@ const knoxelRect = new function()
           rect.setAttribute('stroke', visualTheme.rect.strokeColor);
           rect.setAttribute('stroke-width', visualTheme.rect.recursive.strokeWidth);
           rectGroup.appendChild(rect);
-        }
-        if (r.type === 'recursive' && r.record)
-        {
-          const info = document.createElementNS(svgNameSpace, 'foreignObject');
-          const strokeW = visualTheme.rect.strokeWidth;
-          info.setAttribute('x', strokeW/2);
-          info.setAttribute('y', strokeW/2);
-          info.setAttribute('width', r.w - strokeW);
-          info.setAttribute('height', r.h - strokeW);
-          info.innerHTML = r.record;
-          rectGroup.appendChild(info);
+          if (r.type === 'recursive' && r.record)
+          {
+            const info = document.createElementNS(svgNameSpace, 'foreignObject');
+            const strokeW = visualTheme.rect.strokeWidth;
+            info.setAttribute('x', strokeW/2);
+            info.setAttribute('y', strokeW/2);
+            info.setAttribute('width', r.w - strokeW);
+            info.setAttribute('height', r.h - strokeW);
+            info.innerHTML = r.record;
+            rectGroup.appendChild(info);
+          }
         }
         if (r.type === 'selfviewed')
         {
@@ -286,7 +284,7 @@ const knoxelRect = new function()
       const {color, record} = informationMap[knyteId];
       const knyteTrace = {};
       knyteTrace[knoxels[spaceRootElement.dataset.knoxelId]] = true;
-      const {w, h, rects, flat} = getFigureDimensions(desc.knoxelId, knyteTrace);
+      const {w, h, rects, type} = getFigureDimensions(desc.knoxelId, knyteTrace);
       const x = desc.position.x - w/2;
       const y = desc.position.y - h/2;
       const rectGroup = document.createElementNS(svgNameSpace, 'g');
@@ -340,7 +338,7 @@ const knoxelRect = new function()
         rectGroup.appendChild(selfcontainedLine3);
         rectGroup.appendChild(selfcontainedLine4);
       }
-      if (record && !flat)
+      if (record && type === 'recursive')
       {
         const info = document.createElementNS(svgNameSpace, 'foreignObject');
         const strokeW = visualTheme.rect.strokeWidth;
@@ -351,7 +349,7 @@ const knoxelRect = new function()
         info.innerHTML = record;
         rectGroup.appendChild(info);
       }
-      const shapes = createShapes(rects, flat);
+      const shapes = createShapes(rects, type);
       for (let i = 0; i < shapes.length; ++i)
         rectGroup.appendChild(shapes[i]);
       if (desc.ghost)
