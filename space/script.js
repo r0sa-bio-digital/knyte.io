@@ -105,90 +105,93 @@ function addKnoxel(desc)
 
 const knoxelRect = new function()
 {
+  function getFigureDimensions(knoxelId, knyteTrace)
+  {
+    let w = visualTheme.rect.defaultWidth;
+    let h = visualTheme.rect.defaultHeight;
+    const leftTop = {x: 0, y: 0};
+    const knyteId = knoxels[knoxelId];
+    const {size} = informationMap[knyteId];
+    if (w < size.w)
+      w = size.w;
+    if (h < size.h)
+      h = size.h;
+    let left = 1000000, right = -1000000, top = 1000000, bottom = -1000000;
+    let flat = false;
+    const rects = [];
+    let type = 'recursive';
+    if (knyteId === knoxels[spacemapKnoxelId])
+      type = 'spacemap';
+    else if (knyteId in knyteTrace)
+      type = 'selfviewed';
+    if (type === 'recursive')
+    {
+      const mx = visualTheme.rect.defaultWidth/2;
+      const my = visualTheme.rect.defaultHeight/2;
+      const space = informationMap[knyteId].space;
+      const nestedKnyteTrace = Object.assign({}, knyteTrace);
+      nestedKnyteTrace[knyteId] = true;
+      for (let nestedKnoxelId in space)
+      {
+        const nestedKnyteId = knoxels[nestedKnoxelId];
+        let nestedType = 'recursive';
+        if (nestedKnyteId === knoxels[spacemapKnoxelId])
+          nestedType = 'spacemap';
+        else if (nestedKnyteId in nestedKnyteTrace)
+          nestedType = 'selfviewed';
+        const d = getFigureDimensions(nestedKnoxelId, nestedKnyteTrace);
+        const nestedW = d.w;
+        const nestedH = d.h;
+        const {x, y} = space[nestedKnoxelId];
+        const {color, record} = informationMap[nestedKnyteId];
+        const nestedLeft = x - nestedW/2 - mx;
+        const nestedRight = x + nestedW/2 + mx;
+        const nestedTop = y - nestedH/2 - my;
+        const nestedBottom = y + nestedH/2 + my;
+        if (left > nestedLeft)
+          left = nestedLeft;
+        if (right < nestedRight)
+          right = nestedRight;
+        if (top > nestedTop)
+          top = nestedTop;
+        if (bottom < nestedBottom)
+          bottom = nestedBottom;
+        const r = {x: x - nestedW/2, y: y - nestedH/2, w: nestedW, h: nestedH, color, record, type: nestedType};
+        rects.push(r);
+        if (!d.flat)
+          for (let i = 0; i < d.rects.length; ++i)
+          {
+            const rr = d.rects[i];
+            rects.push({x: r.x + rr.x, y: r.y + rr.y, w: rr.w, h: rr.h, color: rr.color, record: rr.record, type: rr.type});
+          }
+      }
+      if (left < right && top < bottom)
+      {
+        w = right - left;
+        h = bottom - top;
+        leftTop.x = left;
+        leftTop.y = top;
+        for (let i = 0; i < rects.length; ++i)
+        {
+          rects[i].x -= left;
+          rects[i].y -= top;
+        }
+      }
+    }
+    else
+    {
+      const {color, record} = informationMap[knyteId];
+      const r = {x: 0, y: 0, w, h, color, record, type};
+      rects.push(r);
+      flat = true;
+    }
+    return {w, h, leftTop, rects, flat};
+  }
+
   this.add = function(desc)
   {
     // desc: {knoxelId, position, ghost, bubble, selfcontained}
 
-    function getFigureDimensions(knoxelId, knyteTrace)
-    {
-      let w = visualTheme.rect.defaultWidth;
-      let h = visualTheme.rect.defaultHeight;
-      const knyteId = knoxels[knoxelId];
-      const {size} = informationMap[knyteId];
-      if (w < size.w)
-        w = size.w;
-      if (h < size.h)
-        h = size.h;
-      let left = 1000000, right = -1000000, top = 1000000, bottom = -1000000;
-      let flat = false;
-      const rects = [];
-      let type = 'recursive';
-      if (knyteId === knoxels[spacemapKnoxelId])
-        type = 'spacemap';
-      else if (knyteId in knyteTrace)
-        type = 'selfviewed';
-      if (type === 'recursive')
-      {
-        const mx = visualTheme.rect.defaultWidth/2;
-        const my = visualTheme.rect.defaultHeight/2;
-        const space = informationMap[knyteId].space;
-        const nestedKnyteTrace = Object.assign({}, knyteTrace);
-        nestedKnyteTrace[knyteId] = true;
-        for (let nestedKnoxelId in space)
-        {
-          const nestedKnyteId = knoxels[nestedKnoxelId];
-          let nestedType = 'recursive';
-          if (nestedKnyteId === knoxels[spacemapKnoxelId])
-            nestedType = 'spacemap';
-          else if (nestedKnyteId in nestedKnyteTrace)
-            nestedType = 'selfviewed';
-          const d = getFigureDimensions(nestedKnoxelId, nestedKnyteTrace);
-          const nestedW = d.w;
-          const nestedH = d.h;
-          const {x, y} = space[nestedKnoxelId];
-          const {color, record} = informationMap[nestedKnyteId];
-          const nestedLeft = x - nestedW/2 - mx;
-          const nestedRight = x + nestedW/2 + mx;
-          const nestedTop = y - nestedH/2 - my;
-          const nestedBottom = y + nestedH/2 + my;
-          if (left > nestedLeft)
-            left = nestedLeft;
-          if (right < nestedRight)
-            right = nestedRight;
-          if (top > nestedTop)
-            top = nestedTop;
-          if (bottom < nestedBottom)
-            bottom = nestedBottom;
-          const r = {x: x - nestedW/2, y: y - nestedH/2, w: nestedW, h: nestedH, color, record, type: nestedType};
-          rects.push(r);
-          if (!d.flat)
-            for (let i = 0; i < d.rects.length; ++i)
-            {
-              const rr = d.rects[i];
-              rects.push({x: r.x + rr.x, y: r.y + rr.y, w: rr.w, h: rr.h, color: rr.color, record: rr.record, type: rr.type});
-            }
-        }
-        if (left < right && top < bottom)
-        {
-          w = right - left;
-          h = bottom - top;
-          for (let i = 0; i < rects.length; ++i)
-          {
-            rects[i].x -= left;
-            rects[i].y -= top;
-          }
-        }
-      }
-      else
-      {
-        const {color, record} = informationMap[knyteId];
-        const r = {x: 0, y: 0, w, h, color, record, type};
-        rects.push(r);
-        flat = true;
-      }
-      return {w, h, rects, flat};
-    }
-    
     function createShapes(rects, flat)
     {
       const result = [];
@@ -379,6 +382,12 @@ const knoxelRect = new function()
     return createFigure(desc);
   };
   
+  this.getSize = function(knoxelId)
+  {
+    const {w, h, leftTop} = getFigureDimensions(knoxelId, {});
+    return {w, h, leftTop};
+  };
+  
   this.setDotted = function(desc)
   {
     // desc: {knoxelId, isDotted}
@@ -460,9 +469,19 @@ function setSpaceRootKnoxel(desc)
   const spaceRootKnoxels = document.getElementById('knoxels');
   while (spaceRootKnoxels.firstChild)
     spaceRootKnoxels.firstChild.remove();
-  // set actual knoxel id and space color
+  // set actual knoxel id, space color and information record
   spaceRootElement.dataset.knoxelId = newKnoxelId;
-  spaceRootElement.style.backgroundColor = informationMap[newKnyteId].color;
+  const {color, record} = informationMap[newKnyteId];
+  spaceRootElement.style.backgroundColor = color;
+  const spaceRootRecord = document.getElementById('record');
+  const foreignObject = spaceRootRecord.getElementsByTagName('foreignObject')[0];
+  foreignObject.innerHTML = record;
+  const {w, h, leftTop} = knoxelRect.getSize(newKnoxelId);
+  const strokeW = visualTheme.rect.strokeWidth;
+  foreignObject.setAttribute('x', leftTop.x + strokeW/2);
+  foreignObject.setAttribute('y', leftTop.y + strokeW/2);
+  foreignObject.setAttribute('width', w - strokeW);
+  foreignObject.setAttribute('height', h - strokeW);
   // restore all nested rects
   const nestedKnoxels = informationMap[newKnyteId].space;
   for (let knoxelId in nestedKnoxels)
