@@ -113,10 +113,15 @@ const knoxelRect = new function()
     {
       let w = visualTheme.rect.defaultWidth;
       let h = visualTheme.rect.defaultHeight;
+      const knyteId = knoxels[knoxelId];
+      const {size} = informationMap[knyteId];
+      if (w < size.w)
+        w = size.w;
+      if (h < size.h)
+        h = size.h;
       let left = 1000000, right = -1000000, top = 1000000, bottom = -1000000;
       let flat = false;
       const rects = [];
-      const knyteId = knoxels[knoxelId];
       let type = 'recursive';
       if (knyteId === knoxels[spacemapKnoxelId])
         type = 'spacemap';
@@ -260,7 +265,7 @@ const knoxelRect = new function()
     function createFigure(desc)
     {
       const knyteId = knoxels[desc.knoxelId];
-      const {color, space, record, size} = informationMap[knyteId];
+      const {color, record} = informationMap[knyteId];
       const knyteTrace = {};
       knyteTrace[knoxels[spaceRootElement.dataset.knoxelId]] = true;
       const {w, h, rects, flat} = getFigureDimensions(desc.knoxelId, knyteTrace);
@@ -317,7 +322,7 @@ const knoxelRect = new function()
         rectGroup.appendChild(selfcontainedLine3);
         rectGroup.appendChild(selfcontainedLine4);
       }
-      if (record && size)
+      if (record)
       {
         const info = document.createElementNS(svgNameSpace, 'foreignObject');
         const strokeW = visualTheme.rect.strokeWidth;
