@@ -88,6 +88,11 @@ function addKnyte(desc)
     terminalKnyteId: desc.terminalKnyteId
   };
   informationMap[desc.knyteId] = {color: desc.color, space: {}};
+  if (true) // debug content // TODO: remove after basic system implementation
+  {
+    informationMap[desc.knyteId].record = '<div style="display: flex; height: 100%; justify-content: center; align-items: center;">My Text</div>';
+    informationMap[desc.knyteId].size = {w: 64, h: 20};
+  }
 }
 
 function addKnoxel(desc)
@@ -258,11 +263,7 @@ const knoxelRect = new function()
       const {color, space, record, size} = informationMap[knyteId];
       const knyteTrace = {};
       knyteTrace[knoxels[spaceRootElement.dataset.knoxelId]] = true;
-      const defaultW = visualTheme.rect.defaultWidth;
-      const defaultH = visualTheme.rect.defaultHeight;
-      const {w, h, rects, flat} = (record && size)
-        ? {w: Math.max(size.w, defaultW), h: Math.max(size.h, defaultH), rects: [], flat: true}
-        : getFigureDimensions(desc.knoxelId, knyteTrace);
+      const {w, h, rects, flat} = getFigureDimensions(desc.knoxelId, knyteTrace);
       const x = desc.position.x - w/2;
       const y = desc.position.y - h/2;
       const rectGroup = document.createElementNS(svgNameSpace, 'g');
@@ -322,12 +323,11 @@ const knoxelRect = new function()
         const strokeW = visualTheme.rect.strokeWidth;
         info.setAttribute('x', strokeW/2);
         info.setAttribute('y', strokeW/2);
-        info.setAttribute('width', size.w - strokeW);
-        info.setAttribute('height', size.h - strokeW);
+        info.setAttribute('width', w - strokeW);
+        info.setAttribute('height', h - strokeW);
         info.innerHTML = record;
         rectGroup.appendChild(info);
       }
-      else
       {
         const shapes = createShapes(rects, flat);
         for (let i = 0; i < shapes.length; ++i)
