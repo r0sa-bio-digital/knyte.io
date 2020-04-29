@@ -436,10 +436,11 @@
               * foreignObject может иметь цвет фона или нет, может иметь фон любого размера
                 * это уже вопрос отображения конкретной информации, а не общая системная функциональность
           * реализовать базовое отображение произвольного html-контента внутри foreignObject'а для всех rect'ов
-            * `функция назначения контента и размера knyte'у по ghost knoxel id`
+            * функция назначения контента и размера knyte'у по ghost knoxel id
               * шаблон контента для простого центрированного текста
                 * <div style="display: flex; height: 100%; justify-content: center; align-items: center;">My Text</div>
-            * багфикс перетаскивания ghost/bubble в случае, если space/enter был нажат над foreignObject'ом
+              * setGhostKnуteInformationRecord - результат
+            * `багфикс перетаскивания ghost/bubble в случае, если space/enter был нажат над foreignObject'ом`
               * сейчас их offset'ы глючат не смотря на применение pointer-events: none
           * как сочетать отображение foreignObject и innerspace для rect'а?
           * что делать со слишком большим контентом, который не хочется показывать целиком?

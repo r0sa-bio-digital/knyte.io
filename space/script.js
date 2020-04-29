@@ -340,10 +340,11 @@ const knoxelRect = new function()
       if (record && size)
       {
         const info = document.createElementNS(svgNameSpace, 'foreignObject');
-        info.setAttribute('x', 0);
-        info.setAttribute('y', 0);
-        info.setAttribute('width', size.w);
-        info.setAttribute('height', size.h);
+        const strokeW = visualTheme.rect.strokeWidth;
+        info.setAttribute('x', strokeW/2);
+        info.setAttribute('y', strokeW/2);
+        info.setAttribute('width', size.w - strokeW);
+        info.setAttribute('height', size.h - strokeW);
         info.innerHTML = record;
         rectGroup.appendChild(info);
       }
@@ -1173,6 +1174,16 @@ function spacemapChangedHandler()
         }
     }
   }
+}
+
+function setGhostKnуteInformationRecord(desc)
+{
+  // desc: {record, w, h}
+  if (!activeGhost.knoxelId)
+    return;
+  const knyteId = knoxels[activeGhost.knoxelId];
+  informationMap[knyteId].record = desc.record;
+  informationMap[knyteId].size = {w: desc.w, h: desc.h};
 }
 
 function onLoadBody(e)
