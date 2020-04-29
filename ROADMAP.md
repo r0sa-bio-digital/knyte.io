@@ -440,8 +440,9 @@
               * шаблон контента для простого центрированного текста
                 * <div style="display: flex; height: 100%; justify-content: center; align-items: center;">My Text</div>
               * setGhostKnуteInformationRecord - результат
-            * `багфикс перетаскивания ghost/bubble в случае, если space/enter был нажат над foreignObject'ом`
+            * багфикс перетаскивания ghost/bubble в случае, если space/enter был нажат над foreignObject'ом
               * сейчас их offset'ы глючат не смотря на применение pointer-events: none
+            * `выяснить реально ли нужен pointer-events: none для foreignObject'ов`
           * как сочетать отображение foreignObject и innerspace для rect'а?
           * что делать со слишком большим контентом, который не хочется показывать целиком?
           * что делать, если совсем не хочется показывать 

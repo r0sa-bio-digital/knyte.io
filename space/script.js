@@ -327,8 +327,8 @@ const knoxelRect = new function()
         info.setAttribute('height', h - strokeW);
         const div = document.createElement('div');
         //div.style.width = '100%';
-        div.style.height = '100%';
-        //div.style.backgroundColor = 'white';
+        //div.style.height = '100%';
+        div.style.backgroundColor = 'white';
         div.style.display = 'flex';
         div.style.justifyContent = 'center';
         div.style.alignItems = 'center';
@@ -340,6 +340,7 @@ const knoxelRect = new function()
       if (record && size)
       {
         const info = document.createElementNS(svgNameSpace, 'foreignObject');
+        info.pointerEvents = 'none';
         const strokeW = visualTheme.rect.strokeWidth;
         info.setAttribute('x', strokeW/2);
         info.setAttribute('y', strokeW/2);
@@ -702,7 +703,7 @@ function replaceKnoxelInStacks(desc)
 
 function onClickSpaceRoot(e)
 {
-  const mousePosition = {x: e.offsetX, y: e.offsetY};
+  const mousePosition = {x: e.clientX, y: e.clientY};
   if (!e.shiftKey && !e.altKey && e.metaKey)
   {
     const knyteId = knit.new();
@@ -950,7 +951,7 @@ let mouseMovePagePosition = {x: 0, y: 0};
 
 function onMouseMoveSpaceRoot(e)
 {
-  mouseMovePosition = {x: e.offsetX, y: e.offsetY};
+  mouseMovePosition = {x: e.clientX, y: e.clientY};
   mouseMovePagePosition = {x: e.pageX, y: e.pageY};
   if (!activeGhost.knoxelId && !activeBubble.knoxelId)
     return;
