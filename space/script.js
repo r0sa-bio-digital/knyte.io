@@ -428,7 +428,7 @@ const knoxelRect = new function()
   this.getRootByTarget = function(targetElement)
   {
     let element = targetElement;
-    while (!element.id && element !== spaceRootElement)
+    while (element.classList.value !== 'mouseOverRect' && element !== spaceRootElement)
       element = element.parentElement;
     return element;
   };
