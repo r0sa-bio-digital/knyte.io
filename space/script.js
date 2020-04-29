@@ -319,13 +319,22 @@ const knoxelRect = new function()
       if (false) // stress test for svg+foreignobject
       {
         const info = document.createElementNS(svgNameSpace, 'foreignObject');
-        info.setAttribute('x', 0);
-        info.setAttribute('y', 0);
-        info.setAttribute('width', w);
-        info.setAttribute('height', h);
-        const div = document.createElement('div');     
+        info.pointerEvents = 'none';
+        const strokeW = visualTheme.rect.strokeWidth;
+        info.setAttribute('x', strokeW/2);
+        info.setAttribute('y', strokeW/2);
+        info.setAttribute('width', w - strokeW);
+        info.setAttribute('height', h - strokeW);
+        const div = document.createElement('div');
+        //div.style.width = '100%';
+        div.style.height = '100%';
+        //div.style.backgroundColor = 'white';
+        div.style.display = 'flex';
+        div.style.justifyContent = 'center';
+        div.style.alignItems = 'center';
         div.innerHTML = 'W';
         info.appendChild(div);
+        //info.innerHTML = 'W';
         rectGroup.appendChild(info);
       }
       if (record && size)
