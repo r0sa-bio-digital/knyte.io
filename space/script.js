@@ -647,36 +647,10 @@ function addKnoxelRect(desc)
   knoxelRect.add({knoxelId, position});
 }
 
-let pauseNavigationButtons = false;
-
-function onBlurContentEditable(e)
-{
-  e.target.contentEditable = false;
-  e.target.removeEventListener('blur', onBlurContentEditable);
-  const targetKnoxelElement = knoxelRect.getRootByTarget(e.target);
-  if (targetKnoxelElement === spaceRootElement)
-  {
-    const knyteId = knoxels[spaceRootElement.dataset.knoxelId];
-    const foreignObject = document.getElementById('record').getElementsByTagName('foreignObject')[0];
-    informationMap[knyteId].record = foreignObject.innerHTML;
-  }
-  else
-  {
-    const knyteId = knoxels[targetKnoxelElement.id];
-    const foreignObject = targetKnoxelElement.getElementsByTagName('foreignObject')[0];
-    informationMap[knyteId].record = foreignObject.innerHTML;
-  }
-  pauseNavigationButtons = false;
-}
-
 function onClickRect(e)
 {
   const targetKnoxelElement = knoxelRect.getRootByTarget(e.target);
   if (!e.shiftKey && !e.altKey && !e.metaKey)
-  {
-    // place knoxel selection here
-  }
-  else if (e.shiftKey && !e.altKey && !e.metaKey)
   {
     if (targetKnoxelElement.id !== spaceRootElement.dataset.knoxelId)
     {
@@ -689,15 +663,6 @@ function onClickRect(e)
       });
     }
     e.stopPropagation(); // to prevent onClickSpaceRoot call
-  }
-  else if (!e.shiftKey && e.altKey && !e.metaKey)
-  {
-    const foreignObject = targetKnoxelElement.getElementsByTagName('foreignObject')[0];
-    const editableElement = foreignObject.firstElementChild;
-    editableElement.contentEditable = true;
-    editableElement.focus();
-    editableElement.addEventListener('blur', onBlurContentEditable);
-    pauseNavigationButtons = true;
   }
 }
 
@@ -771,21 +736,6 @@ function onClickSpaceRoot(e)
     addKnoxelRect({knyteId, hostKnoxelId: spaceRootElement.dataset.knoxelId, position: mousePosition});
     knoxelSpaceRoot.update();
     handleSpacemapChanged();
-  }
-  else if (!e.shiftKey && e.altKey && !e.metaKey)
-  {
-    const mouseoverTarget = document.elementFromPoint(mousePagePosition.x, mousePagePosition.y);
-    const mouseoverElement = knoxelRect.getRootByTarget(mouseoverTarget);
-    const mouseoverKnoxelId = mouseoverElement.classList.value === 'mouseOverRect'
-      ? mouseoverElement.id : null;
-    if (mouseoverKnoxelId)
-      return;
-    const foreignObject = document.getElementById('record').getElementsByTagName('foreignObject')[0];
-    const editableElement = foreignObject.firstElementChild;
-    editableElement.contentEditable = true;
-    editableElement.focus();
-    editableElement.addEventListener('blur', onBlurContentEditable);
-    pauseNavigationButtons = true;
   }
 }
 
@@ -1092,8 +1042,6 @@ function joinActiveBubble(desc)
 
 function onKeyDownWindow(e)
 {
-  if (pauseNavigationButtons)
-    return;
   const mouseoverTarget = document.elementFromPoint(mouseMovePagePosition.x, mouseMovePagePosition.y);
   const mouseoverElement = knoxelRect.getRootByTarget(mouseoverTarget);
   const mouseoverKnoxelId = mouseoverElement.classList.value === 'mouseOverRect'
@@ -1117,24 +1065,12 @@ function onKeyDownWindow(e)
       });
     }
   }
-  else if (e.code === 'Space' && !activeBubble.knoxelId)
+  else if (e.code === 'Space')
   {
-    if (!e.shiftKey && !e.altKey && !e.metaKey)
+    const position = mouseMovePosition;
+    if (activeGhost.knoxelId)
     {
-      const position = mouseMovePosition;
-      if (!activeGhost.knoxelId)
-      {
-        let knoxelId = mouseoverKnoxelId;
-        let selfcontained = false;
-        if (!knoxelId)
-        {
-          knoxelId = spaceRootElement.dataset.knoxelId;
-          selfcontained = true;
-        }
-        const spawnSpaceRootKnoxelId = spaceRootElement.dataset.knoxelId;
-        spawnGhostRect({knoxelId, spawnSpaceRootKnoxelId, position, selfcontained});
-      }
-      else
+      if (!e.shiftKey && !e.altKey && !e.metaKey)
       {
         dropGhostRect(
           {
@@ -1144,30 +1080,15 @@ function onKeyDownWindow(e)
           }
         );
         terminateGhostRect();
+        setNavigationControlState({
+          backKnoxelId: spaceBackStack[spaceBackStack.length - 1],
+          forwardKnoxelId: spaceForwardStack[spaceForwardStack.length - 1]
+        });
       }
-      setNavigationControlState({
-        backKnoxelId: spaceBackStack[spaceBackStack.length - 1],
-        forwardKnoxelId: spaceForwardStack[spaceForwardStack.length - 1]
-      });
     }
-  }
-  else if (e.code === 'Enter' && !activeGhost.knoxelId)
-  {
-    if (!e.shiftKey && !e.altKey && !e.metaKey)
+    else if (activeBubble.knoxelId)
     {
-      const position = mouseMovePosition;
-      if (!activeBubble.knoxelId)
-      {
-        let knoxelId = mouseoverKnoxelId;
-        let selfcontained = false;
-        if (!knoxelId)
-        {
-          knoxelId = spaceRootElement.dataset.knoxelId;
-          selfcontained = true;
-        }
-        spawnBubbleRect({knoxelId, position, selfcontained});
-      }
-      else
+      if (!e.shiftKey && !e.altKey && !e.metaKey)
       {
         const bubbleKnyteId = knoxels[activeBubble.knoxelId];
         const overKnoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
@@ -1186,11 +1107,49 @@ function onKeyDownWindow(e)
           terminateBubbleRect();
         else
           divideActiveBubble({position});
+        setNavigationControlState({
+          backKnoxelId: spaceBackStack[spaceBackStack.length - 1],
+          forwardKnoxelId: spaceForwardStack[spaceForwardStack.length - 1]
+        });
       }
-      setNavigationControlState({
-        backKnoxelId: spaceBackStack[spaceBackStack.length - 1],
-        forwardKnoxelId: spaceForwardStack[spaceForwardStack.length - 1]
-      });
+    }
+    else
+    {
+      if (!e.shiftKey && !e.altKey && !e.metaKey)
+      {
+        let knoxelId = mouseoverKnoxelId;
+        let selfcontained = false;
+        if (!knoxelId)
+        {
+          knoxelId = spaceRootElement.dataset.knoxelId;
+          selfcontained = true;
+        }
+        const spawnSpaceRootKnoxelId = spaceRootElement.dataset.knoxelId;
+        spawnGhostRect({knoxelId, spawnSpaceRootKnoxelId, position, selfcontained});
+      }
+      else if (e.shiftKey && !e.altKey && !e.metaKey)
+      {
+        let knoxelId = mouseoverKnoxelId;
+        let selfcontained = false;
+        if (!knoxelId)
+        {
+          knoxelId = spaceRootElement.dataset.knoxelId;
+          selfcontained = true;
+        }
+        spawnBubbleRect({knoxelId, position, selfcontained});
+      }
+    }
+  }
+  else if (e.code === 'Enter')
+  {
+    if (!e.shiftKey && !e.altKey && !e.metaKey)
+    {
+      let knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
+      let knyteId = knoxels[knoxelId];
+      let {record} = informationMap[knyteId];
+      informationMap[knyteId].record = prompt('Edit knyte value', record);
+      setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+      handleSpacemapChanged();
     }
   }
 }
