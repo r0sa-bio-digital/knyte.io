@@ -10,7 +10,7 @@ let spaceHostElement;
 let spacemapKnoxelId;
 let handleSpacemapChanged = function() {};
 const knytesCloud = {}; // core knyte id --> {initialKnyteId, terminalKnyteId}
-const informationMap = {}; // knyte id --> {color, space: {knoxel id --> position}, record, size}
+const informationMap = {}; // knyte id --> {color, space: {knoxel id --> position}, record: {data, viewer}, size}
 const knoxels = {}; // knoxel id --> knyte id
 const arrows = {}; // arrow id --> {initialKnoxelId, terminalKnoxelId}
 const spaceBackStack = []; // [previous space root knoxel id]
@@ -90,7 +90,7 @@ function addKnyte(desc)
   informationMap[desc.knyteId] = {color: desc.color, space: {}};
   if (true) // debug content // TODO: remove after basic system implementation
   {
-    informationMap[desc.knyteId].record = '<div style="display: flex; height: 100%; justify-content: center; align-items: center;"><div><div>My Text</div></div></div>';
+    informationMap[desc.knyteId].record = {data: 'My Text', viewer: recordViewers.centeredOneliner};
     informationMap[desc.knyteId].size = {w: 64, h: 20};
   }
 }
@@ -162,7 +162,8 @@ const knoxelRect = new function()
           for (let i = 0; i < d.rects.length; ++i)
           {
             const rr = d.rects[i];
-            rects.push({x: r.x + rr.x, y: r.y + rr.y, w: rr.w, h: rr.h, color: rr.color, record: rr.record, type: rr.type});
+            rects.push({x: r.x + rr.x, y: r.y + rr.y, w: rr.w, h: rr.h, 
+              color: rr.color, record: rr.record, type: rr.type});
           }
       }
       if (left < right && top < bottom)
@@ -218,7 +219,7 @@ const knoxelRect = new function()
             info.setAttribute('y', strokeW/2);
             info.setAttribute('width', r.w - strokeW);
             info.setAttribute('height', r.h - strokeW);
-            info.innerHTML = r.record;
+            info.innerHTML = r.record.viewer(r.reecord.data);
             rectGroup.appendChild(info);
           }
         }
@@ -346,7 +347,7 @@ const knoxelRect = new function()
         info.setAttribute('y', strokeW/2);
         info.setAttribute('width', w - strokeW);
         info.setAttribute('height', h - strokeW);
-        info.innerHTML = record;
+        info.innerHTML = record.viewer(record.data);
         rectGroup.appendChild(info);
       }
       const shapes = createShapes(rects, type);
@@ -442,7 +443,7 @@ const knoxelSpaceRoot = new function()
     spaceRootElement.style.backgroundColor = color;
     const spaceRootRecord = document.getElementById('record');
     const foreignObject = spaceRootRecord.getElementsByTagName('foreignObject')[0];
-    foreignObject.innerHTML = record ? record : '';
+    foreignObject.innerHTML = record ? record.viewer(record.data) : '';
     const {w, h, leftTop} = knoxelRect.getSize(knoxelId);
     const strokeW = visualTheme.rect.strokeWidth;
     foreignObject.setAttribute('x', leftTop.x + strokeW/2);
@@ -451,6 +452,19 @@ const knoxelSpaceRoot = new function()
     foreignObject.setAttribute('height', h - strokeW);
   };
 }
+
+const recordViewers = new function()
+{
+  this.centeredOneliner = function(data)
+  {
+    return '<div style="display: flex; height: 100%; justify-content: center; align-items: center;"><div><div>' +
+      data + '</div></div></div>';
+  };
+  this.strightCode = function(data)
+  {
+    return data;
+  };
+};
 
 function setGhostedMode(desc)
 {
@@ -1147,7 +1161,9 @@ function onKeyDownWindow(e)
       let knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
       let knyteId = knoxels[knoxelId];
       let {record} = informationMap[knyteId];
-      informationMap[knyteId].record = prompt('Edit knyte value', record);
+      const newData = prompt('Edit knyte value', record ? record.data : '');
+      if (newData !== null)
+        informationMap[knyteId].record = {data: newData, viewer: recordViewers.centeredOneliner};
       setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
       handleSpacemapChanged();
     }
@@ -1211,16 +1227,6 @@ function spacemapChangedHandler()
         }
     }
   }
-}
-
-function setGhostKnуteInformationRecord(desc)
-{
-  // desc: {record, w, h}
-  if (!activeGhost.knoxelId)
-    return;
-  const knyteId = knoxels[activeGhost.knoxelId];
-  informationMap[knyteId].record = desc.record;
-  informationMap[knyteId].size = {w: desc.w, h: desc.h};
 }
 
 function onLoadBody(e)
