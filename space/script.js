@@ -1169,21 +1169,41 @@ function onKeyDownWindow(e)
   }
   else if (e.code === 'Enter')
   {
+    const knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
+    const knyteId = knoxels[knoxelId];
+    const {record, size, color} = informationMap[knyteId];
     if (!e.shiftKey && !e.altKey && !e.metaKey)
     {
-      let knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
-      let knyteId = knoxels[knoxelId];
-      let {record} = informationMap[knyteId];
       const newData = prompt('Edit knyte value', record ? record.data : '');
       if (newData !== null)
       {
-        const record = {data: newData, viewer: recordViewers.centeredOneliner};
-        const size = getSizeOfRecord(record);
-        informationMap[knyteId].record = record;
+        const newRecord = {data: newData, viewer: recordViewers.centeredOneliner};
+        const size = getSizeOfRecord(newRecord);
+        informationMap[knyteId].record = newRecord;
         informationMap[knyteId].size = size;
+        setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+        handleSpacemapChanged();
       }
-      setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
-      handleSpacemapChanged();
+    }
+    else if (e.shiftKey && !e.altKey && !e.metaKey)
+    {
+      const newSize = prompt('Edit knyte size', size ? JSON.stringify(size) : '{w: 0, h: 0}');
+      if (newSize !== null)
+      {
+        informationMap[knyteId].size = JSON.parse(newSize);
+        setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+        handleSpacemapChanged();
+      }
+    }
+    else if (!e.shiftKey && e.altKey && !e.metaKey)
+    {
+      const newColor = prompt('Edit knyte color', color ? color : '#000000');
+      if (newColor !== null)
+      {
+        informationMap[knyteId].color = newColor;
+        setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+        handleSpacemapChanged();
+      }
     }
   }
 }
