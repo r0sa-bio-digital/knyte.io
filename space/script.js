@@ -219,7 +219,7 @@ const knoxelRect = new function()
             info.setAttribute('y', strokeW/2);
             info.setAttribute('width', r.w - strokeW);
             info.setAttribute('height', r.h - strokeW);
-            info.innerHTML = r.record.viewer(r.reecord.data);
+            info.innerHTML = r.record.viewer(r.record.data);
             rectGroup.appendChild(info);
           }
         }
@@ -457,8 +457,8 @@ const recordViewers = new function()
 {
   this.centeredOneliner = function(data)
   {
-    return '<div style="display: flex; height: 100%; justify-content: center; align-items: center;"><div><div>' +
-      data + '</div></div></div>';
+    return '<div style="display: flex; height: 100%; justify-content: center; align-items: center;">' +
+      data + '</div>';
   };
   this.strightCode = function(data)
   {
