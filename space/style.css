@@ -55,3 +55,11 @@ body {
   width: 40px;
   height: 40px;  
 }
+
+#autosizer {
+  position: absolute;
+  visibility: hidden;
+  height: auto;
+  width: auto;
+  white-space: nowrap;  
+}

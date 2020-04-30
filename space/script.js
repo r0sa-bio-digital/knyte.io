@@ -90,8 +90,10 @@ function addKnyte(desc)
   informationMap[desc.knyteId] = {color: desc.color, space: {}};
   if (true) // debug content // TODO: remove after basic system implementation
   {
-    informationMap[desc.knyteId].record = {data: 'My Text', viewer: recordViewers.centeredOneliner};
-    informationMap[desc.knyteId].size = {w: 64, h: 20};
+    const record = {data: 'My Text', viewer: recordViewers.centeredOneliner};
+    const size = getSizeOfRecord(record);
+    informationMap[desc.knyteId].record = record;
+    informationMap[desc.knyteId].size = size;
   }
 }
 
@@ -1054,6 +1056,17 @@ function joinActiveBubble(desc)
   setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
 }
 
+function getSizeOfRecord(record)
+{
+  const autosizer = document.getElementById('autosizer');
+  autosizer.innerHTML = record.viewer(record.data);
+  const rect = autosizer.getBoundingClientRect();
+  autosizer.innerHTML = '';
+  const strokeW = visualTheme.rect.strokeWidth;
+  const w = rect.width + 3*strokeW, h = rect.height + strokeW;
+  return {w, h};
+}
+
 function onKeyDownWindow(e)
 {
   const mouseoverTarget = document.elementFromPoint(mouseMovePagePosition.x, mouseMovePagePosition.y);
@@ -1163,7 +1176,12 @@ function onKeyDownWindow(e)
       let {record} = informationMap[knyteId];
       const newData = prompt('Edit knyte value', record ? record.data : '');
       if (newData !== null)
-        informationMap[knyteId].record = {data: newData, viewer: recordViewers.centeredOneliner};
+      {
+        const record = {data: newData, viewer: recordViewers.centeredOneliner};
+        const size = getSizeOfRecord(record);
+        informationMap[knyteId].record = record;
+        informationMap[knyteId].size = size;
+      }
       setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
       handleSpacemapChanged();
     }
