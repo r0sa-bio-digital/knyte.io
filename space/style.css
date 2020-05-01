@@ -64,3 +64,12 @@ body {
   width: auto;
   white-space: nowrap;  
 }
+
+#colorpicker {
+  width: 30%;
+}
+
+.colorpickerColorButton {
+  width: 3em;
+  height: 3em;
+}

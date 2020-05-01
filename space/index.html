@@ -6,9 +6,9 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="space/style.css">
-    <script src="space/colors.js" defer></script>
-    <script src="space/intersect.js" defer></script>
-    <script src="space/script.js" defer></script>
+    <script src="space/colors.js"></script>
+    <script src="space/intersect.js"></script>
+    <script src="space/script.js"></script>
   </head>  
   <body onload="onLoadBody(event);">
     <svg class="spaceRoot" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -55,5 +55,59 @@
       </svg>
     </div>
     <div id="autosizer"></div>
+    <dialog id="colorpicker" onkeypress="onKeyPressColorpicker(event);">
+      <p>
+        Edit knyte color
+      </p>
+      <input>
+      <p id="colorset"></p>
+      <p>
+        <button onclick="onClickColorpickerClose();">
+          cancel (esc)
+        </button>
+        <button onclick="onClickColorpickerOk();">
+          OK (enter)
+        </button>
+      </p>
+    </dialog>
+    <script>
+      function onKeyPressColorpicker(e)
+      {
+        if (e.code === 'Enter' && !e.keyShift && !e.keyAlt && !e.keyMeta)
+          onClickColorpickerOk();
+        else if (e.code === 'Escape' && !e.keyShift && !e.keyAlt && !e.keyMeta)
+          onClickColorpickerClose();
+      }
+      
+      function onClickColorpickerClose()
+      {
+        const colorpickerDialog = document.getElementById('colorpicker');
+        colorpickerDialog.close();  
+      }
+      
+      function onClickColorpickerOk()
+      {
+        const colorpickerDialog = document.getElementById('colorpicker');
+        const colorpickerInput = colorpickerDialog.getElementsByTagName('input')[0];
+        colorpickerDialog.returnValue = colorpickerInput.value;
+        colorpickerDialog.close();
+      }
+      
+      function onClickColorpickerColorButton(e)
+      {
+        const colorpickerDialog = document.getElementById('colorpicker');
+        const colorpickerInput = colorpickerDialog.getElementsByTagName('input')[0];
+        colorpickerInput.value = e.target.dataset.color;
+        onClickColorpickerOk();
+      }
+      
+      const colorset = document.getElementById('colorset');
+      for (let i = 0; i < visualThemeColors.elements.length; ++i)
+      {
+        const color = visualThemeColors.elements[i];
+        colorset.innerHTML += '<button data-color="' + color + '" style="background-color: ' + color + ';" ' +
+          'class="colorpickerColorButton" onclick="onClickColorpickerColorButton(event);"></button>';
+      }
+    </script>
   </body>
 </html>

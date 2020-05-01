@@ -1060,6 +1060,8 @@ function getSizeOfRecord(record)
 
 function onKeyDownWindow(e)
 {
+  if (document.getElementById('colorpicker').open)
+    return;
   const mouseoverTarget = document.elementFromPoint(mouseMovePagePosition.x, mouseMovePagePosition.y);
   const mouseoverElement = knoxelRect.getRootByTarget(mouseoverTarget);
   const mouseoverKnoxelId = mouseoverElement.classList.value === 'mouseOverRect'
@@ -1186,7 +1188,7 @@ function onKeyDownWindow(e)
       const knyteId = knoxels[knoxelId];
       const {size} = informationMap[knyteId];
       const newSize = prompt('Edit knyte size', size ? JSON.stringify(size) : '{"w": 0, "h": 0}');
-      if (newSize !== null)
+      if (newSize)
       {
         informationMap[knyteId].size = JSON.parse(newSize);
         setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
@@ -1198,16 +1200,28 @@ function onKeyDownWindow(e)
   {
     if (!e.shiftKey && !e.altKey && !e.metaKey)
     {
+      function onCloseDialog(e)
+      {
+        e.target.removeEventListener('close', onCloseDialog);
+        const newColor = e.target.returnValue;
+        if (newColor)
+        {
+          informationMap[knyteId].color = newColor;
+          setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+          handleSpacemapChanged();
+        }
+      }
+      
       const knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
       const knyteId = knoxels[knoxelId];
       const {color} = informationMap[knyteId];
-      const newColor = prompt('Edit knyte color', color ? color : '#000000');
-      if (newColor !== null)
-      {
-        informationMap[knyteId].color = newColor;
-        setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
-        handleSpacemapChanged();
-      }
+      const colorpickerDialog = document.getElementById('colorpicker');
+      const colorpickerInput = colorpickerDialog.getElementsByTagName('input')[0];
+      colorpickerInput.value = color;
+      colorpickerDialog.returnValue = '';
+      colorpickerDialog.dataset.knyteId = knyteId;
+      colorpickerDialog.addEventListener('close', onCloseDialog);
+      setTimeout(function(){colorpickerDialog.showModal();}, 0);
     }
   }
 }
