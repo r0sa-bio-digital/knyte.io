@@ -238,7 +238,7 @@ const knoxelRect = new function()
           const x1 = (r.w - visualTheme.arrow.defaultLength)/2;
           const x2 = (r.w + visualTheme.arrow.defaultLength)/2;
           const arrow = createArrowShape({x1, y1: r.h/2, x2, y2: r.h/2});
-          rectGroup.appendChild(arrow);
+          rectGroup.appendChild(arrow); // TODO: hide arrow if useless for visualisation
           const rect = createRectShape({w: r.w, h: r.h, color: r.color, strokeWidth: visualTheme.rect.recursive.strokeWidth});
           rectGroup.appendChild(rect);
           if (r.type === 'recursive' && r.record)
@@ -321,7 +321,7 @@ const knoxelRect = new function()
       const x1 = (w - visualTheme.arrow.defaultLength)/2;
       const x2 = (w + visualTheme.arrow.defaultLength)/2;
       const arrowRoot = createArrowShape({x1, y1: h/2, x2, y2: h/2});
-      rectGroup.appendChild(arrowRoot);
+      rectGroup.appendChild(arrowRoot); // TODO: hide arrow if useless for visualisation
       const rectRoot = createRectShape({w, h, color, strokeWidth: visualTheme.rect.strokeWidth});
       rectGroup.appendChild(rectRoot);
       if (desc.selfcontained)
