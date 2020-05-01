@@ -36,6 +36,9 @@ const visualTheme = {
   arrow: {
     strokeColor: visualThemeColors.line,
     strokeWidth: 3,
+    recursive: {
+      strokeWidth: 2
+    },
     defaultLength: 20,
   },
   navigation: {
@@ -101,14 +104,14 @@ function addKnoxel(desc)
 
 const knoxelRect = new function()
 {
-  function computeArrowShape(w, h, x, y, knoxelId, hostKnyteId)
+  function computeArrowShape(w, h, x, y, knoxelId, hostKnyteId, arrowStrokeWidth)
   {
     const hostSpace = informationMap[hostKnyteId].space;
     const endpoints = knoxelVectors[knoxelId];
     const l = visualTheme.arrow.defaultLength;
     const {x1, y1, x2, y2} = endpoints
       ? getArrowPointsByKnoxelEndpoints({arrowSpace: hostSpace, 
-        initialKnoxelId: endpoints.initialKnoxelId, terminalKnoxelId: endpoints.terminalKnoxelId, x, y})
+        initialKnoxelId: endpoints.initialKnoxelId, terminalKnoxelId: endpoints.terminalKnoxelId, x, y, arrowStrokeWidth})
       : {x1: (w - l)/2, y1: h/2, x2: (w + l)/2, y2: h/2};
     return {x1, y1, x2, y2};
   }
@@ -165,7 +168,8 @@ const knoxelRect = new function()
           bottom = nestedBottom;
         const nestedX = x - nestedW/2;
         const nestedY = y - nestedH/2;
-        const {x1, y1, x2, y2} = computeArrowShape(nestedW, nestedH, nestedX, nestedY, nestedKnoxelId, knyteId);
+        const {x1, y1, x2, y2} = computeArrowShape(nestedW, nestedH, nestedX, nestedY,
+          nestedKnoxelId, knyteId, visualTheme.arrow.recursive.strokeWidth);
         const r = {x: nestedX, y: nestedY, w: nestedW, h: nestedH, color, record, x1, y1, x2, y2, type: nestedType};
         rects.push(r);
         if (d.type === 'recursive')
@@ -226,7 +230,7 @@ const knoxelRect = new function()
       return info;
     }
     
-    function createArrowShape(x1, y1, x2, y2)
+    function createArrowShape(x1, y1, x2, y2, strokeWidth)
     {
       const arrow = document.createElementNS(svgNameSpace, 'line');
       arrow.setAttribute('x1', x1);
@@ -234,7 +238,7 @@ const knoxelRect = new function()
       arrow.setAttribute('x2', x2);
       arrow.setAttribute('y2', y2);
       arrow.setAttribute('stroke', visualTheme.arrow.strokeColor);
-      arrow.setAttribute('stroke-width', visualTheme.arrow.strokeWidth);
+      arrow.setAttribute('stroke-width', strokeWidth);
       arrow.setAttribute('marker-start', 'url(#arrowTail)');
       arrow.setAttribute('marker-end', 'url(#arrowHead)');
       return arrow;
@@ -250,7 +254,7 @@ const knoxelRect = new function()
         if (rootType === 'recursive')
         {
           rectGroup.setAttribute('transform', 'translate(' + r.x + ' ' + r.y + ')');
-          const arrow = createArrowShape(r.x1, r.y1, r.x2, r.y2);
+          const arrow = createArrowShape(r.x1, r.y1, r.x2, r.y2, visualTheme.arrow.recursive.strokeWidth);
           rectGroup.appendChild(arrow); // TODO: hide arrow if useless for visualisation
           const rect = createRectShape({w: r.w, h: r.h, color: r.color, strokeWidth: visualTheme.rect.recursive.strokeWidth});
           rectGroup.appendChild(rect);
@@ -334,8 +338,8 @@ const knoxelRect = new function()
       rectGroup.setAttribute('transform', 'translate(' + x + ' ' + y + ')');
       if (!desc.ghost && !desc.bubble)
       {
-        const {x1, y1, x2, y2} = computeArrowShape(w, h, x, y, desc.knoxelId, hostKnyteId);
-        const arrowRoot = createArrowShape(x1, y1, x2, y2);
+        const {x1, y1, x2, y2} = computeArrowShape(w, h, x, y, desc.knoxelId, hostKnyteId, visualTheme.arrow.strokeWidth);
+        const arrowRoot = createArrowShape(x1, y1, x2, y2, visualTheme.arrow.strokeWidth);
         rectGroup.appendChild(arrowRoot); // TODO: hide arrow if useless for visualisation
       }
       const rectRoot = createRectShape({w, h, color, strokeWidth: visualTheme.rect.strokeWidth});
@@ -583,7 +587,7 @@ function setSpaceRootKnoxel(desc)
 
 function getArrowPointsByKnoxelEndpoints(desc)
 {
-  // desc: {arrowSpace, initialKnoxelId, terminalKnoxelId, x, y}
+  // desc: {arrowSpace, initialKnoxelId, terminalKnoxelId, x, y, arrowStrokeWidth}
   function collideAABBVsLine(aabb, line)
   {
 		var box = new intersect.AABB(
@@ -638,9 +642,9 @@ function getArrowPointsByKnoxelEndpoints(desc)
         {position1: initialPosition, position2: terminalPosition}
       );
       const rectStrokeOffset = 0.5*visualTheme.rect.strokeWidth;
-      const initialArrowStrokeOffset = 0.5*visualTheme.arrow.strokeWidth;
-      const terminalArrowStrokeOffset = 2.0*visualTheme.arrow.strokeWidth;
-      const arrowIntervalStrokeOffset = 0.5*visualTheme.arrow.strokeWidth;
+      const initialArrowStrokeOffset = 0.5*desc.arrowStrokeWidth;
+      const terminalArrowStrokeOffset = 2.0*desc.arrowStrokeWidth;
+      const arrowIntervalStrokeOffset = 0.5*desc.arrowStrokeWidth;
       const initialStrokeOffset = rectStrokeOffset + initialArrowStrokeOffset + arrowIntervalStrokeOffset;
       x1 += ((1 - initialTime) * directionLength + initialStrokeOffset) * directionNormalised.x;
       y1 += ((1 - initialTime) * directionLength + initialStrokeOffset) * directionNormalised.y;
@@ -662,7 +666,8 @@ function addOriginsArrow(desc)
   const spaceRootKnyteId = knoxels[spacemapKnoxelId];
   const arrowSpace = informationMap[spaceRootKnyteId].space;
   const {x1, y1, x2, y2} = getArrowPointsByKnoxelEndpoints(
-    {arrowSpace, initialKnoxelId: desc.initialKnoxelId, terminalKnoxelId: desc.terminalKnoxelId, x: 0, y: 0}
+    {arrowSpace, initialKnoxelId: desc.initialKnoxelId, terminalKnoxelId: desc.terminalKnoxelId,
+       x: 0, y: 0, arrowStrokeWidth: visualTheme.arrow.strokeWidth}
   );
   const arrow = document.createElementNS(svgNameSpace, 'line');
   arrow.id = desc.id;
