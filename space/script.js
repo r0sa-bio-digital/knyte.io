@@ -88,13 +88,6 @@ function addKnyte(desc)
     terminalKnyteId: desc.terminalKnyteId
   };
   informationMap[desc.knyteId] = {color: desc.color, space: {}};
-  if (true) // debug content // TODO: remove after basic system implementation
-  {
-    const record = {data: 'My Text', viewer: recordViewers.centeredOneliner};
-    const size = getSizeOfRecord(record);
-    informationMap[desc.knyteId].record = record;
-    informationMap[desc.knyteId].size = size;
-  }
 }
 
 function addKnoxel(desc)
@@ -121,7 +114,7 @@ const knoxelRect = new function()
       type = 'selfviewed';
     if (type === 'recursive')
     {
-      const {size} = informationMap[knyteId];
+      const {size, space} = informationMap[knyteId];
       if (size)
       {
         w = Math.max(w, size.w);
@@ -130,7 +123,6 @@ const knoxelRect = new function()
       let left = 1000000, right = -1000000, top = 1000000, bottom = -1000000;
       const mx = visualTheme.rect.defaultWidth/2;
       const my = visualTheme.rect.defaultHeight/2;
-      const space = informationMap[knyteId].space;
       const nestedKnyteTrace = Object.assign({}, knyteTrace);
       nestedKnyteTrace[knyteId] = true;
       for (let nestedKnoxelId in space)
@@ -170,8 +162,8 @@ const knoxelRect = new function()
       }
       if (left < right && top < bottom)
       {
-        w = right - left;
-        h = bottom - top;
+        w = Math.max(w, right - left);
+        h = Math.max(h, bottom - top);
         leftTop.x = left;
         leftTop.y = top;
         for (let i = 0; i < rects.length; ++i)
@@ -1187,7 +1179,7 @@ function onKeyDownWindow(e)
     }
     else if (e.shiftKey && !e.altKey && !e.metaKey)
     {
-      const newSize = prompt('Edit knyte size', size ? JSON.stringify(size) : '{w: 0, h: 0}');
+      const newSize = prompt('Edit knyte size', size ? JSON.stringify(size) : '{"w": 0, "h": 0}');
       if (newSize !== null)
       {
         informationMap[knyteId].size = JSON.parse(newSize);
