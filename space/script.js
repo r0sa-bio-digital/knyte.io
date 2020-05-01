@@ -1084,12 +1084,24 @@ function onKeyDownWindow(e)
       });
     }
   }
-  else if (e.code === 'Space')
+  else if (e.code === 'Space' && !activeBubble.knoxelId)
   {
-    const position = mouseMovePosition;
-    if (activeGhost.knoxelId)
+    if (!e.shiftKey && !e.altKey && !e.metaKey)
     {
-      if (!e.shiftKey && !e.altKey && !e.metaKey)
+      const position = mouseMovePosition;
+      if (!activeGhost.knoxelId)
+      {
+        let knoxelId = mouseoverKnoxelId;
+        let selfcontained = false;
+        if (!knoxelId)
+        {
+          knoxelId = spaceRootElement.dataset.knoxelId;
+          selfcontained = true;
+        }
+        const spawnSpaceRootKnoxelId = spaceRootElement.dataset.knoxelId;
+        spawnGhostRect({knoxelId, spawnSpaceRootKnoxelId, position, selfcontained});
+      }
+      else
       {
         dropGhostRect(
           {
@@ -1099,15 +1111,30 @@ function onKeyDownWindow(e)
           }
         );
         terminateGhostRect();
-        setNavigationControlState({
-          backKnoxelId: spaceBackStack[spaceBackStack.length - 1],
-          forwardKnoxelId: spaceForwardStack[spaceForwardStack.length - 1]
-        });
       }
+      setNavigationControlState({
+        backKnoxelId: spaceBackStack[spaceBackStack.length - 1],
+        forwardKnoxelId: spaceForwardStack[spaceForwardStack.length - 1]
+      });
     }
-    else if (activeBubble.knoxelId)
+  }
+  else if (e.code === 'KeyB' && !activeGhost.knoxelId)
+  {
+    if (!e.shiftKey && !e.altKey && !e.metaKey)
     {
-      if (!e.shiftKey && !e.altKey && !e.metaKey)
+      const position = mouseMovePosition;
+      if (!activeBubble.knoxelId)
+      {
+        let knoxelId = mouseoverKnoxelId;
+        let selfcontained = false;
+        if (!knoxelId)
+        {
+          knoxelId = spaceRootElement.dataset.knoxelId;
+          selfcontained = true;
+        }
+        spawnBubbleRect({knoxelId, position, selfcontained});
+      }
+      else
       {
         const bubbleKnyteId = knoxels[activeBubble.knoxelId];
         const overKnoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
@@ -1126,46 +1153,20 @@ function onKeyDownWindow(e)
           terminateBubbleRect();
         else
           divideActiveBubble({position});
-        setNavigationControlState({
-          backKnoxelId: spaceBackStack[spaceBackStack.length - 1],
-          forwardKnoxelId: spaceForwardStack[spaceForwardStack.length - 1]
-        });
       }
-    }
-    else
-    {
-      if (!e.shiftKey && !e.altKey && !e.metaKey)
-      {
-        let knoxelId = mouseoverKnoxelId;
-        let selfcontained = false;
-        if (!knoxelId)
-        {
-          knoxelId = spaceRootElement.dataset.knoxelId;
-          selfcontained = true;
-        }
-        const spawnSpaceRootKnoxelId = spaceRootElement.dataset.knoxelId;
-        spawnGhostRect({knoxelId, spawnSpaceRootKnoxelId, position, selfcontained});
-      }
-      else if (e.shiftKey && !e.altKey && !e.metaKey)
-      {
-        let knoxelId = mouseoverKnoxelId;
-        let selfcontained = false;
-        if (!knoxelId)
-        {
-          knoxelId = spaceRootElement.dataset.knoxelId;
-          selfcontained = true;
-        }
-        spawnBubbleRect({knoxelId, position, selfcontained});
-      }
+      setNavigationControlState({
+        backKnoxelId: spaceBackStack[spaceBackStack.length - 1],
+        forwardKnoxelId: spaceForwardStack[spaceForwardStack.length - 1]
+      });
     }
   }
   else if (e.code === 'Enter')
   {
-    const knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
-    const knyteId = knoxels[knoxelId];
-    const {record, size, color} = informationMap[knyteId];
     if (!e.shiftKey && !e.altKey && !e.metaKey)
     {
+      const knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
+      const knyteId = knoxels[knoxelId];
+      const {record, size} = informationMap[knyteId];
       const newData = prompt('Edit knyte value', record ? record.data : '');
       if (newData !== null)
       {
@@ -1177,8 +1178,14 @@ function onKeyDownWindow(e)
         handleSpacemapChanged();
       }
     }
-    else if (e.shiftKey && !e.altKey && !e.metaKey)
+  }
+  else if (e.code === 'KeyS')
+  {
+    if (!e.shiftKey && !e.altKey && !e.metaKey)
     {
+      const knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
+      const knyteId = knoxels[knoxelId];
+      const {size} = informationMap[knyteId];
       const newSize = prompt('Edit knyte size', size ? JSON.stringify(size) : '{"w": 0, "h": 0}');
       if (newSize !== null)
       {
@@ -1187,8 +1194,14 @@ function onKeyDownWindow(e)
         handleSpacemapChanged();
       }
     }
-    else if (!e.shiftKey && e.altKey && !e.metaKey)
+  }
+  else if (e.code === 'KeyC')
+  {
+    if (!e.shiftKey && !e.altKey && !e.metaKey)
     {
+      const knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
+      const knyteId = knoxels[knoxelId];
+      const {color} = informationMap[knyteId];
       const newColor = prompt('Edit knyte color', color ? color : '#000000');
       if (newColor !== null)
       {
