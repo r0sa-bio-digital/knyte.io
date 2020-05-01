@@ -28,13 +28,7 @@ const visualTheme = {
     pictograph: {
       strokeWidth: 2
     },
-    fillColor: {
-      getRandom: function() {
-        const colors = visualThemeColors.elements;
-        const randomIndex = Math.floor(Math.random() * colors.length);
-        return colors[randomIndex];
-      }
-    },
+    fillColor: visualThemeColors.fill,
     defaultWidth: 32,
     defaultHeight: 32,
   },
@@ -45,6 +39,11 @@ const visualTheme = {
   navigation: {
     strokeColor: visualThemeColors.control,
     fillColor: visualThemeColors.navigation,
+  },
+  getRandomColor: function() {
+    const colors = visualThemeColors.elements;
+    const randomIndex = Math.floor(Math.random() * colors.length);
+    return colors[randomIndex];
   },
 };
 
@@ -739,7 +738,7 @@ function onClickSpaceRoot(e)
   if (!e.shiftKey && !e.altKey && e.metaKey)
   {
     const knyteId = knit.new();
-    const color = visualTheme.rect.fillColor.getRandom();
+    const color = visualTheme.rect.fillColor;
     addKnyte({knyteId, initialKnyteId: knit.empty, terminalKnyteId: knit.empty, color});
     addKnoxelRect({knyteId, hostKnoxelId: spaceRootElement.dataset.knoxelId, position: mousePosition});
     knoxelSpaceRoot.update();
@@ -1284,7 +1283,7 @@ function onLoadBody(e)
   // create master knyte
   const masterKnyteId = knit.new();
   const masterKnoxelId = knit.new();
-  const masterColor = visualTheme.rect.fillColor.getRandom();
+  const masterColor = visualTheme.rect.fillColor;
   addKnyte({knyteId: masterKnyteId, initialKnyteId: knit.empty, terminalKnyteId: knit.empty, color: masterColor});
   // create spacemap knyte
   const spacemapKnyteId = knit.new();
