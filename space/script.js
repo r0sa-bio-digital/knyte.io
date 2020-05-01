@@ -386,7 +386,7 @@ const knoxelRect = new function()
     if (rectElement.tagName === 'g' && rectElement.firstElementChild.tagName === 'rect')
       rectElement = rectElement.firstElementChild;
     else
-      console.error('failed ghosting for knoxelId ' + desc.knoxelId);
+      console.error('failed dotting for knoxelId ' + desc.knoxelId);
     if (desc.isDotted)
     {
       rectElement.setAttribute('stroke-dasharray', '0 16');
@@ -474,10 +474,7 @@ function setBubbledMode(desc)
   {
     const knoxelId = knoxelElement.id;
     const knyteId = knoxels[knoxelId];
-    if (
-      knoxelId !== spaceRootElement.dataset.knoxelId &&
-      knoxelId !== desc.knoxelId && knyteId === desc.knyteId
-    )
+    if (knoxelId !== desc.knoxelId && knyteId === desc.knyteId)
       knoxelRect.setDotted({knoxelId, isDotted: desc.isBubbled});
     knoxelElement = knoxelElement.nextElementSibling;
   }
