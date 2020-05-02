@@ -340,6 +340,7 @@ const knoxelRect = new function()
       {
         const {x1, y1, x2, y2} = computeArrowShape(w, h, x, y, desc.knoxelId, hostKnyteId, visualTheme.arrow.strokeWidth);
         const arrowRoot = createArrowShape(x1, y1, x2, y2, visualTheme.arrow.strokeWidth);
+        arrowRoot.id = desc.knoxelId + '.arrow';
         rectGroup.appendChild(arrowRoot); // TODO: hide arrow if useless for visualisation
       }
       const rectRoot = createRectShape({w, h, color, strokeWidth: visualTheme.rect.strokeWidth});
@@ -419,6 +420,24 @@ const knoxelRect = new function()
     return createFigure(desc);
   };
   
+  this.updateArrow = function(knoxelId, position)
+  {
+    const arrowShape = document.getElementById(knoxelId + '.arrow');
+    console.log(arrowShape);
+    const knyteId = knoxels[knoxelId];
+    const knyteTrace = {};
+    const hostKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
+    knyteTrace[hostKnyteId] = true;
+    const {w, h, rects, type} = getFigureDimensions(knoxelId, knyteTrace);
+    const x = position.x - w/2;
+    const y = position.y - h/2;
+    const {x1, y1, x2, y2} = computeArrowShape(w, h, x, y, knoxelId, hostKnyteId, visualTheme.arrow.strokeWidth);
+    arrowShape.setAttribute('x1', x1);
+    arrowShape.setAttribute('y1', y1);
+    arrowShape.setAttribute('x2', x2);
+    arrowShape.setAttribute('y2', y2);
+  }
+  
   this.getSize = function(knoxelId)
   {
     const {w, h, leftTop} = getFigureDimensions(knoxelId, {});
@@ -468,8 +487,21 @@ const knoxelRect = new function()
   
   this.getElementSize = function(element)
   {
-    const size = element.getBoundingClientRect();
-    return {w: size.width, h: size.height};
+    let rectShape;
+    if (element.tagName === 'g')
+    {
+      let shape = element.firstElementChild;
+      while (shape)
+      {
+        if (shape.tagName === 'rect' && !rectShape)
+          rectShape = shape;
+        shape = shape.nextElementSibling;
+      }
+    }
+    if (!rectShape)
+      console.error('failed get size for element ' + element.id);
+    const {width, height} = rectShape.getBoundingClientRect();
+    return {w: width, h: height};
   };
   
   this.moveElement = function(desc)
@@ -569,6 +601,12 @@ function setSpaceRootKnoxel(desc)
     knoxelRect.add({knoxelId, position, selfcontained});
     if (knoxelId === activeGhost.knoxelId)
       setGhostedMode({knoxelId, isGhosted: true});
+  }
+  // update all arrows of nested rects
+  for (let knoxelId in nestedKnoxels)
+  {
+    const position = nestedKnoxels[knoxelId];
+    knoxelRect.updateArrow(knoxelId, position);
   }
   // restore bubble-mode view
   setBubbledMode({knoxelId: activeBubble.knoxelId, knyteId: knoxels[activeBubble.knoxelId], isBubbled: true});
@@ -790,6 +828,7 @@ function addKnoxelRect(desc)
   const knoxelId = knit.new();
   addKnoxel({hostKnyteId, knyteId: desc.knyteId, knoxelId, position});
   knoxelRect.add({knoxelId, position});
+  knoxelRect.updateArrow(knoxelId, position);
 }
 
 function onClickRect(e)
