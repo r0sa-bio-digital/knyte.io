@@ -123,6 +123,8 @@ const knoxelRect = new function()
     const leftTop = {x: 0, y: 0};
     const knyteId = knoxels[knoxelId];
     const rects = [];
+    const arrows = {};
+    const knoxelIdToRectId = {};
     let type = 'recursive';
     if (knyteId === knoxels[spacemapKnoxelId])
       type = 'spacemap';
@@ -143,6 +145,8 @@ const knoxelRect = new function()
       nestedKnyteTrace[knyteId] = true;
       for (let nestedKnoxelId in space)
       {
+        const rectId = knit.new();
+        knoxelIdToRectId[nestedKnoxelId] = rectId;
         const nestedKnyteId = knoxels[nestedKnoxelId];
         let nestedType = 'recursive';
         if (nestedKnyteId === knoxels[spacemapKnoxelId])
@@ -170,15 +174,36 @@ const knoxelRect = new function()
         const nestedY = y - nestedH/2;
         const {x1, y1, x2, y2} = computeArrowShape(nestedW, nestedH, nestedX, nestedY,
           nestedKnoxelId, knyteId, visualTheme.arrow.recursive.strokeWidth);
-        const r = {x: nestedX, y: nestedY, w: nestedW, h: nestedH, color, record, x1, y1, x2, y2, type: nestedType};
+        const r = {rectId, x: nestedX, y: nestedY, w: nestedW, h: nestedH, color, record, x1, y1, x2, y2, type: nestedType};
         rects.push(r);
         if (d.type === 'recursive')
+        {
           for (let i = 0; i < d.rects.length; ++i)
           {
             const rr = d.rects[i];
-            rects.push({x: r.x + rr.x, y: r.y + rr.y, w: rr.w, h: rr.h, 
+            rects.push({rectId: rr.rectId, x: r.x + rr.x, y: r.y + rr.y, w: rr.w, h: rr.h, 
               color: rr.color, record: rr.record, x1: rr.x1, y1: rr.y1, x2: rr.x2, y2: rr.y2, type: rr.type});
           }
+          for (let arrowId in d.arrows)
+          {
+            const ar = d.arrows[arrowId];
+            arrows[arrowId] = {space: ar.space, knoxelId: ar.knoxelId, initialKnoxelId: ar.initialKnoxelId,
+              terminalKnoxelId: ar.terminalKnoxelId, initialRectId: ar.initialRectId, terminalRectId: ar.terminalRectId};
+          }
+        }
+      }
+      for (let nestedKnoxelId in space)
+      {
+        const vector = knoxelVectors[nestedKnoxelId];
+        if (vector)
+          arrows[knoxelIdToRectId[nestedKnoxelId]] = {
+            space,
+            knoxelId: nestedKnoxelId,
+            initialKnoxelId: vector.initialKnoxelId,
+            terminalKnoxelId: vector.terminalKnoxelId,
+            initialRectId: knoxelIdToRectId[vector.initialKnoxelId], 
+            terminalRectId: knoxelIdToRectId[vector.terminalKnoxelId]
+          };
       }
       if (left < right && top < bottom)
       {
@@ -199,7 +224,7 @@ const knoxelRect = new function()
       const r = {x: 0, y: 0, w, h, color, record, type};
       rects.push(r);
     }
-    return {w, h, leftTop, rects, type};
+    return {w, h, leftTop, rects, arrows, type};
   }
 
   this.add = function(desc)
@@ -244,7 +269,7 @@ const knoxelRect = new function()
       return arrow;
     }
 
-    function createShapes(rects, rootType)
+    function createShapes(rects, arrows, rootType)
     {
       const result = [];
       for (let i = 0; i < rects.length; ++i)
@@ -255,8 +280,10 @@ const knoxelRect = new function()
         {
           rectGroup.setAttribute('transform', 'translate(' + r.x + ' ' + r.y + ')');
           const arrow = createArrowShape(r.x1, r.y1, r.x2, r.y2, visualTheme.arrow.recursive.strokeWidth);
+          if (r.rectId) arrow.id = r.rectId + '.arrow';
           rectGroup.appendChild(arrow); // TODO: hide arrow if useless for visualisation
           const rect = createRectShape({w: r.w, h: r.h, color: r.color, strokeWidth: visualTheme.rect.recursive.strokeWidth});
+          if (r.rectId) rect.id = r.rectId + '.rect';
           rectGroup.appendChild(rect);
           if (r.type === 'recursive' && r.record)
           {
@@ -322,6 +349,27 @@ const knoxelRect = new function()
       return result;
     }
     
+    function updateArrows(arrows)
+    {
+      for (let id in arrows)
+      {
+        const arrowId = id + '.arrow';
+        const rectId = id + '.rect';
+        const initialRectId = arrows[id].initialRectId + '.rect';
+        const terminalRectId = arrows[id].terminalRectId + '.rect';
+        const {space, knoxelId, initialKnoxelId, terminalKnoxelId} = arrows[id];
+        const arrowStrokeWidth = visualTheme.arrow.recursive.strokeWidth;
+        const {x1, y1, x2, y2} = getArrowPointsByRects(
+          {space, knoxelId, initialKnoxelId, terminalKnoxelId, rectId, initialRectId, terminalRectId, arrowStrokeWidth}
+        );
+        const arrowShape = document.getElementById(arrowId);
+        arrowShape.setAttribute('x1', x1);
+        arrowShape.setAttribute('y1', y1);
+        arrowShape.setAttribute('x2', x2);
+        arrowShape.setAttribute('y2', y2);
+      }
+    }
+    
     function createFigure(desc)
     {
       const knyteId = knoxels[desc.knoxelId];
@@ -329,7 +377,7 @@ const knoxelRect = new function()
       const knyteTrace = {};
       const hostKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
       knyteTrace[hostKnyteId] = true;
-      const {w, h, rects, type} = getFigureDimensions(desc.knoxelId, knyteTrace);
+      const {w, h, rects, arrows, type} = getFigureDimensions(desc.knoxelId, knyteTrace);
       const x = desc.position.x - w/2;
       const y = desc.position.y - h/2;
       const rectGroup = document.createElementNS(svgNameSpace, 'g');
@@ -390,9 +438,11 @@ const knoxelRect = new function()
         );
         rectGroup.appendChild(info);
       }
-      const shapes = createShapes(rects, type);
+      const shapes = createShapes(rects, arrows, type);
       for (let i = 0; i < shapes.length; ++i)
         rectGroup.appendChild(shapes[i]);
+      //updateArrows(arrows);
+      setTimeout(updateArrows, 0, arrows);
       if (desc.ghost)
       {
         rectGroup.id += '.ghost';
@@ -423,7 +473,6 @@ const knoxelRect = new function()
   this.updateArrow = function(knoxelId, position)
   {
     const arrowShape = document.getElementById(knoxelId + '.arrow');
-    console.log(arrowShape);
     const knyteId = knoxels[knoxelId];
     const knyteTrace = {};
     const hostKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
@@ -637,6 +686,76 @@ function collideAABBVsLine(aabb, line)
   return hit ? hit.time : 0;
 }
 
+function getArrowPointsByRects(desc)
+{
+  function getBoundingClientDimension(element)
+  {
+    const {width, height} = element.getBoundingClientRect();
+    return {w: width, h: height};
+  }
+  
+  // desc: {space, knoxelId, initialKnoxelId, terminalKnoxelId, rectId, initialRectId, terminalRectId, arrowStrokeWidth}
+  const initialPosition = desc.space[desc.initialKnoxelId];
+  const terminalPosition = desc.space[desc.terminalKnoxelId];
+  let x1 = initialPosition.x;
+  let y1 = initialPosition.y;
+  let x2 = terminalPosition.x;
+  let y2 = terminalPosition.y;
+  if (desc.initialKnoxelId === desc.terminalKnoxelId)
+  {
+    x1 -= visualTheme.arrow.defaultLength/2;
+    x2 += visualTheme.arrow.defaultLength/2;
+  }
+  else
+  {
+    const direction = {
+      x: terminalPosition.x - initialPosition.x,
+      y: terminalPosition.y - initialPosition.y
+    };
+    const directionLengthSquared = direction.x*direction.x + direction.y*direction.y;
+    if (directionLengthSquared > 0.01)
+    {
+      const directionLength = Math.sqrt(directionLengthSquared);
+      const directionNormalised = {
+        x: direction.x / directionLength,
+        y: direction.y / directionLength
+      };
+      const w = visualTheme.rect.defaultWidth;
+      const h = visualTheme.rect.defaultHeight;
+      const initialElement = document.getElementById(desc.initialRectId);
+      const initialDimension = initialElement ? getBoundingClientDimension(initialElement) : {w, h};
+      const initialTime = collideAABBVsLine(
+        {position: initialPosition, dimension: initialDimension},
+        {position1: terminalPosition, position2: initialPosition}
+      );
+      const terminalElement = document.getElementById(desc.terminalRectId);
+      const terminalDimension = terminalElement ? getBoundingClientDimension(terminalElement) : {w, h};
+      const terminalTime = collideAABBVsLine(
+        {position: terminalPosition, dimension: terminalDimension},
+        {position1: initialPosition, position2: terminalPosition}
+      );
+      const rectStrokeOffset = 0.5*visualTheme.rect.strokeWidth;
+      const initialArrowStrokeOffset = 0.5*desc.arrowStrokeWidth;
+      const terminalArrowStrokeOffset = 2.0*desc.arrowStrokeWidth;
+      const arrowIntervalStrokeOffset = 0.5*desc.arrowStrokeWidth;
+      const initialStrokeOffset = rectStrokeOffset + initialArrowStrokeOffset + arrowIntervalStrokeOffset;
+      x1 += ((1 - initialTime) * directionLength + initialStrokeOffset) * directionNormalised.x;
+      y1 += ((1 - initialTime) * directionLength + initialStrokeOffset) * directionNormalised.y;
+      const terminalStrokeOffset = rectStrokeOffset + terminalArrowStrokeOffset + arrowIntervalStrokeOffset;
+      x2 -= ((1 - terminalTime) * directionLength + terminalStrokeOffset) * directionNormalised.x;
+      y2 -= ((1 - terminalTime) * directionLength + terminalStrokeOffset) * directionNormalised.y;
+    }
+  }
+  const {x, y} = desc.space[desc.knoxelId];
+  const jointElement = document.getElementById(desc.rectId);
+  const d = getBoundingClientDimension(jointElement);
+  x1 -= x - d.w/2;
+  y1 -= y - d.h/2;
+  x2 -= x - d.w/2;
+  y2 -= y - d.h/2;
+  return {x1, y1, x2, y2};
+}
+
 function getArrowPointsByKnoxels(desc)
 {
   // desc: {arrowSpace, initialKnoxelId, terminalKnoxelId, x, y, arrowStrokeWidth}
@@ -781,31 +900,6 @@ function addOriginsArrow(desc)
   arrow.style.pointerEvents = 'none';
   document.getElementById('arrows').appendChild(arrow);
   arrows[desc.id] = {initialKnoxelId: desc.initialKnoxelId, terminalKnoxelId: desc.terminalKnoxelId};
-}
-
-function updateOriginsArrow(desc)
-{
-  // desc: {id}
-  const endpoints = arrows[desc.id];
-  const arrow = document.getElementById(desc.id);
-  const spaceRootKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
-  const arrowSpace = informationMap[spaceRootKnyteId].space;
-  const initialPosition = arrowSpace[endpoints.initialKnoxelId];
-  const terminalPosition = arrowSpace[endpoints.terminalKnoxelId];
-  const x1 = initialPosition.x;
-  const y1 = initialPosition.y;
-  const x2 = terminalPosition.x;
-  const y2 = terminalPosition.y;
-  arrow.setAttribute('x1', x1);
-  arrow.setAttribute('y1', y1);
-  arrow.setAttribute('x2', x2);
-  arrow.setAttribute('y2', y2);
-}
-
-function updateArrows()
-{
-  for (let id in arrows)
-    updateOriginsArrow({id});
 }
 
 function cleanupArrows()
