@@ -110,7 +110,7 @@ const knoxelRect = new function()
     const endpoints = knoxelVectors[knoxelId];
     const l = visualTheme.arrow.defaultLength;
     const {x1, y1, x2, y2} = endpoints
-      ? getArrowPointsByKnoxelEndpoints({arrowSpace: hostSpace, 
+      ? getArrowPointsByKnoxels({arrowSpace: hostSpace, 
         initialKnoxelId: endpoints.initialKnoxelId, terminalKnoxelId: endpoints.terminalKnoxelId, x, y, arrowStrokeWidth})
       : {x1: (w - l)/2, y1: h/2, x2: (w + l)/2, y2: h/2};
     return {x1, y1, x2, y2};
@@ -585,23 +585,84 @@ function setSpaceRootKnoxel(desc)
   }
 }
 
-function getArrowPointsByKnoxelEndpoints(desc)
+function collideAABBVsLine(aabb, line)
+{
+  var box = new intersect.AABB(
+    new intersect.Point(aabb.position.x, aabb.position.y), 
+    new intersect.Point(0.5*aabb.dimension.w, 0.5*aabb.dimension.h)
+  );
+  var position = new intersect.Point(line.position1.x, line.position1.y);
+  var delta = new intersect.Point(
+    line.position2.x - line.position1.x, line.position2.y - line.position1.y
+  );
+  const hit = box.intersectSegment(position, delta); // returns null or intersect.Hit object
+  return hit ? hit.time : 0;
+}
+
+function getArrowPointsByKnoxels(desc)
 {
   // desc: {arrowSpace, initialKnoxelId, terminalKnoxelId, x, y, arrowStrokeWidth}
-  function collideAABBVsLine(aabb, line)
+  const initialPosition = desc.arrowSpace[desc.initialKnoxelId];
+  const terminalPosition = desc.arrowSpace[desc.terminalKnoxelId];
+  let x1 = initialPosition.x;
+  let y1 = initialPosition.y;
+  let x2 = terminalPosition.x;
+  let y2 = terminalPosition.y;
+  if (desc.initialKnoxelId === desc.terminalKnoxelId)
   {
-		var box = new intersect.AABB(
-			new intersect.Point(aabb.position.x, aabb.position.y), 
-			new intersect.Point(0.5*aabb.dimension.w, 0.5*aabb.dimension.h)
-		);
-		var position = new intersect.Point(line.position1.x, line.position1.y);
-		var delta = new intersect.Point(
-			line.position2.x - line.position1.x, line.position2.y - line.position1.y
-		);
-		const hit = box.intersectSegment(position, delta); // returns null or intersect.Hit object
-    return hit ? hit.time : 0;
+    x1 -= visualTheme.arrow.defaultLength/2;
+    x2 += visualTheme.arrow.defaultLength/2;
   }
+  else
+  {
+    const direction = {
+      x: terminalPosition.x - initialPosition.x,
+      y: terminalPosition.y - initialPosition.y
+    };
+    const directionLengthSquared = direction.x*direction.x + direction.y*direction.y;
+    if (directionLengthSquared > 0.01)
+    {
+      const directionLength = Math.sqrt(directionLengthSquared);
+      const directionNormalised = {
+        x: direction.x / directionLength,
+        y: direction.y / directionLength
+      };
+      const w = visualTheme.rect.defaultWidth;
+      const h = visualTheme.rect.defaultHeight;
+      const initialElement = document.getElementById(desc.initialKnoxelId); // TODO: get dimension directly by knoxelId
+      const initialDimension = initialElement ? knoxelRect.getElementSize(initialElement) : {w, h};
+      const initialTime = collideAABBVsLine(
+        {position: initialPosition, dimension: initialDimension},
+        {position1: terminalPosition, position2: initialPosition}
+      );
+      const terminalElement = document.getElementById(desc.terminalKnoxelId); // TODO: get dimension directly by knoxelId
+      const terminalDimension = terminalElement ? knoxelRect.getElementSize(terminalElement) : {w, h};
+      const terminalTime = collideAABBVsLine(
+        {position: terminalPosition, dimension: terminalDimension},
+        {position1: initialPosition, position2: terminalPosition}
+      );
+      const rectStrokeOffset = 0.5*visualTheme.rect.strokeWidth;
+      const initialArrowStrokeOffset = 0.5*desc.arrowStrokeWidth;
+      const terminalArrowStrokeOffset = 2.0*desc.arrowStrokeWidth;
+      const arrowIntervalStrokeOffset = 0.5*desc.arrowStrokeWidth;
+      const initialStrokeOffset = rectStrokeOffset + initialArrowStrokeOffset + arrowIntervalStrokeOffset;
+      x1 += ((1 - initialTime) * directionLength + initialStrokeOffset) * directionNormalised.x;
+      y1 += ((1 - initialTime) * directionLength + initialStrokeOffset) * directionNormalised.y;
+      const terminalStrokeOffset = rectStrokeOffset + terminalArrowStrokeOffset + arrowIntervalStrokeOffset;
+      x2 -= ((1 - terminalTime) * directionLength + terminalStrokeOffset) * directionNormalised.x;
+      y2 -= ((1 - terminalTime) * directionLength + terminalStrokeOffset) * directionNormalised.y;
+    }
+  }
+  x1 -= desc.x;
+  y1 -= desc.y;
+  x2 -= desc.x;
+  y2 -= desc.y;
+  return {x1, y1, x2, y2};
+}
 
+function getArrowPointsByEndpoints(desc)
+{
+  // desc: {arrowSpace, initialKnoxelId, terminalKnoxelId, x, y, arrowStrokeWidth}
   const initialPosition = desc.arrowSpace[desc.initialKnoxelId];
   const terminalPosition = desc.arrowSpace[desc.terminalKnoxelId];
   let x1 = initialPosition.x;
@@ -665,7 +726,7 @@ function addOriginsArrow(desc)
   // desc: {id, initialKnoxelId, terminalKnoxelId}
   const spaceRootKnyteId = knoxels[spacemapKnoxelId];
   const arrowSpace = informationMap[spaceRootKnyteId].space;
-  const {x1, y1, x2, y2} = getArrowPointsByKnoxelEndpoints(
+  const {x1, y1, x2, y2} = getArrowPointsByEndpoints(
     {arrowSpace, initialKnoxelId: desc.initialKnoxelId, terminalKnoxelId: desc.terminalKnoxelId,
        x: 0, y: 0, arrowStrokeWidth: visualTheme.arrow.strokeWidth}
   );
