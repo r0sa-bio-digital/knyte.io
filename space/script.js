@@ -490,7 +490,7 @@ const knoxelRect = new function()
     const knyteTrace = {};
     const hostKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
     knyteTrace[hostKnyteId] = true;
-    const {w, h, rects, type} = getFigureDimensions(knoxelId, knyteTrace);
+    const {w, h} = getFigureDimensions(knoxelId, knyteTrace);
     const x = position.x - w/2;
     const y = position.y - h/2;
     const {x1, y1, x2, y2, x3, y3} = computeArrowShape(w, h, x, y, knoxelId, hostKnyteId, visualTheme.arrow.strokeWidth);
@@ -712,15 +712,15 @@ function getArrowPointsByRects(desc)
   }
   
   const jointPosition = desc.arrowSpace[desc.jointKnoxelId];
-  const initialPosition = desc.arrowSpace[desc.initialKnoxelId];
-  const terminalPosition = desc.arrowSpace[desc.terminalKnoxelId];
+  const initialPosition = desc.initialKnoxelId ? desc.arrowSpace[desc.initialKnoxelId] : jointPosition;
+  const terminalPosition = desc.terminalKnoxelId ? desc.arrowSpace[desc.terminalKnoxelId] : jointPosition;
   let x1 = initialPosition.x;
   let y1 = initialPosition.y;
   let x2 = jointPosition.x;
   let y2 = jointPosition.y;
   let x3 = terminalPosition.x;
   let y3 = terminalPosition.y;
-  if (desc.initialKnoxelId === desc.jointKnoxelId)
+  if (!desc.initialKnoxelId || desc.initialKnoxelId === desc.jointKnoxelId)
     x1 -= visualTheme.arrow.defaultLength/2;
   else
   {
@@ -752,7 +752,7 @@ function getArrowPointsByRects(desc)
       y1 -= ((1 - initialTime) * directionLength + initialStrokeOffset) * directionNormalised.y;
     }
   }
-  if (desc.terminalKnoxelId === desc.jointKnoxelId)
+  if (!desc.terminalKnoxelId || desc.terminalKnoxelId === desc.jointKnoxelId)
     x3 += visualTheme.arrow.defaultLength/2;
   else
   {
@@ -800,15 +800,15 @@ function getArrowPointsByKnoxels(desc)
 {
   // desc: {arrowSpace, jointKnoxelId, initialKnoxelId, terminalKnoxelId, w, h, arrowStrokeWidth}
   const jointPosition = desc.arrowSpace[desc.jointKnoxelId];
-  const initialPosition = desc.arrowSpace[desc.initialKnoxelId];
-  const terminalPosition = desc.arrowSpace[desc.terminalKnoxelId];
+  const initialPosition = desc.initialKnoxelId ? desc.arrowSpace[desc.initialKnoxelId] : jointPosition;
+  const terminalPosition = desc.terminalKnoxelId ? desc.arrowSpace[desc.terminalKnoxelId] : jointPosition;
   let x1 = initialPosition.x;
   let y1 = initialPosition.y;
   let x2 = jointPosition.x;
   let y2 = jointPosition.y;
   let x3 = terminalPosition.x;
   let y3 = terminalPosition.y;
-  if (desc.initialKnoxelId === desc.jointKnoxelId)
+  if (!desc.initialKnoxelId || desc.initialKnoxelId === desc.jointKnoxelId)
     x1 -= visualTheme.arrow.defaultLength/2;
   else
   {
@@ -840,7 +840,7 @@ function getArrowPointsByKnoxels(desc)
       y1 -= ((1 - initialTime) * directionLength + initialStrokeOffset) * directionNormalised.y;
     }
   }
-  if (desc.terminalKnoxelId === desc.jointKnoxelId)
+  if (!desc.terminalKnoxelId || desc.terminalKnoxelId === desc.jointKnoxelId)
     x3 += visualTheme.arrow.defaultLength/2;
   else
   {
@@ -1371,12 +1371,6 @@ function initialConnectGhostRect(desc)
     knoxelVectors[desc.droppedKnoxelId].initialKnoxelId = desc.connectingKnoxelId;
   else
     delete knoxelVectors[desc.droppedKnoxelId].initialKnoxelId;
-  // TODO: remove when system will be ready for incomplete vectors
-  if (desc.connectingKnoxelId && !knoxelVectors[desc.droppedKnoxelId].terminalKnoxelId)
-    knoxelVectors[desc.droppedKnoxelId].terminalKnoxelId = desc.connectingKnoxelId;
-  if (!desc.connectingKnoxelId)
-    delete knoxelVectors[desc.droppedKnoxelId];
-  //
   setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
   handleSpacemapChanged();
 }
@@ -1390,12 +1384,6 @@ function terminalConnectGhostRect(desc)
     knoxelVectors[desc.droppedKnoxelId].terminalKnoxelId = desc.connectingKnoxelId;
   else
     delete knoxelVectors[desc.droppedKnoxelId].terminalKnoxelId;
-  // TODO: remove when system will be ready for incomplete vectors
-  if (desc.connectingKnoxelId && !knoxelVectors[desc.droppedKnoxelId].initialKnoxelId)
-    knoxelVectors[desc.droppedKnoxelId].initialKnoxelId = desc.connectingKnoxelId;
-  if (!desc.connectingKnoxelId)
-    delete knoxelVectors[desc.droppedKnoxelId];
-  //
   setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
   handleSpacemapChanged();
 }
