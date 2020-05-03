@@ -1616,7 +1616,6 @@ function onKeyDownWindow(e)
       prompt('Knyte id:', knyteId);
     }
   }
-  
   else if (e.code === 'KeyZ' && !activeBubble.knoxelId)
   {
     if (!e.shiftKey && !e.altKey && !e.metaKey)
@@ -1650,7 +1649,6 @@ function onKeyDownWindow(e)
       });
     }
   }
-
   else if (e.code === 'KeyX' && !activeBubble.knoxelId)
   {
     if (!e.shiftKey && !e.altKey && !e.metaKey)
@@ -1684,7 +1682,6 @@ function onKeyDownWindow(e)
       });
     }
   }
-
 }
 
 function spacemapChangedHandler()
