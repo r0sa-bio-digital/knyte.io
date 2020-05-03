@@ -1362,6 +1362,44 @@ function dropGhostRect(desc)
   handleSpacemapChanged();
 }
 
+function initialConnectGhostRect(desc)
+{
+  // desc: {droppedKnoxelId, connectingKnoxelId}
+  if (!(desc.droppedKnoxelId in knoxelVectors))
+    knoxelVectors[desc.droppedKnoxelId] = {};
+  if (desc.connectingKnoxelId)
+    knoxelVectors[desc.droppedKnoxelId].initialKnoxelId = desc.connectingKnoxelId;
+  else
+    delete knoxelVectors[desc.droppedKnoxelId].initialKnoxelId;
+  // TODO: remove when system will be ready for incomplete vectors
+  if (desc.connectingKnoxelId && !knoxelVectors[desc.droppedKnoxelId].terminalKnoxelId)
+    knoxelVectors[desc.droppedKnoxelId].terminalKnoxelId = desc.connectingKnoxelId;
+  if (!desc.connectingKnoxelId)
+    delete knoxelVectors[desc.droppedKnoxelId];
+  //
+  setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+  handleSpacemapChanged();
+}
+
+function terminalConnectGhostRect(desc)
+{
+  // desc: {droppedKnoxelId, connectingKnoxelId}
+  if (!(desc.droppedKnoxelId in knoxelVectors))
+    knoxelVectors[desc.droppedKnoxelId] = {};
+  if (desc.connectingKnoxelId)
+    knoxelVectors[desc.droppedKnoxelId].terminalKnoxelId = desc.connectingKnoxelId;
+  else
+    delete knoxelVectors[desc.droppedKnoxelId].terminalKnoxelId;
+  // TODO: remove when system will be ready for incomplete vectors
+  if (desc.connectingKnoxelId && !knoxelVectors[desc.droppedKnoxelId].initialKnoxelId)
+    knoxelVectors[desc.droppedKnoxelId].initialKnoxelId = desc.connectingKnoxelId;
+  if (!desc.connectingKnoxelId)
+    delete knoxelVectors[desc.droppedKnoxelId];
+  //
+  setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+  handleSpacemapChanged();
+}
+
 function divideActiveBubble(desc)
 {
   // desc: {position}
@@ -1578,6 +1616,75 @@ function onKeyDownWindow(e)
       prompt('Knyte id:', knyteId);
     }
   }
+  
+  else if (e.code === 'KeyZ' && !activeBubble.knoxelId)
+  {
+    if (!e.shiftKey && !e.altKey && !e.metaKey)
+    {
+      const position = mouseMovePosition;
+      if (!activeGhost.knoxelId)
+      {
+        let knoxelId = mouseoverKnoxelId;
+        let selfcontained = false;
+        if (!knoxelId)
+        {
+          knoxelId = spaceRootElement.dataset.knoxelId;
+          selfcontained = true;
+        }
+        const spawnSpaceRootKnoxelId = spaceRootElement.dataset.knoxelId;
+        spawnGhostRect({knoxelId, spawnSpaceRootKnoxelId, position, selfcontained});
+      }
+      else
+      {
+        initialConnectGhostRect(
+          {
+            droppedKnoxelId: activeGhost.knoxelId,
+            connectingKnoxelId: mouseoverKnoxelId,
+          }
+        );
+        terminateGhostRect();
+      }
+      setNavigationControlState({
+        backKnoxelId: spaceBackStack[spaceBackStack.length - 1],
+        forwardKnoxelId: spaceForwardStack[spaceForwardStack.length - 1]
+      });
+    }
+  }
+
+  else if (e.code === 'KeyX' && !activeBubble.knoxelId)
+  {
+    if (!e.shiftKey && !e.altKey && !e.metaKey)
+    {
+      const position = mouseMovePosition;
+      if (!activeGhost.knoxelId)
+      {
+        let knoxelId = mouseoverKnoxelId;
+        let selfcontained = false;
+        if (!knoxelId)
+        {
+          knoxelId = spaceRootElement.dataset.knoxelId;
+          selfcontained = true;
+        }
+        const spawnSpaceRootKnoxelId = spaceRootElement.dataset.knoxelId;
+        spawnGhostRect({knoxelId, spawnSpaceRootKnoxelId, position, selfcontained});
+      }
+      else
+      {
+        terminalConnectGhostRect(
+          {
+            droppedKnoxelId: activeGhost.knoxelId,
+            connectingKnoxelId: mouseoverKnoxelId,
+          }
+        );
+        terminateGhostRect();
+      }
+      setNavigationControlState({
+        backKnoxelId: spaceBackStack[spaceBackStack.length - 1],
+        forwardKnoxelId: spaceForwardStack[spaceForwardStack.length - 1]
+      });
+    }
+  }
+
 }
 
 function spacemapChangedHandler()
