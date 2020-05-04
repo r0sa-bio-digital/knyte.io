@@ -109,11 +109,11 @@ const knoxelRect = new function()
     const hostSpace = informationMap[hostKnyteId].space;
     const endpoints = knoxelVectors[knoxelId];
     const l = visualTheme.arrow.defaultLength;
-    const {x1, y1, x2, y2, x3, y3} = endpoints
+    const {x1, y1, x2, y2, x3, y3, initialCross, terminalCross} = endpoints
       ? getArrowPointsByKnoxels({arrowSpace: hostSpace, jointKnoxelId: knoxelId,
         initialKnoxelId: endpoints.initialKnoxelId, terminalKnoxelId: endpoints.terminalKnoxelId, w, h, arrowStrokeWidth})
-      : {x1: (w - l)/2, y1: h/2, x2: w/2, y2: h/2, x3: (w + l)/2, y3: h/2};
-    return {x1, y1, x2, y2, x3, y3};
+      : {x1: (w - l)/2, y1: h/2, x2: w/2, y2: h/2, x3: (w + l)/2, y3: h/2, initialCross: false, terminalCross: false};
+    return {x1, y1, x2, y2, x3, y3, initialCross, terminalCross};
   }
   
   function getFigureDimensions(knoxelId, knyteTrace)
@@ -172,9 +172,10 @@ const knoxelRect = new function()
           bottom = nestedBottom;
         const nestedX = x - nestedW/2;
         const nestedY = y - nestedH/2;
-        const {x1, y1, x2, y2, x3, y3} = computeArrowShape(nestedW, nestedH, nestedX, nestedY,
+        const {x1, y1, x2, y2, x3, y3, initialCross, terminalCross} = computeArrowShape(nestedW, nestedH, nestedX, nestedY,
           nestedKnoxelId, knyteId, visualTheme.arrow.recursive.strokeWidth);
-        const r = {rectId, x: nestedX, y: nestedY, w: nestedW, h: nestedH, color, record, x1, y1, x2, y2, x3, y3, type: nestedType};
+        const r = {rectId, x: nestedX, y: nestedY, w: nestedW, h: nestedH, color, record, 
+          x1, y1, x2, y2, x3, y3, initialCross, terminalCross, type: nestedType};
         rects.push(r);
         if (d.type === 'recursive')
         {
@@ -257,7 +258,7 @@ const knoxelRect = new function()
     
     function createArrowShape(desc)
     {
-      // desc: {x1, y1, x2, y2, x3, y3, strokeWidth}
+      // desc: {x1, y1, x2, y2, x3, y3, initialCross, terminalCross, strokeWidth}
       const arrow = document.createElementNS(svgNameSpace, 'polyline');
       const p1 = spaceRootElement.createSVGPoint();
       const p2 = spaceRootElement.createSVGPoint();
@@ -274,8 +275,8 @@ const knoxelRect = new function()
       arrow.setAttribute('fill', 'none');
       arrow.setAttribute('stroke', visualTheme.arrow.strokeColor);
       arrow.setAttribute('stroke-width', desc.strokeWidth);
-      arrow.setAttribute('marker-start', 'url(#arrowTail)');
-      arrow.setAttribute('marker-end', 'url(#arrowHead)');
+      arrow.setAttribute('marker-start', desc.initialCross ? 'url(#crossTail)' : 'url(#arrowTail)');
+      arrow.setAttribute('marker-end', desc.terminalCross ? 'url(#crossHead)' : 'url(#arrowHead)');
       return arrow;
     }
 
@@ -289,9 +290,8 @@ const knoxelRect = new function()
         if (rootType === 'recursive')
         {
           rectGroup.setAttribute('transform', 'translate(' + r.x + ' ' + r.y + ')');
-          const arrow = createArrowShape(
-            {x1: r.x1, y1: r.y1, x2: r.x2, y2: r.y2, x3: r.x3, y3: r.y3, strokeWidth: visualTheme.arrow.recursive.strokeWidth}
-          );
+          const arrow = createArrowShape({x1: r.x1, y1: r.y1, x2: r.x2, y2: r.y2, x3: r.x3, y3: r.y3,
+            initialCross: r.initialCross, terminalCross: r.terminalCross, strokeWidth: visualTheme.arrow.recursive.strokeWidth});
           if (r.rectId) arrow.id = r.rectId + '.arrow';
           rectGroup.appendChild(arrow); // TODO: hide arrow if useless for visualisation
           const rect = createRectShape({w: r.w, h: r.h, color: r.color, strokeWidth: visualTheme.rect.recursive.strokeWidth});
@@ -399,8 +399,10 @@ const knoxelRect = new function()
       rectGroup.setAttribute('transform', 'translate(' + x + ' ' + y + ')');
       if (!desc.ghost && !desc.bubble)
       {
-        const {x1, y1, x2, y2, x3, y3} = computeArrowShape(w, h, x, y, desc.knoxelId, hostKnyteId, visualTheme.arrow.strokeWidth);
-        const arrowRoot = createArrowShape({x1, y1, x2, y2, x3, y3, strokeWidth: visualTheme.arrow.strokeWidth});
+        const {x1, y1, x2, y2, x3, y3, initialCross, terminalCross} = computeArrowShape(
+          w, h, x, y, desc.knoxelId, hostKnyteId, visualTheme.arrow.strokeWidth);
+        const arrowRoot = createArrowShape({x1, y1, x2, y2, x3, y3, initialCross, terminalCross, 
+          strokeWidth: visualTheme.arrow.strokeWidth});
         arrowRoot.id = desc.knoxelId + '.arrow';
         rectGroup.appendChild(arrowRoot); // TODO: hide arrow if useless for visualisation
       }
@@ -493,13 +495,17 @@ const knoxelRect = new function()
     const {w, h} = getFigureDimensions(knoxelId, knyteTrace);
     const x = position.x - w/2;
     const y = position.y - h/2;
-    const {x1, y1, x2, y2, x3, y3} = computeArrowShape(w, h, x, y, knoxelId, hostKnyteId, visualTheme.arrow.strokeWidth);
+    const {x1, y1, x2, y2, x3, y3, initialCross, terminalCross} = computeArrowShape(
+      w, h, x, y, knoxelId, hostKnyteId, visualTheme.arrow.strokeWidth);
     arrowShape.points.getItem(0).x = x1;
     arrowShape.points.getItem(0).y = y1;
     arrowShape.points.getItem(1).x = x2;
     arrowShape.points.getItem(1).y = y2;
     arrowShape.points.getItem(2).x = x3;
     arrowShape.points.getItem(2).y = y3;
+    arrowShape.setAttribute('marker-start', initialCross ? 'url(#crossTail)' : 'url(#arrowTail)');
+    arrowShape.setAttribute('marker-end', terminalCross ? 'url(#crossHead)' : 'url(#arrowHead)');
+    
   }
   
   this.getSize = function(knoxelId)
@@ -800,20 +806,36 @@ function getArrowPointsByKnoxels(desc)
 {
   // desc: {arrowSpace, jointKnoxelId, initialKnoxelId, terminalKnoxelId, w, h, arrowStrokeWidth}
   const jointPosition = desc.arrowSpace[desc.jointKnoxelId];
-  const initialPosition = desc.initialKnoxelId ? desc.arrowSpace[desc.initialKnoxelId] : jointPosition;
-  const terminalPosition = desc.terminalKnoxelId ? desc.arrowSpace[desc.terminalKnoxelId] : jointPosition;
-  let x1 = initialPosition.x;
-  let y1 = initialPosition.y;
+  const initialPosition = desc.initialKnoxelId ? desc.arrowSpace[desc.initialKnoxelId] : undefined;
+  const terminalPosition = desc.terminalKnoxelId ? desc.arrowSpace[desc.terminalKnoxelId] : undefined;
+  let x1;
+  let y1;
   let x2 = jointPosition.x;
   let y2 = jointPosition.y;
-  let x3 = terminalPosition.x;
-  let y3 = terminalPosition.y;
-  if (!desc.initialKnoxelId)
-    x1 -= visualTheme.arrow.defaultLength/2;
-  else if (desc.initialKnoxelId === desc.jointKnoxelId)
-    x1 -= desc.w/2 + visualTheme.arrow.defaultLength;
+  let x3;
+  let y3;
+  let initialCross = false;
+  let terminalCross = false;
+  if (desc.initialKnoxelId === desc.jointKnoxelId)
+  {
+    x1 = x2 - desc.w/2 - visualTheme.arrow.defaultLength;
+    y1 = y2;
+  }
+  else if (!desc.initialKnoxelId)
+  {
+    x1 = x2 - visualTheme.arrow.defaultLength/2;
+    y1 = y2;
+  }
+  else if (!initialPosition)
+  {
+    x1 = x2 - desc.w/2 - visualTheme.arrow.defaultLength;
+    y1 = y2;
+    initialCross = true;
+  }
   else
   {
+    x1 = initialPosition.x;
+    y1 = initialPosition.y;
     const direction = {
       x: initialPosition.x - jointPosition.x,
       y: initialPosition.y - jointPosition.y
@@ -842,12 +864,26 @@ function getArrowPointsByKnoxels(desc)
       y1 -= ((1 - initialTime) * directionLength + initialStrokeOffset) * directionNormalised.y;
     }
   }
-  if (!desc.terminalKnoxelId)
-    x3 += visualTheme.arrow.defaultLength/2;
-  else if (desc.terminalKnoxelId === desc.jointKnoxelId)
-    x3 += desc.w/2 + visualTheme.arrow.defaultLength;
+  if (desc.terminalKnoxelId === desc.jointKnoxelId)
+  {
+    x3 = x2 + desc.w/2 + visualTheme.arrow.defaultLength;
+    y3 = y2;
+  }
+  else if (!desc.terminalKnoxelId)
+  {
+    x3 = x2 + visualTheme.arrow.defaultLength/2;
+    y3 = y2;
+  }
+  else if (!terminalPosition)
+  {
+    x3 = x2 + desc.w/2 + visualTheme.arrow.defaultLength;
+    y3 = y2;
+    terminalCross = true;
+  }
   else
   {
+    x3 = terminalPosition.x;
+    y3 = terminalPosition.y;
     const direction = {
       x: terminalPosition.x - jointPosition.x,
       y: terminalPosition.y - jointPosition.y
@@ -884,7 +920,7 @@ function getArrowPointsByKnoxels(desc)
   y2 -= y;
   x3 -= x;
   y3 -= y;
-  return {x1, y1, x2, y2, x3, y3};
+  return {x1, y1, x2, y2, x3, y3, initialCross, terminalCross};
 }
 
 function getArrowPointsByEndpoints(desc)
