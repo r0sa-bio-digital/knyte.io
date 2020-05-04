@@ -460,7 +460,6 @@ const knoxelRect = new function()
       const shapes = createShapes(rects, arrows, type);
       for (let i = 0; i < shapes.length; ++i)
         rectGroup.appendChild(shapes[i]);
-      //updateArrowShapes(arrows);
       setTimeout(updateArrowShapes, 0, arrows);
       if (desc.ghost)
       {
@@ -1640,7 +1639,6 @@ function divideActiveBubble(desc)
   };
   divideKnoxel({dividedKnoxelId, hostKnoxelId: spaceRootElement.dataset.knoxelId, position});
   handleSpacemapChanged();
-  setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
 }
 
 function joinActiveBubble(desc)
