@@ -495,7 +495,7 @@ const knoxelRect = new function()
     const {w, h} = getFigureDimensions(knoxelId, knyteTrace);
     const x = position.x - w/2;
     const y = position.y - h/2;
-    const {x1, y1, x2, y2, x3, y3, initialCross, terminalCross} = computeArrowShape(
+    const {x1, y1, x2, y2, x3, y3} = computeArrowShape(
       w, h, x, y, knoxelId, hostKnyteId, visualTheme.arrow.strokeWidth);
     arrowShape.points.getItem(0).x = x1;
     arrowShape.points.getItem(0).y = y1;
@@ -503,9 +503,6 @@ const knoxelRect = new function()
     arrowShape.points.getItem(1).y = y2;
     arrowShape.points.getItem(2).x = x3;
     arrowShape.points.getItem(2).y = y3;
-    arrowShape.setAttribute('marker-start', initialCross ? 'url(#crossTail)' : 'url(#arrowTail)');
-    arrowShape.setAttribute('marker-end', terminalCross ? 'url(#crossHead)' : 'url(#arrowHead)');
-    
   }
   
   this.getSize = function(knoxelId)
@@ -718,18 +715,38 @@ function getArrowPointsByRects(desc)
   }
   
   const jointPosition = desc.arrowSpace[desc.jointKnoxelId];
-  const initialPosition = desc.initialKnoxelId ? desc.arrowSpace[desc.initialKnoxelId] : jointPosition;
-  const terminalPosition = desc.terminalKnoxelId ? desc.arrowSpace[desc.terminalKnoxelId] : jointPosition;
-  let x1 = initialPosition.x;
-  let y1 = initialPosition.y;
+  const initialPosition = desc.initialKnoxelId ? desc.arrowSpace[desc.initialKnoxelId] : undefined;
+  const terminalPosition = desc.terminalKnoxelId ? desc.arrowSpace[desc.terminalKnoxelId] : undefined;
+  let x1;
+  let y1;
   let x2 = jointPosition.x;
   let y2 = jointPosition.y;
-  let x3 = terminalPosition.x;
-  let y3 = terminalPosition.y;
-  if (!desc.initialKnoxelId || desc.initialKnoxelId === desc.jointKnoxelId)
-    x1 -= visualTheme.arrow.defaultLength/2;
+  let x3;
+  let y3;
+  let initialCross = false;
+  let terminalCross = false;
+  const jointElement = document.getElementById(desc.rectId);
+  const {w, h} = getBoundingClientDimension(jointElement);
+  if (desc.initialKnoxelId === desc.jointKnoxelId)
+  {
+    x1 = x2 - w/2 - visualTheme.arrow.defaultLength;
+    y1 = y2;
+  }
+  else if (!desc.initialKnoxelId)
+  {
+    x1 = x2 - visualTheme.arrow.defaultLength/2;
+    y1 = y2;
+  }
+  else if (!initialPosition)
+  {
+    x1 = x2 - w/2 - visualTheme.arrow.defaultLength;
+    y1 = y2;
+    initialCross = true;
+  }
   else
   {
+    x1 = initialPosition.x;
+    y1 = initialPosition.y;
     const direction = {
       x: initialPosition.x - jointPosition.x,
       y: initialPosition.y - jointPosition.y
@@ -758,10 +775,26 @@ function getArrowPointsByRects(desc)
       y1 -= ((1 - initialTime) * directionLength + initialStrokeOffset) * directionNormalised.y;
     }
   }
-  if (!desc.terminalKnoxelId || desc.terminalKnoxelId === desc.jointKnoxelId)
-    x3 += visualTheme.arrow.defaultLength/2;
+  if (desc.terminalKnoxelId === desc.jointKnoxelId)
+  {
+    x3 = x2 + w/2 + visualTheme.arrow.defaultLength;
+    y3 = y2;
+  }
+  else if (!desc.terminalKnoxelId)
+  {
+    x3 = x2 + visualTheme.arrow.defaultLength/2;
+    y3 = y2;
+  }
+  else if (!terminalPosition)
+  {
+    x3 = x2 + w/2 + visualTheme.arrow.defaultLength;
+    y3 = y2;
+    terminalCross = true;
+  }
   else
   {
+    x3 = terminalPosition.x;
+    y3 = terminalPosition.y;
     const direction = {
       x: terminalPosition.x - jointPosition.x,
       y: terminalPosition.y - jointPosition.y
@@ -791,15 +824,13 @@ function getArrowPointsByRects(desc)
     }
   }
   const {x, y} = jointPosition;
-  const jointElement = document.getElementById(desc.rectId);
-  const d = getBoundingClientDimension(jointElement);
-  x1 -= x - d.w/2;
-  y1 -= y - d.h/2;
-  x2 -= x - d.w/2;
-  y2 -= y - d.h/2;
-  x3 -= x - d.w/2;
-  y3 -= y - d.h/2;
-  return {x1, y1, x2, y2, x3, y3};
+  x1 -= x - w/2;
+  y1 -= y - h/2;
+  x2 -= x - w/2;
+  y2 -= y - h/2;
+  x3 -= x - w/2;
+  y3 -= y - h/2;
+  return {x1, y1, x2, y2, x3, y3, initialCross, terminalCross};
 }
 
 function getArrowPointsByKnoxels(desc)
