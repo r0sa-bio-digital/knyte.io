@@ -536,7 +536,7 @@ const knoxelRect = new function()
       rectShape.setAttribute('stroke-linecap', 'square');
       if (arrowShape)
       {
-        arrowShape.setAttribute('stroke-dasharray', '0 16');
+        arrowShape.setAttribute('stroke-dasharray', '0 8');
         arrowShape.setAttribute('stroke-linecap', 'square');
       }
     }
@@ -625,6 +625,34 @@ const knoxelArrow = new function()
     else
       console.error('failed moving for knoxelId ' + desc.element.id);
   };
+  this.setDotted = function(desc)
+  {
+    // desc: {knoxelId, isDotted}
+    let rectElement = document.getElementById(desc.knoxelId);
+    let arrowShape;
+    if (rectElement.tagName === 'g')
+    {
+      let shape = rectElement.firstElementChild;
+      while (shape)
+      {
+        if (shape.tagName === 'polyline' && !arrowShape)
+          arrowShape = shape;
+        shape = shape.nextElementSibling;
+      }
+    }
+    if (!arrowShape)
+      console.error('failed dotting for knoxelId ' + desc.knoxelId);
+    if (desc.isDotted)
+    {
+      arrowShape.setAttribute('stroke-dasharray', '0 8');
+      arrowShape.setAttribute('stroke-linecap', 'square');
+    }
+    else
+    {
+      arrowShape.removeAttribute('stroke-dasharray');
+      arrowShape.removeAttribute('stroke-linecap');
+    }
+  };
 }
 
 const recordViewers = new function()
@@ -639,6 +667,12 @@ const recordViewers = new function()
     return data;
   };
 };
+
+function setArrowGhostedMode(desc)
+{
+  // desc: {knoxelId, isGhosted}
+  knoxelArrow.setDotted({knoxelId: desc.knoxelId, isDotted: desc.isGhosted});
+}
 
 function setGhostedMode(desc)
 {
@@ -683,6 +717,8 @@ function setSpaceRootKnoxel(desc)
     knoxelRect.add({knoxelId, position, selfcontained});
     if (knoxelId === activeGhost.knoxelId)
       setGhostedMode({knoxelId, isGhosted: true});
+    if (knoxelId === activeInitialGhost.knoxelId || knoxelId === activeTerminalGhost.knoxelId)
+      setArrowGhostedMode({knoxelId, isGhosted: true});
   }
   // update all arrows of nested rects
   for (let knoxelId in nestedKnoxels)
@@ -1442,12 +1478,12 @@ function spawnInitialGhostArrow(desc)
   activeInitialGhost.spawnSpaceRootKnoxelId = desc.spawnSpaceRootKnoxelId;
   activeInitialGhost.hostKnyteId = getHostKnyteIdByKnoxelId(desc.knoxelId);
   activeInitialGhost.element = createActiveInitialArrow({knoxelId: desc.knoxelId, position: desc.position, initial: true});
-  const x = mouseMovePosition.x;
-  const y = mouseMovePosition.y;
+  setArrowGhostedMode({knoxelId: activeInitialGhost.knoxelId, isGhosted: true});
 }
 
 function terminateInitialGhostArrow()
 {
+  setArrowGhostedMode({knoxelId: activeInitialGhost.knoxelId, isGhosted: false});
   activeInitialGhost.element.remove();
   activeInitialGhost.knoxelId = null;
   activeInitialGhost.spawnSpaceRootKnoxelId = null;
@@ -1469,12 +1505,12 @@ function spawnTerminalGhostArrow(desc)
   activeTerminalGhost.spawnSpaceRootKnoxelId = desc.spawnSpaceRootKnoxelId;
   activeTerminalGhost.hostKnyteId = getHostKnyteIdByKnoxelId(desc.knoxelId);
   activeTerminalGhost.element = createActiveInitialArrow({knoxelId: desc.knoxelId, position: desc.position, terminal: true});
-  const x = mouseMovePosition.x;
-  const y = mouseMovePosition.y;
+  setArrowGhostedMode({knoxelId: activeTerminalGhost.knoxelId, isGhosted: true});
 }
 
 function terminateTerminalGhostArrow()
 {
+  setArrowGhostedMode({knoxelId: activeTerminalGhost.knoxelId, isGhosted: false});
   activeTerminalGhost.element.remove();
   activeTerminalGhost.knoxelId = null;
   activeTerminalGhost.spawnSpaceRootKnoxelId = null;
