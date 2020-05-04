@@ -118,7 +118,7 @@ const knoxelRect = new function()
     return {x1, y1, x2, y2, x3, y3, initialCross, terminalCross};
   }
   
-  function getFigureDimensions(knoxelId, knyteTrace)
+  function getFigureDimensions(knoxelId, knyteTrace, bubble)
   {
     const leftTop = {x: 0, y: 0};
     const knyteId = knoxels[knoxelId];
@@ -130,7 +130,7 @@ const knoxelRect = new function()
       type = 'spacemap';
     else if (knyteId in knyteTrace)
       type = 'selfviewed';
-    const isArrow = type === 'recursive' && (knoxelId in knoxelVectors) &&
+    const isArrow = type === 'recursive' && !bubble && (knoxelId in knoxelVectors) &&
       (knoxelVectors[knoxelId].initialKnoxelId || knoxelVectors[knoxelId].terminalKnoxelId);
     let w = isArrow ? visualTheme.arrow.defaultWidth : visualTheme.rect.defaultWidth;
     let h = isArrow ? visualTheme.arrow.defaultHeight : visualTheme.rect.defaultHeight;
@@ -394,7 +394,7 @@ const knoxelRect = new function()
       const knyteTrace = {};
       const hostKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
       knyteTrace[hostKnyteId] = true;
-      const {w, h, rects, arrows, type} = getFigureDimensions(desc.knoxelId, knyteTrace);
+      const {w, h, rects, arrows, type} = getFigureDimensions(desc.knoxelId, knyteTrace, desc.bubble);
       const x = desc.position.x - w/2;
       const y = desc.position.y - h/2;
       const rectGroup = document.createElementNS(svgNameSpace, 'g');
@@ -1445,7 +1445,7 @@ function spawnBubbleRect(desc)
     const y = mouseMovePosition.y + activeBubble.offset.y;
     knoxelRect.moveElement({element: activeBubble.element, x, y});
   }
-  setBubbledMode({knoxelId: desc.knoxelId, knyteId, isBubbled: true});
+  setBubbledMode({knoxelId: activeBubble.knoxelId, knyteId, isBubbled: true});
 }
 
 function terminateBubbleRect()
@@ -1641,6 +1641,8 @@ function divideActiveBubble(desc)
     y: desc.position.y + activeBubble.offset.y
   };
   divideKnoxel({dividedKnoxelId, hostKnoxelId: spaceRootElement.dataset.knoxelId, position});
+  const knyteId = knoxels[activeBubble.knoxelId];
+  setBubbledMode({knoxelId: activeBubble.knoxelId, knyteId, isBubbled: true});
   handleSpacemapChanged();
 }
 
