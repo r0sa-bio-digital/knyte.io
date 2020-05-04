@@ -1652,7 +1652,7 @@ function onKeyDownWindow(e)
       terminateBubbleRect();
     if (activeInitialGhost.knoxelId)
       terminateInitialGhostArrow();
-    if (activeTerminalGhost)
+    if (activeTerminalGhost.knoxelId)
       terminateTerminalGhostArrow();
     setNavigationControlState({
       backKnoxelId: spaceBackStack[spaceBackStack.length - 1],
@@ -1822,9 +1822,12 @@ function onKeyDownWindow(e)
       const position = mouseMovePosition;
       if (!activeInitialGhost.knoxelId)
       {
-        let knoxelId = mouseoverKnoxelId;
-        const spawnSpaceRootKnoxelId = spaceRootElement.dataset.knoxelId;
-        spawnInitialGhostArrow({knoxelId, spawnSpaceRootKnoxelId, position});
+        if (mouseoverKnoxelId)
+        {
+          let knoxelId = mouseoverKnoxelId;
+          const spawnSpaceRootKnoxelId = spaceRootElement.dataset.knoxelId;
+          spawnInitialGhostArrow({knoxelId, spawnSpaceRootKnoxelId, position});
+        }
       }
       else
       {
@@ -1849,9 +1852,12 @@ function onKeyDownWindow(e)
       const position = mouseMovePosition;
       if (!activeTerminalGhost.knoxelId)
       {
-        let knoxelId = mouseoverKnoxelId;
-        const spawnSpaceRootKnoxelId = spaceRootElement.dataset.knoxelId;
-        spawnTerminalGhostArrow({knoxelId, spawnSpaceRootKnoxelId, position});
+        if (mouseoverKnoxelId)
+        {
+          let knoxelId = mouseoverKnoxelId;
+          const spawnSpaceRootKnoxelId = spaceRootElement.dataset.knoxelId;
+          spawnTerminalGhostArrow({knoxelId, spawnSpaceRootKnoxelId, position});
+        }
       }
       else
       {

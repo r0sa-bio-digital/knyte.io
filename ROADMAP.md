@@ -556,8 +556,8 @@
               * вторая версия на специальных объектах: initial ghost, terminal ghost
                 * базовый функционал
                 * dotted для arrow изменяемого knoxel'я
-                * `selfcontained`
-                * interspace
+                * selfcontained - отключить, так как связи неограниченного с ограниченным не имеют смысла
+                * `interspace`
           * уменьшение rect'а, если у knoxel'я указаны параметры vector'а, но при этом у его knyte'а не задан record
             * возможно, 32х32 --> 8х8
           * багфикс - ошибка при divide'е knoxel'я со связями в innerspace
