@@ -808,8 +808,10 @@ function getArrowPointsByKnoxels(desc)
   let y2 = jointPosition.y;
   let x3 = terminalPosition.x;
   let y3 = terminalPosition.y;
-  if (!desc.initialKnoxelId || desc.initialKnoxelId === desc.jointKnoxelId)
+  if (!desc.initialKnoxelId)
     x1 -= visualTheme.arrow.defaultLength/2;
+  else if (desc.initialKnoxelId === desc.jointKnoxelId)
+    x1 -= desc.w/2 + visualTheme.arrow.defaultLength;
   else
   {
     const direction = {
@@ -840,8 +842,10 @@ function getArrowPointsByKnoxels(desc)
       y1 -= ((1 - initialTime) * directionLength + initialStrokeOffset) * directionNormalised.y;
     }
   }
-  if (!desc.terminalKnoxelId || desc.terminalKnoxelId === desc.jointKnoxelId)
+  if (!desc.terminalKnoxelId)
     x3 += visualTheme.arrow.defaultLength/2;
+  else if (desc.terminalKnoxelId === desc.jointKnoxelId)
+    x3 += desc.w/2 + visualTheme.arrow.defaultLength;
   else
   {
     const direction = {
