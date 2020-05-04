@@ -499,8 +499,8 @@ const knoxelRect = new function()
     const hostKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
     knyteTrace[hostKnyteId] = true;
     const {w, h} = getFigureDimensions(knoxelId, knyteTrace);
-    const x = position.x - w/2;
-    const y = position.y - h/2;
+    const x = position.x;// - w/2;
+    const y = position.y;// - h/2;
     const {x1, y1, x2, y2, x3, y3} = computeArrowShape(
       w, h, x, y, knoxelId, hostKnyteId, visualTheme.arrow.strokeWidth);
     arrowShape.points.getItem(0).x = x1;
@@ -900,7 +900,7 @@ function getArrowPointsByRects(desc)
 function getArrowPointsByKnoxels(desc)
 {
   // desc: {arrowSpace, jointKnoxelId, initialKnoxelId, terminalKnoxelId, w, h, arrowStrokeWidth}
-  const jointPosition = {x: desc.x, y: desc.y}; //desc.arrowSpace[desc.jointKnoxelId];
+  const jointPosition = {x: desc.x, y: desc.y};
   const initialPosition = desc.initialKnoxelId ? desc.arrowSpace[desc.initialKnoxelId] : undefined;
   const terminalPosition = desc.terminalKnoxelId ? desc.arrowSpace[desc.terminalKnoxelId] : undefined;
   let x1;
@@ -1401,6 +1401,7 @@ function spawnGhostRect(desc)
     const x = mouseMovePosition.x + activeGhost.offset.x;
     const y = mouseMovePosition.y + activeGhost.offset.y;
     knoxelRect.moveElement({element: activeGhost.element, x, y});
+    knoxelRect.updateArrowShape(activeGhost.knoxelId, {x, y}, true);
     setGhostedMode({knoxelId: desc.knoxelId, isGhosted: true});
   }
 }
