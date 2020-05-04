@@ -616,9 +616,16 @@ const knoxelArrow = new function()
 {
   this.moveElement = function(desc)
   {
-    // desc: {element, x, y}
+    // desc: {knoxelId, element, x, y}
     if (desc.element.tagName === 'line')
     {
+      const spaceRootKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
+      const space = informationMap[spaceRootKnyteId].space;
+      if (!(desc.knoxelId in space))
+      {
+        desc.element.setAttribute('x1', desc.x + visualTheme.arrow.defaultLength);
+        desc.element.setAttribute('y1', desc.y);
+      }
       desc.element.setAttribute('x2', desc.x);
       desc.element.setAttribute('y2', desc.y);
     }
@@ -1343,6 +1350,18 @@ function refreshActiveRect(desc)
     activeBubble.element = createActiveRect({knoxelId: activeBubble.knoxelId, position: desc.position, bubble: true});
     activeBubble.offset = {x: 0, y: 0};
   }
+  if (activeInitialGhost.knoxelId)
+  {
+    activeInitialGhost.element.remove();
+    activeInitialGhost.element = createActiveArrow(
+      {knoxelId: activeInitialGhost.knoxelId, position: desc.position, initial: true});
+  }
+  if (activeTerminalGhost.knoxelId)
+  {
+    activeTerminalGhost.element.remove();
+    activeTerminalGhost.element = createActiveArrow(
+      {knoxelId: activeTerminalGhost.knoxelId, position: desc.position, terminal: true});
+  }
 }
 
 const activeGhost = {
@@ -1433,7 +1452,7 @@ function terminateBubbleRect()
   activeBubble.element = null;
 }
 
-function createActiveInitialArrow(desc)
+function createActiveArrow(desc)
 {
   // desc: {knoxelId, position, initial, terminal}
   const arrow = document.createElementNS(svgNameSpace, 'line');
@@ -1457,7 +1476,7 @@ function createActiveInitialArrow(desc)
   arrow.setAttribute('stroke', visualTheme.arrow.strokeColor);
   arrow.setAttribute('stroke-width', visualTheme.arrow.strokeWidth);
   if (desc.initial)
-    arrow.setAttribute('marker-end', cross ? 'url(#crossTail)' : 'url(#arrowTail)');
+    arrow.setAttribute(cross ? 'marker-start' : 'marker-end', cross ? 'url(#crossTail)' : 'url(#arrowTail)');
   else if (desc.terminal)
     arrow.setAttribute('marker-end', cross ? 'url(#crossHead)' : 'url(#arrowHead)');
   document.getElementById('arrowGhosts').appendChild(arrow);
@@ -1477,13 +1496,15 @@ function spawnInitialGhostArrow(desc)
   activeInitialGhost.knoxelId = desc.knoxelId;
   activeInitialGhost.spawnSpaceRootKnoxelId = desc.spawnSpaceRootKnoxelId;
   activeInitialGhost.hostKnyteId = getHostKnyteIdByKnoxelId(desc.knoxelId);
-  activeInitialGhost.element = createActiveInitialArrow({knoxelId: desc.knoxelId, position: desc.position, initial: true});
+  activeInitialGhost.element = createActiveArrow({knoxelId: desc.knoxelId, position: desc.position, initial: true});
   setArrowGhostedMode({knoxelId: activeInitialGhost.knoxelId, isGhosted: true});
 }
 
 function terminateInitialGhostArrow()
 {
-  setArrowGhostedMode({knoxelId: activeInitialGhost.knoxelId, isGhosted: false});
+  const knyteId = knoxels[spaceRootElement.dataset.knoxelId];
+  if (activeInitialGhost.knoxelId in informationMap[knyteId].space)
+    setArrowGhostedMode({knoxelId: activeInitialGhost.knoxelId, isGhosted: false});
   activeInitialGhost.element.remove();
   activeInitialGhost.knoxelId = null;
   activeInitialGhost.spawnSpaceRootKnoxelId = null;
@@ -1504,13 +1525,15 @@ function spawnTerminalGhostArrow(desc)
   activeTerminalGhost.knoxelId = desc.knoxelId;
   activeTerminalGhost.spawnSpaceRootKnoxelId = desc.spawnSpaceRootKnoxelId;
   activeTerminalGhost.hostKnyteId = getHostKnyteIdByKnoxelId(desc.knoxelId);
-  activeTerminalGhost.element = createActiveInitialArrow({knoxelId: desc.knoxelId, position: desc.position, terminal: true});
+  activeTerminalGhost.element = createActiveArrow({knoxelId: desc.knoxelId, position: desc.position, terminal: true});
   setArrowGhostedMode({knoxelId: activeTerminalGhost.knoxelId, isGhosted: true});
 }
 
 function terminateTerminalGhostArrow()
 {
-  setArrowGhostedMode({knoxelId: activeTerminalGhost.knoxelId, isGhosted: false});
+  const knyteId = knoxels[spaceRootElement.dataset.knoxelId];
+  if (activeTerminalGhost.knoxelId in informationMap[knyteId].space)
+    setArrowGhostedMode({knoxelId: activeTerminalGhost.knoxelId, isGhosted: false});
   activeTerminalGhost.element.remove();
   activeTerminalGhost.knoxelId = null;
   activeTerminalGhost.spawnSpaceRootKnoxelId = null;
@@ -1544,12 +1567,12 @@ function onMouseMoveSpaceRoot(e)
   if (activeInitialGhost.knoxelId)
   {
     const {x, y} = mouseMovePosition;
-    knoxelArrow.moveElement({element: activeInitialGhost.element, x, y});
+    knoxelArrow.moveElement({knoxelId: activeInitialGhost.knoxelId, element: activeInitialGhost.element, x, y});
   }
   if (activeTerminalGhost.knoxelId)
   {
     const {x, y} = mouseMovePosition;
-    knoxelArrow.moveElement({element: activeTerminalGhost.element, x, y});
+    knoxelArrow.moveElement({knoxelId: activeTerminalGhost.knoxelId, element: activeTerminalGhost.element, x, y});
   }
 }
 
