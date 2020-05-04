@@ -40,6 +40,8 @@ const visualTheme = {
       strokeWidth: 2
     },
     defaultLength: 12,
+    defaultWidth: 10,
+    defaultHeight: 10,
   },
   navigation: {
     strokeColor: visualThemeColors.control,
@@ -118,8 +120,10 @@ const knoxelRect = new function()
   
   function getFigureDimensions(knoxelId, knyteTrace)
   {
-    let w = visualTheme.rect.defaultWidth;
-    let h = visualTheme.rect.defaultHeight;
+    const isArrow = (knoxelId in knoxelVectors) &&
+      (knoxelVectors[knoxelId].initialKnoxelId || knoxelVectors[knoxelId].terminalKnoxelId);
+    let w = isArrow ? visualTheme.arrow.defaultWidth : visualTheme.rect.defaultWidth;
+    let h = isArrow ? visualTheme.arrow.defaultHeight : visualTheme.rect.defaultHeight;
     const leftTop = {x: 0, y: 0};
     const knyteId = knoxels[knoxelId];
     const rects = [];
