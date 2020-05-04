@@ -113,7 +113,7 @@ const knoxelRect = new function()
     const l = visualTheme.arrow.defaultLength;
     const {x1, y1, x2, y2, x3, y3, initialCross, terminalCross} = endpoints
       ? getArrowPointsByKnoxels({arrowSpace: hostSpace, jointKnoxelId: knoxelId,
-        initialKnoxelId: endpoints.initialKnoxelId, terminalKnoxelId: endpoints.terminalKnoxelId, w, h, arrowStrokeWidth})
+        initialKnoxelId: endpoints.initialKnoxelId, terminalKnoxelId: endpoints.terminalKnoxelId, x, y, w, h, arrowStrokeWidth})
       : {x1: (w - l)/2, y1: h/2, x2: w/2, y2: h/2, x3: (w + l)/2, y3: h/2, initialCross: false, terminalCross: false};
     return {x1, y1, x2, y2, x3, y3, initialCross, terminalCross};
   }
@@ -401,13 +401,15 @@ const knoxelRect = new function()
       rectGroup.id = desc.knoxelId;
       rectGroup.classList.value = 'mouseOverRect';
       rectGroup.setAttribute('transform', 'translate(' + x + ' ' + y + ')');
-      if (!desc.ghost && !desc.bubble)
+      if (!desc.bubble)
       {
         const {x1, y1, x2, y2, x3, y3, initialCross, terminalCross} = computeArrowShape(
           w, h, x, y, desc.knoxelId, hostKnyteId, visualTheme.arrow.strokeWidth);
         const arrowRoot = createArrowShape({x1, y1, x2, y2, x3, y3, initialCross, terminalCross, 
           strokeWidth: visualTheme.arrow.strokeWidth});
         arrowRoot.id = desc.knoxelId + '.arrow';
+        if (desc.ghost)
+          arrowRoot.id += '.ghost';
         rectGroup.appendChild(arrowRoot); // TODO: hide arrow if useless for visualisation
       }
       const rectRoot = createRectShape({w, h, color, strokeWidth: visualTheme.rect.strokeWidth});
@@ -488,9 +490,10 @@ const knoxelRect = new function()
     return createFigure(desc);
   };
   
-  this.updateArrowShape = function(knoxelId, position)
+  this.updateArrowShape = function(knoxelId, position, ghost)
   {
-    const arrowShape = document.getElementById(knoxelId + '.arrow');
+    const postfix = '.arrow' + (ghost ? '.ghost' : '');
+    const arrowShape = document.getElementById(knoxelId + postfix);
     const knyteId = knoxels[knoxelId];
     const knyteTrace = {};
     const hostKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
@@ -897,7 +900,7 @@ function getArrowPointsByRects(desc)
 function getArrowPointsByKnoxels(desc)
 {
   // desc: {arrowSpace, jointKnoxelId, initialKnoxelId, terminalKnoxelId, w, h, arrowStrokeWidth}
-  const jointPosition = desc.arrowSpace[desc.jointKnoxelId];
+  const jointPosition = {x: desc.x, y: desc.y}; //desc.arrowSpace[desc.jointKnoxelId];
   const initialPosition = desc.initialKnoxelId ? desc.arrowSpace[desc.initialKnoxelId] : undefined;
   const terminalPosition = desc.terminalKnoxelId ? desc.arrowSpace[desc.terminalKnoxelId] : undefined;
   let x1;
@@ -1560,6 +1563,7 @@ function onMouseMoveSpaceRoot(e)
     const x = mouseMovePosition.x + activeGhost.offset.x;
     const y = mouseMovePosition.y + activeGhost.offset.y;
     knoxelRect.moveElement({element: activeGhost.element, x, y});
+    knoxelRect.updateArrowShape(activeGhost.knoxelId, {x, y}, true);
   }
   if (activeBubble.knoxelId)
   {
