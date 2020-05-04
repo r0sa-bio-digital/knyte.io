@@ -120,10 +120,6 @@ const knoxelRect = new function()
   
   function getFigureDimensions(knoxelId, knyteTrace)
   {
-    const isArrow = (knoxelId in knoxelVectors) &&
-      (knoxelVectors[knoxelId].initialKnoxelId || knoxelVectors[knoxelId].terminalKnoxelId);
-    let w = isArrow ? visualTheme.arrow.defaultWidth : visualTheme.rect.defaultWidth;
-    let h = isArrow ? visualTheme.arrow.defaultHeight : visualTheme.rect.defaultHeight;
     const leftTop = {x: 0, y: 0};
     const knyteId = knoxels[knoxelId];
     const rects = [];
@@ -134,6 +130,10 @@ const knoxelRect = new function()
       type = 'spacemap';
     else if (knyteId in knyteTrace)
       type = 'selfviewed';
+    const isArrow = type === 'recursive' && (knoxelId in knoxelVectors) &&
+      (knoxelVectors[knoxelId].initialKnoxelId || knoxelVectors[knoxelId].terminalKnoxelId);
+    let w = isArrow ? visualTheme.arrow.defaultWidth : visualTheme.rect.defaultWidth;
+    let h = isArrow ? visualTheme.arrow.defaultHeight : visualTheme.rect.defaultHeight;
     if (type === 'recursive')
     {
       const {size, space} = informationMap[knyteId];
@@ -499,10 +499,8 @@ const knoxelRect = new function()
     const hostKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
     knyteTrace[hostKnyteId] = true;
     const {w, h} = getFigureDimensions(knoxelId, knyteTrace);
-    const x = position.x;// - w/2;
-    const y = position.y;// - h/2;
     const {x1, y1, x2, y2, x3, y3} = computeArrowShape(
-      w, h, x, y, knoxelId, hostKnyteId, visualTheme.arrow.strokeWidth);
+      w, h, position.x, position.y, knoxelId, hostKnyteId, visualTheme.arrow.strokeWidth);
     arrowShape.points.getItem(0).x = x1;
     arrowShape.points.getItem(0).y = y1;
     arrowShape.points.getItem(1).x = x2;
