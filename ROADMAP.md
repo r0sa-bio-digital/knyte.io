@@ -550,9 +550,10 @@
               * разрулить ситуации частичного и полного замыкания связи на саму себя
                 * когда initialKnoxelId и/или terminalKnoxelId равны jointKnoxelId
               * разрулить ситуацию, когда указанный initialKnoxelId/terminalKnoxelId не найден в текущем space'е
-              * `поправить определение размеров для self-connected arrows и broken arrows`
+              * поправить определение размеров для self-connected arrows и broken arrows
                 * выступающие части стрелок не учитываются в размере и в итоге могут вылазить за гарницы пространства
-              * вторая версия на специальных объектах: initial ghost, terminal ghost
+                  * в итоге сделал метки спец-knoxel'ей поменьше, чтобы они влазили в стандартную обводку вокруг rect'ов
+              * `вторая версия на специальных объектах: initial ghost, terminal ghost`
           * уменьшение rect'а, если у knoxel'я указаны параметры vector'а, но при этом у его knyte'а не задан record
             * возможно, 32х32 --> 8х8
           * багфикс - ошибка при divide'е knoxel'я со связями в innerspace

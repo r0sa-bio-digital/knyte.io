@@ -39,7 +39,7 @@ const visualTheme = {
     recursive: {
       strokeWidth: 2
     },
-    defaultLength: 20,
+    defaultLength: 12,
   },
   navigation: {
     strokeColor: visualThemeColors.control,
@@ -965,8 +965,8 @@ function getArrowPointsByEndpoints(desc)
   let y2 = terminalPosition.y;
   if (desc.initialKnoxelId === desc.terminalKnoxelId)
   {
-    x1 -= visualTheme.arrow.defaultLength/2;
-    x2 += visualTheme.arrow.defaultLength/2;
+    x1 -= visualTheme.arrow.defaultLength;
+    x2 += visualTheme.arrow.defaultLength;
   }
   else
   {
