@@ -591,8 +591,8 @@
       * команда соединания knyte'ов vector'ом
       * наложение ограничений на соединение knoxel'ей vector'ами с учётом структуры knyteVectors
       * реализовать все вариации knoxel vector'ов на уровне интерфейса в соединении с knyte'ами
-        * `привязка knyte vector'ов к initial ghost, initial ghost`
-        * режимы initial bubble, terminal bubble на кнопках KeyN, KeyM соответственно
+        * привязка knyte vector'ов к initial ghost, initial ghost
+        * `режимы initial bubble, terminal bubble на кнопках KeyN, KeyM соответственно`
         * привязка knyte vector'ов к initial bubble, initial bubble
     * подумать что делать со связями и особыми стрелками в spacemap-knoxel'е
     * подумать как делать назначение разных цветов стрелкам
