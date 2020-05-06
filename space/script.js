@@ -1176,6 +1176,16 @@ function assignKnyteVectorTerminal(desc)
 function assignKnoxelVectorInitial(desc)
 {
   // desc: {jointKnoxelId, initialKnoxelId}
+  if (desc.initialKnoxelId)
+  {
+    const jointKnyteId = knoxels[desc.jointKnoxelId];
+    const initialKnyteId = knoxels[desc.initialKnoxelId];
+    if (!knyteVectors[jointKnyteId] || knyteVectors[jointKnyteId].initialKnyteId !== initialKnyteId)
+    {
+      console.error('knoxels knyteVectors must match: ' + desc.jointKnoxelId + ', ' + desc.initialKnoxelId);
+      return;
+    }
+  }
   if (!(desc.jointKnoxelId in knoxelVectors))
     knoxelVectors[desc.jointKnoxelId] = {};
   if (desc.initialKnoxelId)
@@ -1187,6 +1197,16 @@ function assignKnoxelVectorInitial(desc)
 function assignKnoxelVectorTerminal(desc)
 {
   // desc: {jointKnoxelId, terminalKnoxelId}
+  if (desc.terminalKnoxelId)
+  {
+    const jointKnyteId = knoxels[desc.jointKnoxelId];
+    const terminalKnyteId = knoxels[desc.terminalKnoxelId];
+    if (!knyteVectors[jointKnyteId] || knyteVectors[jointKnyteId].terminalKnyteId !== terminalKnyteId)
+    {
+      console.error('knoxels knyteVectors must match: ' + desc.jointKnoxelId + ', ' + desc.terminalKnoxelId);
+      return;
+    }
+  }
   if (!(desc.jointKnoxelId in knoxelVectors))
     knoxelVectors[desc.jointKnoxelId] = {};
   if (desc.terminalKnoxelId)
@@ -1198,6 +1218,11 @@ function assignKnoxelVectorTerminal(desc)
 function replaceKnoxelInVector(desc)
 {
   // desc: {removeKnoxelId, stayKnoxelId}
+  if (knoxels[desc.removeKnoxelId] !== knoxels[desc.stayKnoxelId])
+  {
+    console.error('knoxels knytes must match: ' + desc.removeKnoxelId + ', ' + desc.stayKnoxelId);
+    return;
+  }
   for (let knoxelId in knoxelVectors)
   {
     const endpoints = knoxelVectors[knoxelId];
