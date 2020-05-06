@@ -692,6 +692,27 @@ function setGhostedMode(desc)
   knoxelRect.setDotted({knoxelId: desc.knoxelId, isDotted: desc.isGhosted});
 }
 
+function setArrowBubbledMode(desc)
+{
+  // desc: {knoxelId, initial, terminal, isBubbled}
+  const jointKnyteId = knoxels[desc.knoxelId];
+  const endpoints = knyteVectors[jointKnyteId];
+  if (!endpoints)
+    return;
+  const spaceRootKnoxels = document.getElementById('knoxels');
+  let knoxelElement = spaceRootKnoxels.firstElementChild;
+  while (knoxelElement)
+  {
+    const knoxelId = knoxelElement.id;
+    const knyteId = knoxels[knoxelId];
+    if (desc.initial && endpoints.initialKnyteId === knyteId)
+      knoxelRect.setDotted({knoxelId, isDotted: desc.isBubbled});
+    if (desc.terminal && endpoints.terminalKnyteId === knyteId)
+      knoxelRect.setDotted({knoxelId, isDotted: desc.isBubbled});
+    knoxelElement = knoxelElement.nextElementSibling;
+  }
+}
+
 function setBubbledMode(desc)
 {
   // desc: {knoxelId, knyteId, isBubbled}
@@ -731,7 +752,6 @@ function setSpaceRootKnoxel(desc)
       setGhostedMode({knoxelId, isGhosted: true});
     if (knoxelId === activeInitialGhost.knoxelId || knoxelId === activeTerminalGhost.knoxelId)
       setArrowGhostedMode({knoxelId, isGhosted: true});
-    // TODO: implement arrow bubble mode here
   }
   // update all arrows of nested rects
   for (let knoxelId in nestedKnoxels)
@@ -740,7 +760,12 @@ function setSpaceRootKnoxel(desc)
     knoxelRect.updateArrowShape(knoxelId, position);
   }
   // restore bubble-mode view
-  setBubbledMode({knoxelId: activeBubble.knoxelId, knyteId: knoxels[activeBubble.knoxelId], isBubbled: true});
+  if (activeBubble.knoxelId)
+    setBubbledMode({knoxelId: activeBubble.knoxelId, knyteId: knoxels[activeBubble.knoxelId], isBubbled: true});
+  if (activeInitialBubble.knoxelId)
+    setArrowBubbledMode({knoxelId: activeInitialBubble.knoxelId, initial: true, isBubbled: true});
+  if (activeTerminalBubble.knoxelId)
+    setArrowBubbledMode({knoxelId: activeTerminalBubble.knoxelId, terminal: true, isBubbled: true});
   // control arrows display
   const arrowsElement = document.getElementById('arrows');
   if (newKnyteId === knoxels[spacemapKnoxelId])
@@ -1690,17 +1715,14 @@ function spawnInitialBubbleArrow(desc)
   activeInitialBubble.spawnSpaceRootKnoxelId = desc.spawnSpaceRootKnoxelId;
   activeInitialBubble.hostKnyteId = getHostKnyteIdByKnoxelId(desc.knoxelId);
   activeInitialBubble.element = createActiveArrow({knoxelId: desc.knoxelId, position: desc.position, initial: true, bubble: true});
-  //setArrowGhostedMode({knoxelId: activeInitialBubble.knoxelId, isGhosted: true});
-  // TODO: implement arrow bubble mode here
+  setArrowBubbledMode({knoxelId: activeInitialBubble.knoxelId, initial: true, isBubbled: true});
 }
 
 function terminateInitialBubbleArrow()
 {
   const knyteId = knoxels[spaceRootElement.dataset.knoxelId];
-  //if (activeInitialBubble.knoxelId in informationMap[knyteId].space)
-  //  setArrowGhostedMode({knoxelId: activeInitialBubble.knoxelId, isGhosted: false});
-  // TODO: implement arrow bubble mode here
   activeInitialBubble.element.remove();
+  setArrowBubbledMode({knoxelId: activeInitialBubble.knoxelId, initial: true, isBubbled: false});
   activeInitialBubble.knoxelId = null;
   activeInitialBubble.spawnSpaceRootKnoxelId = null;
   activeInitialBubble.hostKnyteId = null;
@@ -1721,17 +1743,14 @@ function spawnTerminalBubbleArrow(desc)
   activeTerminalBubble.spawnSpaceRootKnoxelId = desc.spawnSpaceRootKnoxelId;
   activeTerminalBubble.hostKnyteId = getHostKnyteIdByKnoxelId(desc.knoxelId);
   activeTerminalBubble.element = createActiveArrow({knoxelId: desc.knoxelId, position: desc.position, terminal: true, bubble: true});
-  //setArrowGhostedMode({knoxelId: activeTerminalBubble.knoxelId, isGhosted: true});
-  // TODO: implement arrow bubble mode here
+  setArrowBubbledMode({knoxelId: activeTerminalBubble.knoxelId, terminal: true, isBubbled: true});
 }
 
 function terminateTerminalBubbleArrow()
 {
   const knyteId = knoxels[spaceRootElement.dataset.knoxelId];
-  //if (activeTerminalBubble.knoxelId in informationMap[knyteId].space)
-  //  setArrowGhostedMode({knoxelId: activeTerminalBubble.knoxelId, isGhosted: false});
-  // TODO: implement arrow bubble mode here
   activeTerminalBubble.element.remove();
+  setArrowBubbledMode({knoxelId: activeTerminalBubble.knoxelId, terminal: true, isBubbled: false});
   activeTerminalBubble.knoxelId = null;
   activeTerminalBubble.spawnSpaceRootKnoxelId = null;
   activeTerminalBubble.hostKnyteId = null;
