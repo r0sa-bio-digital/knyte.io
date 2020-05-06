@@ -11,6 +11,7 @@ let spacemapKnoxelId;
 let handleSpacemapChanged = function() {};
 const knytesCloud = {}; // core knyte id --> {initialKnyteId, terminalKnyteId}
 const knoxelVectors = {}; // knoxel id --> {initialKnoxelId, terminalKnoxelId}
+const knyteVectors = {}; // knyte id --> {initialKnyteId, terminalKnyteId}
 const informationMap = {}; // knyte id --> {color, space: {knoxel id --> position}, record: {data, viewer}, size}
 const knoxels = {}; // knoxel id --> knyte id
 const arrows = {}; // arrow id --> {initialKnoxelId, terminalKnoxelId}
@@ -1148,6 +1149,28 @@ function divideKnoxel(desc)
   // desc: {dividedKnoxelId, hostKnoxelId, position}
   const knyteId = knoxels[desc.dividedKnoxelId];
   addKnoxelRect({knyteId, hostKnoxelId: desc.hostKnoxelId, position: desc.position});
+}
+
+function assignKnyteVectorInitial(desc)
+{
+  // desc: {jointKnyteId, initialKnyteId}
+  if (!(desc.jointKnyteId in knyteVectors))
+    knyteVectors[desc.jointKnyteId] = {};
+  if (desc.initialKnyteId)
+    knyteVectors[desc.jointKnyteId].initialKnyteId = desc.initialKnyteId;
+  else
+    delete knyteVectors[desc.jointKnyteId].initialKnyteId;
+}
+
+function assignKnyteVectorTerminal(desc)
+{
+  // desc: {jointKnyteId, terminalKnyteId}
+  if (!(desc.jointKnyteId in knyteVectors))
+    knyteVectors[desc.jointKnyteId] = {};
+  if (desc.terminalKnyteId)
+    knyteVectors[desc.jointKnyteId].terminalKnyteId = desc.terminalKnyteId;
+  else
+    delete knyteVectors[desc.jointKnyteId].terminalKnyteId;
 }
 
 function assignKnoxelVectorInitial(desc)
