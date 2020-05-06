@@ -39,11 +39,27 @@
       * без ghost'а - создать ghost для выбранного knoxel'я
         * пространство - это тоже knoxel. ghost существует в screenspace'e и привязан к курсору.
       * c ghost'ом - переместить ghost knoxel в выбранную позицию выбранного пространства
+    * z
+      * без ghost'а - начать создание/изменение initial-части vector'а между knyte'ами
+      * c ghost'ом на другом knoxel'е - назначить knyte этого knoxel'я как initial для ghosted knyte'а
+      * c ghost'ом на пустом месте - сбросить initial для ghosted knyte'а
+    * x
+      * без ghost'а - начать создание/изменение terminal-части vector'а между knyte'ами
+      * c ghost'ом на другом knoxel'е - назначить knyte этого knoxel'я как terminal для ghosted knyte'а
+      * c ghost'ом на пустом месте - сбросить terminal для ghosted knyte'а
     * b
       * без bubble'а - создать bubble для выбранного knoxel'я
         * пространство - это тоже knoxel. bubble существует в screenspace'e и привязан к курсору.
       * с bubble'ом на knoxel'е того же knyte'а - объединить 2 knoxel'я в 1
       * с bubble'ом в другом месте - создать ещё 1 knoxel для выбранного knyte'а
+    * n
+      * без bubble'а - начать создание/изменение initial-части vector'а между knoxel'ями
+      * с bubble'ом на knoxel'е того же knyte'а - назначить knoxel как initial для bubbled knoxel'я
+      * с bubble'ом в другом месте - сбросить initial для ghosted knoxel'я
+    * m
+      * без bubble'а - начать создание/изменение terminal-части vector'а между knoxel'ями
+      * с bubble'ом на knoxel'е того же knyte'а - назначить knoxel как terminal для bubbled knoxel'я
+      * с bubble'ом в другом месте - сбросить terminal для ghosted knoxel'я
     * enter
       * в режиме пространства - вызвать редактор information record'а для knoxel'я под курсором
       * в режиме редактора - установить внесённые изменения
