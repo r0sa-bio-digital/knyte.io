@@ -1857,11 +1857,11 @@ function initialConnectBubbleRect(desc)
 {
   // desc: {droppedKnoxelId, connectingKnoxelId}
   const jointKnoxelId = desc.droppedKnoxelId;
-  const initialKnoxelId = desc.connectingKnoxelId;
+  let initialKnoxelId = desc.connectingKnoxelId;
   const jointKnyteId = knoxels[jointKnoxelId];
   const initialKnyteId = knoxels[initialKnoxelId];
   if (initialKnoxelId && knyteVectors[jointKnyteId].initialKnyteId !== initialKnyteId)
-    return;
+    initialKnoxelId = undefined;
   assignKnoxelVectorInitial({jointKnoxelId, initialKnoxelId})
   setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
   handleSpacemapChanged();
@@ -1871,11 +1871,11 @@ function terminalConnectBubbleRect(desc)
 {
   // desc: {droppedKnoxelId, connectingKnoxelId}
   const jointKnoxelId = desc.droppedKnoxelId;
-  const terminalKnoxelId = desc.connectingKnoxelId;
+  let terminalKnoxelId = desc.connectingKnoxelId;
   const jointKnyteId = knoxels[jointKnoxelId];
   const terminalKnyteId = knoxels[terminalKnoxelId];
   if (terminalKnoxelId && knyteVectors[jointKnyteId].terminalKnyteId !== terminalKnyteId)
-    return;
+    terminalKnoxelId = undefined;
   assignKnoxelVectorTerminal({jointKnoxelId, terminalKnoxelId});
   setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
   handleSpacemapChanged();
