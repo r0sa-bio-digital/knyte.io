@@ -1853,6 +1853,34 @@ function terminalConnectGhostRect(desc)
   handleSpacemapChanged();
 }
 
+function initialConnectBubbleRect(desc)
+{
+  // desc: {droppedKnoxelId, connectingKnoxelId}
+  const jointKnoxelId = desc.droppedKnoxelId;
+  const initialKnoxelId = desc.connectingKnoxelId;
+  const jointKnyteId = knoxels[jointKnoxelId];
+  const initialKnyteId = knoxels[initialKnoxelId];
+  if (initialKnoxelId && knyteVectors[jointKnyteId].initialKnyteId !== initialKnyteId)
+    return;
+  assignKnoxelVectorInitial({jointKnoxelId, initialKnoxelId})
+  setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+  handleSpacemapChanged();
+}
+
+function terminalConnectBubbleRect(desc)
+{
+  // desc: {droppedKnoxelId, connectingKnoxelId}
+  const jointKnoxelId = desc.droppedKnoxelId;
+  const terminalKnoxelId = desc.connectingKnoxelId;
+  const jointKnyteId = knoxels[jointKnoxelId];
+  const terminalKnyteId = knoxels[terminalKnoxelId];
+  if (terminalKnoxelId && knyteVectors[jointKnyteId].terminalKnyteId !== terminalKnyteId)
+    return;
+  assignKnoxelVectorTerminal({jointKnoxelId, terminalKnoxelId});
+  setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+  handleSpacemapChanged();
+}
+
 function divideActiveBubble(desc)
 {
   // desc: {position}
@@ -2153,15 +2181,12 @@ function onKeyDownWindow(e)
       }
       else
       {
-        /*
         initialConnectBubbleRect(
           {
             droppedKnoxelId: activeInitialBubble.knoxelId,
             connectingKnoxelId: mouseoverKnoxelId,
           }
         );
-        */
-        // TODO: implement connection
         terminateInitialBubbleArrow();
       }
       setNavigationControlState({
@@ -2187,15 +2212,12 @@ function onKeyDownWindow(e)
       }
       else
       {
-        /*
-        terminalConnectGhostRect(
+        terminalConnectBubbleRect(
           {
-            droppedKnoxelId: activeTerminalGhost.knoxelId,
+            droppedKnoxelId: activeTerminalBubble.knoxelId,
             connectingKnoxelId: mouseoverKnoxelId,
           }
         );
-        */
-        // TODO: implement connection
         terminateTerminalBubbleArrow();
       }
       setNavigationControlState({
