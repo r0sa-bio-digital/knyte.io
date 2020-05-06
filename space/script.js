@@ -1153,8 +1153,21 @@ function divideKnoxel(desc)
 function joinKnoxels(desc)
 {
   // desc: {removeKnoxelId, stayKnoxelId}
+  
+  // reassign all vectors from removeKnoxel to stayKnoxel
+  for (let knoxelId in knoxelVectors)
+  {
+    const endpoints = knoxelVectors[knoxelId];
+    if (endpoints.initialKnoxelId === desc.removeKnoxelId)
+      endpoints.initialKnoxelId = desc.stayKnoxelId;
+    if (endpoints.terminalKnoxelId === desc.removeKnoxelId)
+      endpoints.terminalKnoxelId = desc.stayKnoxelId;
+  }
+  // remove knoxel and its info knoxel vector map
   replaceKnoxelInStacks(desc);
   removeKnoxel({knoxelId: desc.removeKnoxelId});
+  delete knoxelVectors[desc.removeKnoxelId];
+  // handle spacemap case
   if (desc.removeKnoxelId === spacemapKnoxelId)
     spacemapKnoxelId = desc.stayKnoxelId;
 }
