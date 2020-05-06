@@ -1151,6 +1151,25 @@ function divideKnoxel(desc)
   addKnoxelRect({knyteId, hostKnoxelId: desc.hostKnoxelId, position: desc.position});
 }
 
+function cleanupKnoxelVectorsByKnyteVector(desc)
+{
+  // desc: {jointKnyteId, initialKnyteId, terminalKnyteId}
+  for (let knoxelId in knoxelVectors)
+  {
+    const knyteId = knoxels[knoxelId];
+    if (knyteId === desc.jointKnyteId)
+    {
+      const endpoints = knoxelVectors[knoxelId];
+      const initialKnyteId = knoxels[endpoints.initialKnoxelId];
+      const terminalKnyteId = knoxels[endpoints.terminalKnoxelId];
+      if (initialKnyteId !== desc.initialKnyteId)
+        delete endpoints.initialKnoxelId;
+      if (terminalKnyteId !== desc.terminalKnyteId)
+        delete endpoints.terminalKnoxelId;
+    }
+  }  
+}
+
 function assignKnyteVectorInitial(desc)
 {
   // desc: {jointKnyteId, initialKnyteId}
@@ -1160,6 +1179,8 @@ function assignKnyteVectorInitial(desc)
     knyteVectors[desc.jointKnyteId].initialKnyteId = desc.initialKnyteId;
   else
     delete knyteVectors[desc.jointKnyteId].initialKnyteId;
+  const {initialKnyteId, terminalKnyteId} = knyteVectors[desc.jointKnyteId];
+  cleanupKnoxelVectorsByKnyteVector({jointKnyteId: desc.jointKnyteId, initialKnyteId, terminalKnyteId});
 }
 
 function assignKnyteVectorTerminal(desc)
@@ -1171,6 +1192,8 @@ function assignKnyteVectorTerminal(desc)
     knyteVectors[desc.jointKnyteId].terminalKnyteId = desc.terminalKnyteId;
   else
     delete knyteVectors[desc.jointKnyteId].terminalKnyteId;
+  const {initialKnyteId, terminalKnyteId} = knyteVectors[desc.jointKnyteId];
+  cleanupKnoxelVectorsByKnyteVector({jointKnyteId: desc.jointKnyteId, initialKnyteId, terminalKnyteId});
 }
 
 function assignKnoxelVectorInitial(desc)
