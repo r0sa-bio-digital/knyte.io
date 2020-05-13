@@ -1121,8 +1121,7 @@ function addOriginsArrow(desc)
   arrow.setAttribute('y2', y2);
   arrow.setAttribute('stroke', visualTheme.arrow.strokeColor);
   arrow.setAttribute('stroke-width', visualTheme.arrow.strokeWidth);
-  arrow.setAttribute('marker-start', 'url(#arrowTail)');
-  arrow.setAttribute('marker-end', 'url(#arrowHead)');
+  arrow.setAttribute('marker-end', 'url(#spaceHead)');
   arrow.style.pointerEvents = 'none';
   document.getElementById('arrows').appendChild(arrow);
   arrows[desc.id] = {initialKnoxelId: desc.initialKnoxelId, terminalKnoxelId: desc.terminalKnoxelId};
