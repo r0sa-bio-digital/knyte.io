@@ -119,7 +119,7 @@ const knoxelRect = new function()
     return {x1, y1, x2, y2, x3, y3, initialCross, terminalCross};
   }
   
-  function getFigureDimensions(knoxelId, knyteTrace, bubble)
+  function getFigureDimensions(knoxelId, knyteTrace, bubble, strokeWidth)
   {
     const leftTop = {x: 0, y: 0};
     const knyteId = knoxels[knoxelId];
@@ -137,13 +137,17 @@ const knoxelRect = new function()
     let h = isArrow ? visualTheme.arrow.defaultHeight : visualTheme.rect.defaultHeight;
     if (type === 'recursive')
     {
-      const {size, space} = informationMap[knyteId];
-      if (size)
+      let left = 1000000, right = -1000000, top = 1000000, bottom = -1000000; // TODO: use more generic approach
+      const {space, record} = informationMap[knyteId];
+      if (record && record.size)
       {
-        w = Math.max(w, size.w);
-        h = Math.max(h, size.h);
+        w = Math.max(w, record.size.w + strokeWidth);
+        h = Math.max(h, record.size.h + strokeWidth);
+        left = 0;
+        right = w;
+        top = 0;
+        bottom = h;
       }
-      let left = 1000000, right = -1000000, top = 1000000, bottom = -1000000;
       const mx = visualTheme.rect.defaultWidth/2;
       const my = visualTheme.rect.defaultHeight/2;
       const nestedKnyteTrace = Object.assign({}, knyteTrace);
@@ -158,7 +162,7 @@ const knoxelRect = new function()
           nestedType = 'spacemap';
         else if (nestedKnyteId in nestedKnyteTrace)
           nestedType = 'selfviewed';
-        const d = getFigureDimensions(nestedKnoxelId, nestedKnyteTrace);
+        const d = getFigureDimensions(nestedKnoxelId, nestedKnyteTrace, undefined, visualTheme.rect.recursive.strokeWidth);
         const nestedW = d.w;
         const nestedH = d.h;
         const {x, y} = space[nestedKnoxelId];
@@ -179,7 +183,7 @@ const knoxelRect = new function()
         const nestedY = y - nestedH/2;
         const {x1, y1, x2, y2, x3, y3, initialCross, terminalCross} = computeArrowShape(nestedW, nestedH, nestedX, nestedY,
           nestedKnoxelId, knyteId, visualTheme.arrow.recursive.strokeWidth);
-        const r = {rectId, x: nestedX, y: nestedY, w: nestedW, h: nestedH, color, record, 
+        const r = {rectId, x: nestedX, y: nestedY, leftTop: d.leftTop, w: nestedW, h: nestedH, color, record, 
           x1, y1, x2, y2, x3, y3, initialCross, terminalCross, type: nestedType};
         rects.push(r);
         if (d.type === 'recursive')
@@ -187,7 +191,7 @@ const knoxelRect = new function()
           for (let i = 0; i < d.rects.length; ++i)
           {
             const rr = d.rects[i];
-            rects.push({rectId: rr.rectId, x: r.x + rr.x, y: r.y + rr.y, w: rr.w, h: rr.h, 
+            rects.push({rectId: rr.rectId, x: r.x + rr.x, y: r.y + rr.y, leftTop: {x: rr.leftTop.x, y: rr.leftTop.y}, w: rr.w, h: rr.h, 
               color: rr.color, record: rr.record, x1: rr.x1, y1: rr.y1, x2: rr.x2, y2: rr.y2, x3: rr.x3, y3: rr.y3, type: rr.type});
           }
           for (let arrowId in d.arrows)
@@ -219,15 +223,15 @@ const knoxelRect = new function()
         leftTop.y = top;
         for (let i = 0; i < rects.length; ++i)
         {
-          rects[i].x -= left;
-          rects[i].y -= top;
+          rects[i].x += -left;// + strokeWidth/2;
+          rects[i].y += -top;// + strokeWidth/2;
         }
       }
     }
     else
     {
       const {color, record} = informationMap[knyteId];
-      const r = {x: 0, y: 0, w, h, color, record, type};
+      const r = {x: 0, y: 0, leftTop, w, h, color, record, type};
       rects.push(r);
     }
     return {w, h, leftTop, rects, arrows, type};
@@ -251,12 +255,13 @@ const knoxelRect = new function()
     
     function createForeignObject(desc)
     {
-      // desc: {w, h, strokeWidth, record}
+      // desc: {x, y, record}
       const info = document.createElementNS(svgNameSpace, 'foreignObject');
-      info.setAttribute('x', desc.strokeWidth/2);
-      info.setAttribute('y', desc.strokeWidth/2);
-      info.setAttribute('width', desc.w - desc.strokeWidth);
-      info.setAttribute('height', desc.h - desc.strokeWidth);
+      info.setAttribute('x', desc.x);
+      info.setAttribute('y', desc.y);
+      const {w, h} = desc.record && desc.record.size ? desc.record.size : {w: 0, h: 0};
+      info.setAttribute('width', w);
+      info.setAttribute('height', h);
       info.innerHTML = desc.record.viewer(desc.record.data);
       return info;
     }
@@ -304,8 +309,9 @@ const knoxelRect = new function()
           rectGroup.appendChild(rect);
           if (r.type === 'recursive' && r.record)
           {
-            const info = createForeignObject({w: r.w, h: r.h, strokeWidth: visualTheme.rect.recursive.strokeWidth,
-              record: r.record});
+            const infoPosition = {x: -r.leftTop.x + visualTheme.rect.recursive.strokeWidth/2,
+              y: -r.leftTop.y + visualTheme.rect.recursive.strokeWidth/2};
+            const info = createForeignObject({x: infoPosition.x, y: infoPosition.y, record: r.record});
             rectGroup.appendChild(info);
           }
         }
@@ -394,7 +400,8 @@ const knoxelRect = new function()
       const knyteTrace = {};
       const hostKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
       knyteTrace[hostKnyteId] = true;
-      const {w, h, rects, arrows, type} = getFigureDimensions(desc.knoxelId, knyteTrace, desc.bubble);
+      const {w, h, leftTop, rects, arrows, type} = getFigureDimensions(
+        desc.knoxelId, knyteTrace, desc.bubble, visualTheme.rect.strokeWidth);
       const x = desc.position.x - w/2;
       const y = desc.position.y - h/2;
       const rectGroup = document.createElementNS(svgNameSpace, 'g');
@@ -454,8 +461,8 @@ const knoxelRect = new function()
       }
       if (record && type === 'recursive')
       {
-        const info = createForeignObject({w, h, strokeWidth: visualTheme.rect.strokeWidth,
-          record});
+        const infoPosition = {x: -leftTop.x + visualTheme.rect.strokeWidth/2, y: -leftTop.y + visualTheme.rect.strokeWidth/2};
+        const info = createForeignObject({x: infoPosition.x, y: infoPosition.y, record});
         rectGroup.appendChild(info);
       }
       const shapes = createShapes(rects, arrows, type);
@@ -497,7 +504,7 @@ const knoxelRect = new function()
     const knyteTrace = {};
     const hostKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
     knyteTrace[hostKnyteId] = true;
-    const {w, h} = getFigureDimensions(knoxelId, knyteTrace);
+    const {w, h} = getFigureDimensions(knoxelId, knyteTrace, undefined, visualTheme.rect.strokeWidth);
     const {x1, y1, x2, y2, x3, y3} = computeArrowShape(
       w, h, position.x, position.y, knoxelId, hostKnyteId, visualTheme.arrow.strokeWidth);
     arrowShape.points.getItem(0).x = x1;
@@ -507,12 +514,6 @@ const knoxelRect = new function()
     arrowShape.points.getItem(2).x = x3;
     arrowShape.points.getItem(2).y = y3;
   }
-  
-  this.getSize = function(knoxelId)
-  {
-    const {w, h, leftTop} = getFigureDimensions(knoxelId, {});
-    return {w, h, leftTop};
-  };
   
   this.setDotted = function(desc)
   {
@@ -606,12 +607,9 @@ const knoxelSpaceRoot = new function()
     const spaceRootRecord = document.getElementById('record');
     const foreignObject = spaceRootRecord.getElementsByTagName('foreignObject')[0];
     foreignObject.innerHTML = record && knoxelId !== spacemapKnoxelId ? record.viewer(record.data) : '';
-    const {w, h, leftTop} = knoxelRect.getSize(knoxelId);
-    const strokeW = visualTheme.rect.strokeWidth;
-    foreignObject.setAttribute('x', leftTop.x + strokeW/2);
-    foreignObject.setAttribute('y', leftTop.y + strokeW/2);
-    foreignObject.setAttribute('width', w - strokeW);
-    foreignObject.setAttribute('height', h - strokeW);
+    const {w, h} = record && record.size ? record.size : {w: 0, h: 0};
+    foreignObject.setAttribute('width', w);
+    foreignObject.setAttribute('height', h);
   };
 }
 
@@ -1902,10 +1900,10 @@ function joinActiveBubble(desc)
   setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
 }
 
-function getSizeOfRecord(record)
+function getSizeOfRecord(data, viewer)
 {
   const autosizer = document.getElementById('autosizer');
-  autosizer.innerHTML = record.viewer(record.data);
+  autosizer.innerHTML = viewer(data);
   const rect = autosizer.getBoundingClientRect();
   autosizer.innerHTML = '';
   const strokeW = visualTheme.rect.strokeWidth;
@@ -2026,14 +2024,13 @@ function onKeyDownWindow(e)
     {
       const knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
       const knyteId = knoxels[knoxelId];
-      const {record, size} = informationMap[knyteId];
+      const {record} = informationMap[knyteId];
       const newData = prompt('Edit knyte value', record ? record.data : '');
       if (newData !== null)
       {
-        const newRecord = {data: newData, viewer: recordViewers.centeredOneliner};
-        const size = getSizeOfRecord(newRecord);
+        const newRecord = {data: newData, viewer: recordViewers.centeredOneliner,
+          size: getSizeOfRecord(newData, recordViewers.centeredOneliner)};
         informationMap[knyteId].record = newRecord;
-        informationMap[knyteId].size = size;
         setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
         handleSpacemapChanged();
       }
@@ -2045,11 +2042,11 @@ function onKeyDownWindow(e)
     {
       const knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
       const knyteId = knoxels[knoxelId];
-      const {size} = informationMap[knyteId];
-      const newSize = prompt('Edit knyte size', size ? JSON.stringify(size) : '{"w": 0, "h": 0}');
+      const {record} = informationMap[knyteId];
+      const newSize = prompt('Edit knyte size', record && record.size ? JSON.stringify(record.size) : '{"w": 0, "h": 0}');
       if (newSize)
       {
-        informationMap[knyteId].size = JSON.parse(newSize);
+        record.size = JSON.parse(newSize);
         setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
         handleSpacemapChanged();
       }
