@@ -1446,6 +1446,7 @@ function setNavigationControlState(desc)
   if (spaceRootElement.dataset.knoxelId !== spacemapKnoxelId)
   {
     const mapShape = document.getElementById('mapShape');
+    mapShape.setAttribute('stroke', visualTheme.navigation.strokeColor);
     mapShape.setAttribute('fill', visualTheme.navigation.fillColor);
     spaceMapElement.style.display = 'block';
   }
