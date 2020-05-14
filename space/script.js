@@ -304,9 +304,8 @@ const knoxelRect = new function()
           rectGroup.appendChild(rect);
           if (r.type === 'recursive' && r.record)
           {
-            const info = createForeignObject(
-              {w: r.w, h: r.h, strokeWidth: visualTheme.rect.recursive.strokeWidth, record: r.record}
-            );
+            const info = createForeignObject({w: r.w, h: r.h, strokeWidth: visualTheme.rect.recursive.strokeWidth,
+              record: r.record});
             rectGroup.appendChild(info);
           }
         }
@@ -455,9 +454,8 @@ const knoxelRect = new function()
       }
       if (record && type === 'recursive')
       {
-        const info = createForeignObject(
-          {w, h, strokeWidth: visualTheme.rect.strokeWidth, record}
-        );
+        const info = createForeignObject({w, h, strokeWidth: visualTheme.rect.strokeWidth,
+          record});
         rectGroup.appendChild(info);
       }
       const shapes = createShapes(rects, arrows, type);
@@ -607,7 +605,7 @@ const knoxelSpaceRoot = new function()
     spaceRootElement.style.backgroundColor = color;
     const spaceRootRecord = document.getElementById('record');
     const foreignObject = spaceRootRecord.getElementsByTagName('foreignObject')[0];
-    foreignObject.innerHTML = record ? record.viewer(record.data) : '';
+    foreignObject.innerHTML = record && knoxelId !== spacemapKnoxelId ? record.viewer(record.data) : '';
     const {w, h, leftTop} = knoxelRect.getSize(knoxelId);
     const strokeW = visualTheme.rect.strokeWidth;
     foreignObject.setAttribute('x', leftTop.x + strokeW/2);
@@ -2070,6 +2068,10 @@ function onKeyDownWindow(e)
           informationMap[knyteId].color = newColor;
           setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
           handleSpacemapChanged();
+          setNavigationControlState({
+            backKnoxelId: spaceBackStack[spaceBackStack.length - 1],
+            forwardKnoxelId: spaceForwardStack[spaceForwardStack.length - 1]
+          });
         }
       }
       
