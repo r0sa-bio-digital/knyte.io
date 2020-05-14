@@ -191,7 +191,7 @@ const knoxelRect = new function()
           for (let i = 0; i < d.rects.length; ++i)
           {
             const rr = d.rects[i];
-            rects.push({rectId: rr.rectId, x: r.x + rr.x, y: r.y + rr.y, leftTop: {x: rr.leftTop.x, y: rr.leftTop.y}, w: rr.w, h: rr.h, 
+            rects.push({rectId: rr.rectId, x: r.x + rr.x, y: r.y + rr.y, leftTop: rr.leftTop, w: rr.w, h: rr.h, 
               color: rr.color, record: rr.record, x1: rr.x1, y1: rr.y1, x2: rr.x2, y2: rr.y2, x3: rr.x3, y3: rr.y3, type: rr.type});
           }
           for (let arrowId in d.arrows)
