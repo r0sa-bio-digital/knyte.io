@@ -14,6 +14,8 @@ const knoxelVectors = {}; // knoxel id --> {initialKnoxelId, terminalKnoxelId}
 const knyteVectors = {}; // knyte id --> {initialKnyteId, terminalKnyteId}
 const informationMap = {}; // knyte id --> {color, space: {knoxel id --> position}, record: {data, viewer}, size}
 const knoxels = {}; // knoxel id --> knyte id
+const knoxelViews = {}; // knoxel id --> {collapse, color}
+// TODO: join knoxelVectors, knoxels and knoxelViews into knoxelSpace
 const arrows = {}; // arrow id --> {initialKnoxelId, terminalKnoxelId}
 const spaceBackStack = []; // [previous space root knoxel id]
 const spaceForwardStack = []; // [next space root knoxel id]
@@ -99,8 +101,9 @@ function addKnyte(desc)
 
 function addKnoxel(desc)
 {
-  // desc: {hostKnyteId, knyteId, knoxelId, position}
+  // desc: {hostKnyteId, knyteId, knoxelId, position, collapse, color}
   knoxels[desc.knoxelId] = desc.knyteId;
+  knoxelViews[desc.knoxelId] = {collapse: desc.collapse || false, color: desc.color || visualTheme.rect.strokeColor};
   if (desc.hostKnyteId)
     informationMap[desc.hostKnyteId].space[desc.knoxelId] = desc.position;
 }
@@ -131,6 +134,8 @@ const knoxelRect = new function()
       type = 'spacemap';
     else if (knyteId in knyteTrace)
       type = 'selfviewed';
+    else if (knoxelViews[knoxelId].collapse)
+      type = 'collapse';
     const isArrow = type === 'recursive' && !bubble && (knoxelId in knoxelVectors) &&
       (knoxelVectors[knoxelId].initialKnoxelId || knoxelVectors[knoxelId].terminalKnoxelId);
     let w = isArrow ? visualTheme.arrow.defaultWidth : visualTheme.rect.defaultWidth;
@@ -162,6 +167,8 @@ const knoxelRect = new function()
           nestedType = 'spacemap';
         else if (nestedKnyteId in nestedKnyteTrace)
           nestedType = 'selfviewed';
+        else if (knoxelViews[nestedKnoxelId].collapse)
+          nestedType = 'collapse';
         const d = getFigureDimensions(nestedKnoxelId, nestedKnyteTrace, undefined, visualTheme.rect.recursive.strokeWidth);
         const nestedW = d.w;
         const nestedH = d.h;
@@ -365,6 +372,36 @@ const knoxelRect = new function()
           rectGroup.appendChild(circle2);
           rectGroup.appendChild(circle3);
           rectGroup.appendChild(circle4);
+        }
+        else if (r.type === 'collapse')
+        {
+          const circle1 = document.createElementNS(svgNameSpace, 'circle');
+          circle1.setAttribute('cx', 7);
+          circle1.setAttribute('cy', 16);
+          circle1.setAttribute('r', 3);
+          circle1.setAttribute('stroke', '#160f19');
+          circle1.setAttribute('stroke-width', visualTheme.rect.pictograph.strokeWidth);
+          circle1.setAttribute('fill', 'transparent');
+          circle1.style.pointerEvents = 'none';
+          const circle2 = document.createElementNS(svgNameSpace, 'circle');
+          circle2.setAttribute('cx', 16);
+          circle2.setAttribute('cy', 16);
+          circle2.setAttribute('r', 3);
+          circle2.setAttribute('stroke', '#160f19');
+          circle2.setAttribute('stroke-width', visualTheme.rect.pictograph.strokeWidth);
+          circle2.setAttribute('fill', 'transparent');
+          circle2.style.pointerEvents = 'none';
+          const circle3 = document.createElementNS(svgNameSpace, 'circle');
+          circle3.setAttribute('cx', 25);
+          circle3.setAttribute('cy', 16);
+          circle3.setAttribute('r', 3);
+          circle3.setAttribute('stroke', '#160f19');
+          circle3.setAttribute('stroke-width', visualTheme.rect.pictograph.strokeWidth);
+          circle3.setAttribute('fill', 'transparent');
+          circle3.style.pointerEvents = 'none';
+          rectGroup.appendChild(circle1);
+          rectGroup.appendChild(circle2);
+          rectGroup.appendChild(circle3);
         }
         result.push(rectGroup);
       }
@@ -1135,13 +1172,13 @@ function cleanupArrows()
 
 function addKnoxelRect(desc)
 {
-  // desc: {knyteId, hostKnoxelId, position}
+  // desc: {knyteId, hostKnoxelId, position, collapse, color}
   const position = activeGhost.knoxelId
     ? {x: desc.position.x + activeGhost.offset.x, y: desc.position.y + activeGhost.offset.y}
     : desc.position;
   const hostKnyteId = knoxels[desc.hostKnoxelId];
   const knoxelId = knit.new();
-  addKnoxel({hostKnyteId, knyteId: desc.knyteId, knoxelId, position});
+  addKnoxel({hostKnyteId, knyteId: desc.knyteId, knoxelId, position, collapse: desc.collapse, color: desc.color});
   knoxelRect.add({knoxelId, position});
   knoxelRect.updateArrowShape(knoxelId, position);
 }
@@ -1169,7 +1206,8 @@ function divideKnoxel(desc)
 {
   // desc: {dividedKnoxelId, hostKnoxelId, position}
   const knyteId = knoxels[desc.dividedKnoxelId];
-  addKnoxelRect({knyteId, hostKnoxelId: desc.hostKnoxelId, position: desc.position});
+  const collapse = knoxelViews[desc.dividedKnoxelId].collapse;
+  addKnoxelRect({knyteId, hostKnoxelId: desc.hostKnoxelId, position: desc.position, collapse});
 }
 
 function cleanupKnoxelVectorsByKnyteVector(desc)
@@ -1310,6 +1348,7 @@ function removeKnoxel(desc)
   const space = informationMap[hostKnyteId].space;
   delete space[desc.knoxelId];
   // cleanup knoxel
+  delete knoxelViews[desc.knoxelId];
   delete knoxels[desc.knoxelId];
   // cleanup arrows
   const arrowsToRemove = {};
@@ -2047,6 +2086,29 @@ function onKeyDownWindow(e)
       if (newSize)
       {
         record.size = JSON.parse(newSize);
+        setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+        handleSpacemapChanged();
+      }
+    }
+  }
+  else if (e.code === 'KeyD')
+  {
+    if (!e.shiftKey && !e.altKey && !e.metaKey)
+    {
+      const knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
+      const collapse = knoxelViews[knoxelId].collapse;
+      if (collapse)
+      {
+        if (confirm('Sure to expand knoxel content?'))
+          knoxelViews[knoxelId].collapse = false;
+      }
+      else
+      {
+        if (confirm('Sure to collapse knoxel content?'))
+          knoxelViews[knoxelId].collapse = true;
+      }
+      if (collapse !== knoxelViews[knoxelId].collapse)        
+      {
         setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
         handleSpacemapChanged();
       }
