@@ -174,6 +174,7 @@ const knoxelRect = new function()
         const nestedH = d.h;
         const {x, y} = space[nestedKnoxelId];
         const {color, record} = informationMap[nestedKnyteId];
+        const strokeColor = knoxelViews[nestedKnoxelId].color;
         const nestedLeft = x - nestedW/2 - mx;
         const nestedRight = x + nestedW/2 + mx;
         const nestedTop = y - nestedH/2 - my;
@@ -190,7 +191,7 @@ const knoxelRect = new function()
         const nestedY = y - nestedH/2;
         const {x1, y1, x2, y2, x3, y3, initialCross, terminalCross} = computeArrowShape(nestedW, nestedH, nestedX, nestedY,
           nestedKnoxelId, knyteId, visualTheme.arrow.recursive.strokeWidth);
-        const r = {rectId, x: nestedX, y: nestedY, leftTop: d.leftTop, w: nestedW, h: nestedH, color, record, 
+        const r = {rectId, x: nestedX, y: nestedY, leftTop: d.leftTop, w: nestedW, h: nestedH, color, strokeColor, record, 
           x1, y1, x2, y2, x3, y3, initialCross, terminalCross, type: nestedType};
         rects.push(r);
         if (d.type === 'recursive')
@@ -199,7 +200,8 @@ const knoxelRect = new function()
           {
             const rr = d.rects[i];
             rects.push({rectId: rr.rectId, x: r.x + rr.x, y: r.y + rr.y, leftTop: rr.leftTop, w: rr.w, h: rr.h, 
-              color: rr.color, record: rr.record, x1: rr.x1, y1: rr.y1, x2: rr.x2, y2: rr.y2, x3: rr.x3, y3: rr.y3, type: rr.type});
+              color: rr.color, strokeColor: rr.strokeColor, record: rr.record,
+              x1: rr.x1, y1: rr.y1, x2: rr.x2, y2: rr.y2, x3: rr.x3, y3: rr.y3, type: rr.type});
           }
           for (let arrowId in d.arrows)
           {
@@ -238,7 +240,8 @@ const knoxelRect = new function()
     else
     {
       const {color, record} = informationMap[knyteId];
-      const r = {x: 0, y: 0, leftTop, w, h, color, record, type};
+      const strokeColor = knoxelViews[knoxelId].color;
+      const r = {x: 0, y: 0, leftTop, w, h, color, strokeColor, record, type};
       rects.push(r);
     }
     return {w, h, leftTop, rects, arrows, type};
@@ -250,12 +253,12 @@ const knoxelRect = new function()
     
     function createRectShape(desc)
     {
-      // desc: {w, h, color, strokeWidth}
+      // desc: {w, h, color, strokeWidth, strokeColor}
       const rect = document.createElementNS(svgNameSpace, 'rect');
       rect.setAttribute('width', desc.w);
       rect.setAttribute('height', desc.h);
       rect.setAttribute('fill', desc.color);
-      rect.setAttribute('stroke', visualTheme.rect.strokeColor);
+      rect.setAttribute('stroke', desc.strokeColor);
       rect.setAttribute('stroke-width', desc.strokeWidth);
       return rect;
     }
@@ -275,7 +278,7 @@ const knoxelRect = new function()
     
     function createArrowShape(desc)
     {
-      // desc: {x1, y1, x2, y2, x3, y3, initialCross, terminalCross, strokeWidth}
+      // desc: {x1, y1, x2, y2, x3, y3, initialCross, terminalCross, strokeWidth, strokeColor}
       const arrow = document.createElementNS(svgNameSpace, 'polyline');
       const p1 = spaceRootElement.createSVGPoint();
       const p2 = spaceRootElement.createSVGPoint();
@@ -290,7 +293,7 @@ const knoxelRect = new function()
       arrow.points.appendItem(p2);
       arrow.points.appendItem(p3);
       arrow.setAttribute('fill', 'none');
-      arrow.setAttribute('stroke', visualTheme.arrow.strokeColor);
+      arrow.setAttribute('stroke', desc.strokeColor);
       arrow.setAttribute('stroke-width', desc.strokeWidth);
       arrow.setAttribute('marker-start', desc.initialCross ? 'url(#crossTail)' : 'url(#arrowTail)');
       arrow.setAttribute('marker-end', desc.terminalCross ? 'url(#crossHead)' : 'url(#arrowHead)');
@@ -308,10 +311,12 @@ const knoxelRect = new function()
         {
           rectGroup.setAttribute('transform', 'translate(' + r.x + ' ' + r.y + ')');
           const arrow = createArrowShape({x1: r.x1, y1: r.y1, x2: r.x2, y2: r.y2, x3: r.x3, y3: r.y3,
-            initialCross: r.initialCross, terminalCross: r.terminalCross, strokeWidth: visualTheme.arrow.recursive.strokeWidth});
+            initialCross: r.initialCross, terminalCross: r.terminalCross, strokeWidth: visualTheme.arrow.recursive.strokeWidth,
+            strokeColor: r.strokeColor});
           if (r.rectId) arrow.id = r.rectId + '.arrow';
           rectGroup.appendChild(arrow); // TODO: hide arrow if useless for visualisation
-          const rect = createRectShape({w: r.w, h: r.h, color: r.color, strokeWidth: visualTheme.rect.recursive.strokeWidth});
+          const rect = createRectShape({w: r.w, h: r.h, color: r.color, strokeWidth: visualTheme.rect.recursive.strokeWidth,
+            strokeColor: r.strokeColor});
           if (r.rectId) rect.id = r.rectId + '.rect';
           rectGroup.appendChild(rect);
           if (r.type === 'recursive' && r.record)
@@ -434,6 +439,7 @@ const knoxelRect = new function()
     {
       const knyteId = knoxels[desc.knoxelId];
       const {color, record} = informationMap[knyteId];
+      const strokeColor = knoxelViews[desc.knoxelId].color;
       const knyteTrace = {};
       const hostKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
       knyteTrace[hostKnyteId] = true;
@@ -450,13 +456,13 @@ const knoxelRect = new function()
         const {x1, y1, x2, y2, x3, y3, initialCross, terminalCross} = computeArrowShape(
           w, h, x, y, desc.knoxelId, hostKnyteId, visualTheme.arrow.strokeWidth);
         const arrowRoot = createArrowShape({x1, y1, x2, y2, x3, y3, initialCross, terminalCross, 
-          strokeWidth: visualTheme.arrow.strokeWidth});
+          strokeWidth: visualTheme.arrow.strokeWidth, strokeColor});
         arrowRoot.id = desc.knoxelId + '.arrow';
         if (desc.ghost)
           arrowRoot.id += '.ghost';
         rectGroup.appendChild(arrowRoot); // TODO: hide arrow if useless for visualisation
       }
-      const rectRoot = createRectShape({w, h, color, strokeWidth: visualTheme.rect.strokeWidth});
+      const rectRoot = createRectShape({w, h, color, strokeWidth: visualTheme.rect.strokeWidth, strokeColor});
       rectGroup.appendChild(rectRoot);
       if (desc.selfcontained)
       {
@@ -468,28 +474,28 @@ const knoxelRect = new function()
         selfcontainedLine1.setAttribute('y1', -d*dir.y);
         selfcontainedLine1.setAttribute('x2', 0);
         selfcontainedLine1.setAttribute('y2', 0);
-        selfcontainedLine1.setAttribute('stroke', visualTheme.rect.strokeColor);
+        selfcontainedLine1.setAttribute('stroke', strokeColor);
         selfcontainedLine1.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
         const selfcontainedLine2 = document.createElementNS(svgNameSpace, 'line');
         selfcontainedLine2.setAttribute('x1', w);
         selfcontainedLine2.setAttribute('y1', h);
         selfcontainedLine2.setAttribute('x2', (d+dirLength)*dir.x);
         selfcontainedLine2.setAttribute('y2', (d+dirLength)*dir.y);
-        selfcontainedLine2.setAttribute('stroke', visualTheme.rect.strokeColor);
+        selfcontainedLine2.setAttribute('stroke', strokeColor);
         selfcontainedLine2.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
         const selfcontainedLine3 = document.createElementNS(svgNameSpace, 'line');
         selfcontainedLine3.setAttribute('x1', -d*dir.x);
         selfcontainedLine3.setAttribute('y1', (d+dirLength)*dir.y);
         selfcontainedLine3.setAttribute('x2', 0);
         selfcontainedLine3.setAttribute('y2', h);
-        selfcontainedLine3.setAttribute('stroke', visualTheme.rect.strokeColor);
+        selfcontainedLine3.setAttribute('stroke', strokeColor);
         selfcontainedLine3.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
         const selfcontainedLine4 = document.createElementNS(svgNameSpace, 'line');
         selfcontainedLine4.setAttribute('x1', w);
         selfcontainedLine4.setAttribute('y1', 0);
         selfcontainedLine4.setAttribute('x2', (d+dirLength)*dir.x);
         selfcontainedLine4.setAttribute('y2', -d*dir.y);
-        selfcontainedLine4.setAttribute('stroke', visualTheme.rect.strokeColor);
+        selfcontainedLine4.setAttribute('stroke', strokeColor);
         selfcontainedLine4.setAttribute('stroke-width', visualTheme.rect.strokeWidth);
         rectGroup.appendChild(selfcontainedLine1);
         rectGroup.appendChild(selfcontainedLine2);
@@ -1648,6 +1654,7 @@ function createActiveArrow(desc)
   const arrow = document.createElementNS(svgNameSpace, 'line');
   const spaceRootKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
   const spacePosition = informationMap[spaceRootKnyteId].space[desc.knoxelId];
+  const strokeColor = knoxelViews[desc.knoxelId].color;
   let cross = false;
   let originPosition;
   if (!spacePosition)
@@ -1663,7 +1670,7 @@ function createActiveArrow(desc)
   arrow.setAttribute('x2', desc.position.x);
   arrow.setAttribute('y2', desc.position.y);
   arrow.setAttribute('fill', 'none');
-  arrow.setAttribute('stroke', visualTheme.arrow.strokeColor);
+  arrow.setAttribute('stroke', strokeColor);
   arrow.setAttribute('stroke-width', visualTheme.arrow.strokeWidth);
   if (desc.bubble)
   {
@@ -2144,6 +2151,21 @@ function onKeyDownWindow(e)
       colorpickerDialog.dataset.knyteId = knyteId;
       colorpickerDialog.addEventListener('close', onCloseDialog);
       setTimeout(function(){colorpickerDialog.showModal();}, 0);
+    }
+  }
+  else if (e.code === 'KeyV')
+  {
+    if (!e.shiftKey && !e.altKey && !e.metaKey)
+    {
+      const knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
+      const color = knoxelViews[knoxelId].color;
+      const newColor = prompt('Edit knoxel value', color);
+      if (newColor !== null)
+      {
+        knoxelViews[knoxelId].color = newColor;
+        setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+        handleSpacemapChanged();
+      }
     }
   }
   else if (e.code === 'KeyO')
