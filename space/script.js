@@ -21,27 +21,28 @@ const spaceBackStack = []; // [previous space root knoxel id]
 const spaceForwardStack = []; // [next space root knoxel id]
 const visualTheme = {
   rect: {
-    strokeColor: visualThemeColors.outline,
     strokeWidth: 4,
     selfcontained: {
-      dashLength: 8
+      dashLength: 8,
     },
     pictograph: {
-      strokeWidth: 2
+      strokeWidth: 2,
     },
     fillColor: visualThemeColors.fill,
     defaultWidth: 32,
     defaultHeight: 32,
   },
   arrow: {
-    strokeColor: visualThemeColors.line,
     strokeWidth: 3,
     defaultLength: 12,
     defaultWidth: 10,
     defaultHeight: 10,
   },
   recursive: {
-    strokeWidth: 2
+    strokeWidth: 2,
+  },
+  knoxel: {
+    defaultColor: visualThemeColors.stroke,
   },
   navigation: {
     strokeColor: visualThemeColors.control,
@@ -100,7 +101,7 @@ function addKnoxel(desc)
 {
   // desc: {hostKnyteId, knyteId, knoxelId, position, collapse, color}
   knoxels[desc.knoxelId] = desc.knyteId;
-  knoxelViews[desc.knoxelId] = {collapse: desc.collapse || false, color: desc.color || visualTheme.rect.strokeColor};
+  knoxelViews[desc.knoxelId] = {collapse: desc.collapse || false, color: desc.color || visualTheme.knoxel.defaultColor};
   if (desc.hostKnyteId)
     informationMap[desc.hostKnyteId].space[desc.knoxelId] = desc.position;
 }
@@ -1155,7 +1156,7 @@ function addOriginsArrow(desc)
   arrow.setAttribute('y1', y1);
   arrow.setAttribute('x2', x2);
   arrow.setAttribute('y2', y2);
-  arrow.setAttribute('stroke', visualTheme.arrow.strokeColor);
+  arrow.setAttribute('stroke', visualTheme.knoxel.defaultColor);
   arrow.setAttribute('stroke-width', visualTheme.arrow.strokeWidth);
   arrow.setAttribute('marker-end', 'url(#spaceHead)');
   arrow.style.pointerEvents = 'none';

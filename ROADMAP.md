@@ -629,7 +629,9 @@
     * ряд багфиксов и мелких правок
       * на уровне редактора вернуть центрирование текста по knoxel'ю для oneliner'ов
       * объединить visualTheme rect.recursive.strokeWidth и arrow.recursive.strokeWidth в recursive.strokeWidth
-      * `объединить visualTheme rect.strokeColor и arrow.strokeColor в knoxel.defaultColor`
+      * объединить visualTheme rect.strokeColor и arrow.strokeColor в knoxel.defaultColor
+      * `убрать отрисовку стрелки, когда нет связи`
+        * необходимо для корректной отрисовки ректов с прозрачным фоном
     * багфикс - поправить разные смещения foreignObject'ов в разныех пространствах
       * spaceroot, 1st level innerspace, 2+ level innerspace
       * смещения различаются на порядок толщины обводки, где-то она некорректно прибавляется/вычитается
