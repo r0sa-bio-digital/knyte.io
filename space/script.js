@@ -424,14 +424,16 @@ const knoxelRect = new function()
         const terminalRectId = arrows[id].terminalRectId + '.rect';
         const {space, knoxelId, initialKnoxelId, terminalKnoxelId} = arrows[id];
         const arrowStrokeWidth = visualTheme.recursive.strokeWidth;
-        const {x1, y1, x2, y2, x3, y3} = getArrowPointsByRects({arrowSpace: space, jointKnoxelId: knoxelId,
-          initialKnoxelId, terminalKnoxelId, rectId, initialRectId, terminalRectId, arrowStrokeWidth});
+        const {x1, y1, x2, y2, x3, y3, initialCross, terminalCross} = getArrowPointsByRects({arrowSpace: space,
+          jointKnoxelId: knoxelId, initialKnoxelId, terminalKnoxelId, rectId, initialRectId, terminalRectId, arrowStrokeWidth});
         arrowShape.points.getItem(0).x = x1;
         arrowShape.points.getItem(0).y = y1;
         arrowShape.points.getItem(1).x = x2;
         arrowShape.points.getItem(1).y = y2;
         arrowShape.points.getItem(2).x = x3;
         arrowShape.points.getItem(2).y = y3;
+        arrowShape.setAttribute('marker-start', initialCross ? 'url(#crossTail)' : 'url(#arrowTail)');
+        arrowShape.setAttribute('marker-end', terminalCross ? 'url(#crossHead)' : 'url(#arrowHead)');
       }
     }
     
