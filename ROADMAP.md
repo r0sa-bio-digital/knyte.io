@@ -632,9 +632,8 @@
       * объединить visualTheme rect.strokeColor и arrow.strokeColor в knoxel.defaultColor
       * убрать отрисовку стрелки, когда нет связи
         * необходимо для корректной отрисовки ректов с прозрачным фоном
-      * `багфикс для пары особых кейсов отображения arrow`
-      * объединить knoxelVectors, knoxels и knoxelViews в knoxelSpace
-    * багфикс - поправить разные смещения foreignObject'ов в разных пространствах
+      * багфикс для пары особых кейсов отображения arrow
+    * `багфикс - поправить разные смещения foreignObject'ов в разных пространствах`
       * spaceroot, 1st level innerspace, 2+ level innerspace
       * смещения различаются на порядок толщины обводки, где-то она некорректно прибавляется/вычитается
         * после долгих размышлений решено переделать принцип позиционирования и выравнивания foreignObject'ов
@@ -662,6 +661,8 @@
   * выделить всю логику из обработчиков вида function onXXX в отдельные функции
   * каким-то образом обобщить очень сходный код для activeGhost/Bubble, activeInitial/TerminalGhost/Bubble
   * при изменении knoxel.color перекрашивать не только обводку rect'а и линию arrow, но и маркеры на концах arrow
+  * объединить knoxels, knoxelVectors и knoxelViews в knoxelSpace со следующей структурой
+    * knoxelSpace[knoxelId] = {knyteId, vector: {initialKnoxelId, terminalKnoxelId}, collapse, color}
 * множественное выделение knoxel'ей и совместимость с ним всех реализованных функций
 * пространственная навигация по пространствам knoxel'ей
   * сюда же входит масштабирование и позиционирование содержимого knoxel'ей

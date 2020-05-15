@@ -15,7 +15,6 @@ const knyteVectors = {}; // knyte id --> {initialKnyteId, terminalKnyteId}
 const informationMap = {}; // knyte id --> {color, space: {knoxel id --> position}, record: {data, viewer}, size}
 const knoxels = {}; // knoxel id --> knyte id
 const knoxelViews = {}; // knoxel id --> {collapse, color}
-// TODO: join knoxelVectors, knoxels and knoxelViews into knoxelSpace
 const arrows = {}; // arrow id --> {initialKnoxelId, terminalKnoxelId}
 const spaceBackStack = []; // [previous space root knoxel id]
 const spaceForwardStack = []; // [next space root knoxel id]
