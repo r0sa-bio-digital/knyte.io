@@ -33,7 +33,7 @@ const visualTheme = {
   },
   arrow: {
     strokeWidth: 3,
-    defaultLength: 12,
+    defaultLength: 6,
     defaultWidth: 10,
     defaultHeight: 10,
   },
@@ -950,7 +950,7 @@ function getArrowPointsByRects(desc)
         {position1: jointPosition, position2: terminalPosition}
       );
       const rectStrokeOffset = 0.5*visualTheme.rect.strokeWidth;
-      const terminalArrowStrokeOffset = 2.0*desc.arrowStrokeWidth;
+      const terminalArrowStrokeOffset = 4.5*desc.arrowStrokeWidth;
       const arrowIntervalStrokeOffset = 0.5*desc.arrowStrokeWidth;
       const terminalStrokeOffset = rectStrokeOffset + terminalArrowStrokeOffset + arrowIntervalStrokeOffset;
       x3 -= ((1 - terminalTime) * directionLength + terminalStrokeOffset) * directionNormalised.x;
@@ -1070,7 +1070,7 @@ function getArrowPointsByKnoxels(desc)
         {position1: jointPosition, position2: terminalPosition}
       );
       const rectStrokeOffset = 0.5*visualTheme.rect.strokeWidth;
-      const terminalArrowStrokeOffset = 2.0*desc.arrowStrokeWidth;
+      const terminalArrowStrokeOffset = 4.5*desc.arrowStrokeWidth;
       const arrowIntervalStrokeOffset = 0.5*desc.arrowStrokeWidth;
       const terminalStrokeOffset = rectStrokeOffset + terminalArrowStrokeOffset + arrowIntervalStrokeOffset;
       x3 -= ((1 - terminalTime) * directionLength + terminalStrokeOffset) * directionNormalised.x;
@@ -1132,7 +1132,7 @@ function getArrowPointsByEndpoints(desc)
       );
       const rectStrokeOffset = 0.5*visualTheme.rect.strokeWidth;
       const initialArrowStrokeOffset = 0.5*desc.arrowStrokeWidth;
-      const terminalArrowStrokeOffset = 2.0*desc.arrowStrokeWidth;
+      const terminalArrowStrokeOffset = 4.5*desc.arrowStrokeWidth;
       const arrowIntervalStrokeOffset = 0.5*desc.arrowStrokeWidth;
       const initialStrokeOffset = rectStrokeOffset + initialArrowStrokeOffset + arrowIntervalStrokeOffset;
       x1 += ((1 - initialTime) * directionLength + initialStrokeOffset) * directionNormalised.x;
