@@ -26,9 +26,6 @@ const visualTheme = {
     selfcontained: {
       dashLength: 8
     },
-    recursive: {
-      strokeWidth: 2
-    },
     pictograph: {
       strokeWidth: 2
     },
@@ -39,12 +36,12 @@ const visualTheme = {
   arrow: {
     strokeColor: visualThemeColors.line,
     strokeWidth: 3,
-    recursive: {
-      strokeWidth: 2
-    },
     defaultLength: 12,
     defaultWidth: 10,
     defaultHeight: 10,
+  },
+  recursive: {
+    strokeWidth: 2
   },
   navigation: {
     strokeColor: visualThemeColors.control,
@@ -169,7 +166,7 @@ const knoxelRect = new function()
           nestedType = 'selfviewed';
         else if (knoxelViews[nestedKnoxelId].collapse)
           nestedType = 'collapse';
-        const d = getFigureDimensions(nestedKnoxelId, nestedKnyteTrace, undefined, visualTheme.rect.recursive.strokeWidth);
+        const d = getFigureDimensions(nestedKnoxelId, nestedKnyteTrace, undefined, visualTheme.recursive.strokeWidth);
         const nestedW = d.w;
         const nestedH = d.h;
         const {x, y} = space[nestedKnoxelId];
@@ -190,7 +187,7 @@ const knoxelRect = new function()
         const nestedX = x - nestedW/2;
         const nestedY = y - nestedH/2;
         const {x1, y1, x2, y2, x3, y3, initialCross, terminalCross} = computeArrowShape(nestedW, nestedH, nestedX, nestedY,
-          nestedKnoxelId, knyteId, visualTheme.arrow.recursive.strokeWidth);
+          nestedKnoxelId, knyteId, visualTheme.recursive.strokeWidth);
         const r = {rectId, x: nestedX, y: nestedY, leftTop: d.leftTop, w: nestedW, h: nestedH, color, strokeColor, record, 
           x1, y1, x2, y2, x3, y3, initialCross, terminalCross, type: nestedType};
         rects.push(r);
@@ -311,18 +308,18 @@ const knoxelRect = new function()
         {
           rectGroup.setAttribute('transform', 'translate(' + r.x + ' ' + r.y + ')');
           const arrow = createArrowShape({x1: r.x1, y1: r.y1, x2: r.x2, y2: r.y2, x3: r.x3, y3: r.y3,
-            initialCross: r.initialCross, terminalCross: r.terminalCross, strokeWidth: visualTheme.arrow.recursive.strokeWidth,
+            initialCross: r.initialCross, terminalCross: r.terminalCross, strokeWidth: visualTheme.recursive.strokeWidth,
             strokeColor: r.strokeColor});
           if (r.rectId) arrow.id = r.rectId + '.arrow';
           rectGroup.appendChild(arrow); // TODO: hide arrow if useless for visualisation
-          const rect = createRectShape({w: r.w, h: r.h, color: r.color, strokeWidth: visualTheme.rect.recursive.strokeWidth,
+          const rect = createRectShape({w: r.w, h: r.h, color: r.color, strokeWidth: visualTheme.recursive.strokeWidth,
             strokeColor: r.strokeColor});
           if (r.rectId) rect.id = r.rectId + '.rect';
           rectGroup.appendChild(rect);
           if (r.type === 'recursive' && r.record)
           {
-            const infoPosition = {x: -r.leftTop.x + visualTheme.rect.recursive.strokeWidth/2,
-              y: -r.leftTop.y + visualTheme.rect.recursive.strokeWidth/2};
+            const infoPosition = {x: -r.leftTop.x + visualTheme.recursive.strokeWidth/2,
+              y: -r.leftTop.y + visualTheme.recursive.strokeWidth/2};
             const info = createForeignObject({x: infoPosition.x, y: infoPosition.y, record: r.record});
             rectGroup.appendChild(info);
           }
@@ -422,7 +419,7 @@ const knoxelRect = new function()
         const initialRectId = arrows[id].initialRectId + '.rect';
         const terminalRectId = arrows[id].terminalRectId + '.rect';
         const {space, knoxelId, initialKnoxelId, terminalKnoxelId} = arrows[id];
-        const arrowStrokeWidth = visualTheme.arrow.recursive.strokeWidth;
+        const arrowStrokeWidth = visualTheme.recursive.strokeWidth;
         const {x1, y1, x2, y2, x3, y3} = getArrowPointsByRects({arrowSpace: space, jointKnoxelId: knoxelId,
           initialKnoxelId, terminalKnoxelId, rectId, initialRectId, terminalRectId, arrowStrokeWidth});
         const arrowShape = document.getElementById(arrowId);
