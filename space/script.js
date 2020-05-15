@@ -416,6 +416,9 @@ const knoxelRect = new function()
       for (let id in arrows)
       {
         const arrowId = id + '.arrow';
+        const arrowShape = document.getElementById(arrowId);
+        if (!arrowShape)
+          continue;
         const rectId = id + '.rect';
         const initialRectId = arrows[id].initialRectId + '.rect';
         const terminalRectId = arrows[id].terminalRectId + '.rect';
@@ -423,7 +426,6 @@ const knoxelRect = new function()
         const arrowStrokeWidth = visualTheme.recursive.strokeWidth;
         const {x1, y1, x2, y2, x3, y3} = getArrowPointsByRects({arrowSpace: space, jointKnoxelId: knoxelId,
           initialKnoxelId, terminalKnoxelId, rectId, initialRectId, terminalRectId, arrowStrokeWidth});
-        const arrowShape = document.getElementById(arrowId);
         arrowShape.points.getItem(0).x = x1;
         arrowShape.points.getItem(0).y = y1;
         arrowShape.points.getItem(1).x = x2;
@@ -435,6 +437,7 @@ const knoxelRect = new function()
     
     function createFigure(desc)
     {
+      // desc: {knoxelId, position, ghost, bubble, selfcontained}
       const knyteId = knoxels[desc.knoxelId];
       const {color, record} = informationMap[knyteId];
       const strokeColor = knoxelViews[desc.knoxelId].color;
@@ -445,11 +448,13 @@ const knoxelRect = new function()
         desc.knoxelId, knyteTrace, desc.bubble, visualTheme.rect.strokeWidth);
       const x = desc.position.x - w/2;
       const y = desc.position.y - h/2;
+      const knoxelVector = knoxelVectors[desc.knoxelId];
+      const hasEndpoints = knoxelVector && (knoxelVector.initialKnoxelId || knoxelVector.terminalKnoxelId); 
       const rectGroup = document.createElementNS(svgNameSpace, 'g');
       rectGroup.id = desc.knoxelId;
       rectGroup.classList.value = 'mouseOverRect';
       rectGroup.setAttribute('transform', 'translate(' + x + ' ' + y + ')');
-      if (!desc.bubble)
+      if (!desc.bubble && hasEndpoints)
       {
         const {x1, y1, x2, y2, x3, y3, initialCross, terminalCross} = computeArrowShape(
           w, h, x, y, desc.knoxelId, hostKnyteId, visualTheme.arrow.strokeWidth);
@@ -541,6 +546,8 @@ const knoxelRect = new function()
   {
     const postfix = '.arrow' + (ghost ? '.ghost' : '');
     const arrowShape = document.getElementById(knoxelId + postfix);
+    if (!arrowShape)
+      return;
     const knyteId = knoxels[knoxelId];
     const knyteTrace = {};
     const hostKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
@@ -690,7 +697,7 @@ const knoxelArrow = new function()
       }
     }
     if (!arrowShape)
-      console.error('failed dotting for knoxelId ' + desc.knoxelId);
+      return;
     if (desc.isDotted)
     {
       arrowShape.setAttribute('stroke-dasharray', '0 8');
