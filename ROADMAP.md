@@ -626,7 +626,11 @@
         * цвет knyte'а задаёт цвет фона, на котором рисуются record и innerspace
         * цвет knoxel'я задаёт цвет обводки rect'а и arrow
           * определяется в knoxelViews[knoxelId].color
-    * `багфикс - поправить разные смещения foreignObject'ов в разные пространствах`
+    * ряд багфиксов и мелких правок
+      * `на уровне редактора вернуть центрирование текста по knoxel'ю для oneliner'ов`
+      * объединить visualTheme rect.recursive.strokeWidth и arrow.recursive.strokeWidth в recursive.strokeWidth
+      * объединить visualTheme rect.strokeColor и arrow.strokeColor в knoxel.defaultColor
+    * багфикс - поправить разные смещения foreignObject'ов в разныех пространствах
       * spaceroot, 1st level innerspace, 2+ level innerspace
       * смещения различаются на порядок толщины обводки, где-то она некорректно прибавляется/вычитается
 * реализовать интерактивное поведение knoxel'ей
@@ -650,6 +654,7 @@
     * заодно избавиться от дублирования кода между createShapes, createFigure, knoxelSpaceRoot.update
   * выделить всю логику из обработчиков вида function onXXX в отдельные функции
   * каким-то образом обобщить очень сходный код для activeGhost/Bubble, activeInitial/TerminalGhost/Bubble
+  * при изменении knoxel.color перекрашивать не только обводку rect'а и линию arrow, но и маркеры на концах arrow
 * множественное выделение knoxel'ей и совместимость с ним всех реализованных функций
 * пространственная навигация по пространствам knoxel'ей
   * сюда же входит масштабирование и позиционирование содержимого knoxel'ей
