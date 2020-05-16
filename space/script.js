@@ -1958,9 +1958,7 @@ function getSizeOfRecord(data, viewer)
   autosizer.innerHTML = viewer(data);
   const rect = autosizer.getBoundingClientRect();
   autosizer.innerHTML = '';
-  const strokeW = visualTheme.rect.strokeWidth;
-  const w = rect.width + 3*strokeW, h = rect.height + strokeW;
-  return {w, h};
+  return {w: rect.width, h: rect.height};
 }
 
 function onKeyDownWindow(e)
