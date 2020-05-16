@@ -2076,7 +2076,9 @@ function onKeyDownWindow(e)
       const newData = prompt('Edit knyte value', record ? record.data : '');
       if (newData !== null)
       {
-        const size = getSizeOfRecord(newData, recordViewers.centeredOneliner);
+        const newDataSize = getSizeOfRecord(newData, recordViewers.centeredOneliner);
+        const padding = 2*visualTheme.rect.strokeWidth;
+        const size = {w: newDataSize.w + padding, h: newDataSize.h + padding};
         const newRecord = {data: newData, viewer: recordViewers.centeredOneliner, size};
         informationMap[knyteId].record = newRecord;
         setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
