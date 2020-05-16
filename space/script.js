@@ -1959,9 +1959,17 @@ function getSizeOfRecord(data, viewer)
   return {w: rect.width, h: rect.height};
 }
 
+function getOnelinerRecordByData(data)
+{
+  const newDataSize = getSizeOfRecord(data, recordViewers.centeredOneliner);
+  const padding = 2*visualTheme.rect.strokeWidth;
+  const size = {w: newDataSize.w + padding, h: newDataSize.h + padding};
+  return {data: data, viewer: recordViewers.centeredOneliner, size};
+}
+
 function onKeyDownWindow(e)
 {
-  if (document.getElementById('colorpicker').open)
+  if (document.getElementById('colorpicker').open || document.getElementById('recordeditor').open)
     return;
   const mouseoverTarget = document.elementFromPoint(mouseMovePagePosition.x, mouseMovePagePosition.y);
   const mouseoverElement = knoxelRect.getRootByTarget(mouseoverTarget);
@@ -2076,14 +2084,38 @@ function onKeyDownWindow(e)
       const newData = prompt('Edit knyte value', record ? record.data : '');
       if (newData !== null)
       {
-        const newDataSize = getSizeOfRecord(newData, recordViewers.centeredOneliner);
-        const padding = 2*visualTheme.rect.strokeWidth;
-        const size = {w: newDataSize.w + padding, h: newDataSize.h + padding};
-        const newRecord = {data: newData, viewer: recordViewers.centeredOneliner, size};
-        informationMap[knyteId].record = newRecord;
+        informationMap[knyteId].record = getOnelinerRecordByData(newData);
         setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
         handleSpacemapChanged();
       }
+    }
+    else if (!e.shiftKey && e.altKey && !e.metaKey)
+    {
+      function onCloseDialog(e)
+      {
+        e.target.removeEventListener('close', onCloseDialog);
+        const newData = e.target.returnValue;
+        if (newData)
+        {
+          if (informationMap[knyteId].record)
+            informationMap[knyteId].record.data = newData;
+          else
+            informationMap[knyteId].record = getOnelinerRecordByData(newData);
+          setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+          handleSpacemapChanged();
+        }
+      }
+      
+      const knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
+      const knyteId = knoxels[knoxelId];
+      const {record} = informationMap[knyteId];
+      const recordeditorDialog = document.getElementById('recordeditor');
+      const recordeditorInput = recordeditorDialog.getElementsByTagName('input')[0];
+      recordeditorInput.value = record ? record.data : '';
+      recordeditorDialog.returnValue = null;
+      recordeditorDialog.dataset.knyteId = knyteId;
+      recordeditorDialog.addEventListener('close', onCloseDialog);
+      setTimeout(function(){recordeditorDialog.showModal();}, 0);
     }
   }
   else if (e.code === 'KeyS')

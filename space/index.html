@@ -83,9 +83,9 @@
     <script>
       function onKeyPressColorpicker(e)
       {
-        if (e.code === 'Enter' && !e.keyShift && !e.keyAlt && !e.keyMeta)
+        if (e.code === 'Enter' && !e.shiftKey && !e.altKey && !e.metaKey)
           onClickColorpickerOk();
-        else if (e.code === 'Escape' && !e.keyShift && !e.keyAlt && !e.keyMeta)
+        else if (e.code === 'Escape' && !e.shiftKey && !e.altKey && !e.metaKey)
           onClickColorpickerClose();
       }
       
@@ -117,6 +117,100 @@
         const color = visualThemeColors.elements[i];
         colorset.innerHTML += '<button data-color="' + color + '" style="background-color: ' + color + ';" ' +
           'class="colorpickerColorButton" onclick="onClickColorpickerColorButton(event);"></button>';
+      }
+    </script>
+    <dialog id="recordeditor" onkeypress="onKeyPressRecordeditor(event);">
+      <p>
+        Edit knyte record as
+        <select>
+          <option>oneliner</option>
+          <option>formatted multiliner</option>
+        </select>
+      </p>
+      <div>
+        <input>
+      </div>
+      <div>
+        <textarea style="tab-size: 4;" onkeydown="onKeyDownRecordeditor(event);"></textarea>
+      </div>
+      <p>
+        <button onclick="onClickRecordeditorClose();">
+          cancel (esc)
+        </button>
+        <button onclick="onClickRecordeditorOk();">
+          OK (alt+enter)
+        </button>
+      </p>
+    </dialog>
+    <script>
+      function onKeyPressRecordeditor(e)
+      {
+        if (e.code === 'Enter' && !e.shiftKey && e.altKey && !e.metaKey)
+          onClickRecordeditorOk();
+        else if (e.code === 'Escape' && !e.shiftKey && !e.altKey && !e.metaKey)
+          onClickRecordeditorClose();
+      }
+      
+      function onClickRecordeditorClose()
+      {
+        const recordeditorDialog = document.getElementById('recordeditor');
+        recordeditorDialog.close();  
+      }
+      
+      function onClickRecordeditorOk()
+      {
+        const recordeditorDialog = document.getElementById('recordeditor');
+        const recordeditorInput = recordeditorDialog.getElementsByTagName('input')[0];
+        recordeditorDialog.returnValue = recordeditorInput.value;
+        recordeditorDialog.close();
+      }
+      
+      function onKeyDownRecordeditor(e)
+      {
+        function getTextLineWhitespacePositions(text, caretPosition)
+        {
+          // find start of the current line
+          let lineStart = caretPosition;
+          while (lineStart > 0 && text[lineStart-1] !== '\n')
+            --lineStart;
+          // find start of nonspace symbols of the current line
+          let whitespaceEnd = lineStart;
+          while (text[whitespaceEnd] === ' ' || text[whitespaceEnd] === '\t')
+            ++whitespaceEnd;
+          return {text, caretPosition, lineStart, whitespaceEnd};
+        }
+        
+        if (e.code === 'Enter' && !e.shiftKey && !e.altKey && !e.metaKey)
+        {
+          const {text, caretPosition, lineStart, whitespaceEnd} = getTextLineWhitespacePositions(
+            e.target.value, e.target.selectionStart);
+          if (whitespaceEnd > lineStart)
+          {
+            // Insert carriage return and indented text
+            document.execCommand('insertText', false, 
+              '\n' + text.substr(lineStart, Math.min(whitespaceEnd, caretPosition)-lineStart));
+            // Scroll caret visible
+            e.target.blur();
+            e.target.focus();
+            e.preventDefault();
+          }
+        }
+        if(e.code === 'Tab' && !e.altKey && !e.metaKey)
+        {
+          const {caretPosition, lineStart, whitespaceEnd} = getTextLineWhitespacePositions(
+            e.target.value, e.target.selectionStart);
+          const reverseTab = (lineStart < whitespaceEnd && caretPosition <= whitespaceEnd);
+          if (e.shiftKey && reverseTab)
+          {
+            if (caretPosition > lineStart)
+              document.execCommand('delete');
+            else
+              document.execCommand('forwardDelete');
+          }
+          else if (!e.shiftKey || caretPosition > lineStart)
+            document.execCommand('insertText', false, '\t');
+          e.preventDefault();
+        }
       }
     </script>
   </body>
