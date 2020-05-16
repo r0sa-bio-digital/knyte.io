@@ -119,7 +119,7 @@ const knoxelRect = new function()
     return {x1, y1, x2, y2, x3, y3, initialCross, terminalCross};
   }
   
-  function getFigureDimensions(knoxelId, knyteTrace, bubble, strokeWidth)
+  function getFigureDimensions(knoxelId, knyteTrace, bubble)
   {
     const leftTop = {x: 0, y: 0};
     const knyteId = knoxels[knoxelId];
@@ -143,8 +143,8 @@ const knoxelRect = new function()
       const {space, record} = informationMap[knyteId];
       if (record && record.size)
       {
-        w = Math.max(w, record.size.w + strokeWidth);
-        h = Math.max(h, record.size.h + strokeWidth);
+        w = Math.max(w, record.size.w);
+        h = Math.max(h, record.size.h);
         left = 0;
         right = w;
         top = 0;
@@ -166,7 +166,7 @@ const knoxelRect = new function()
           nestedType = 'selfviewed';
         else if (knoxelViews[nestedKnoxelId].collapse)
           nestedType = 'collapse';
-        const d = getFigureDimensions(nestedKnoxelId, nestedKnyteTrace, undefined, visualTheme.recursive.strokeWidth);
+        const d = getFigureDimensions(nestedKnoxelId, nestedKnyteTrace);
         const nestedW = d.w;
         const nestedH = d.h;
         const {x, y} = space[nestedKnoxelId];
@@ -229,8 +229,8 @@ const knoxelRect = new function()
         leftTop.y = top;
         for (let i = 0; i < rects.length; ++i)
         {
-          rects[i].x += -left;// + strokeWidth/2;
-          rects[i].y += -top;// + strokeWidth/2;
+          rects[i].x -= left;
+          rects[i].y -= top;
         }
       }
     }
@@ -318,8 +318,7 @@ const knoxelRect = new function()
           rectGroup.appendChild(rect);
           if (r.type === 'recursive' && r.record)
           {
-            const infoPosition = {x: -r.leftTop.x + visualTheme.recursive.strokeWidth/2,
-              y: -r.leftTop.y + visualTheme.recursive.strokeWidth/2};
+            const infoPosition = {x: -r.leftTop.x, y: -r.leftTop.y};
             const info = createForeignObject({x: infoPosition.x, y: infoPosition.y, record: r.record});
             rectGroup.appendChild(info);
           }
@@ -445,8 +444,7 @@ const knoxelRect = new function()
       const knyteTrace = {};
       const hostKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
       knyteTrace[hostKnyteId] = true;
-      const {w, h, leftTop, rects, arrows, type} = getFigureDimensions(
-        desc.knoxelId, knyteTrace, desc.bubble, visualTheme.rect.strokeWidth);
+      const {w, h, leftTop, rects, arrows, type} = getFigureDimensions(desc.knoxelId, knyteTrace, desc.bubble);
       const x = desc.position.x - w/2;
       const y = desc.position.y - h/2;
       const knoxelVector = knoxelVectors[desc.knoxelId];
@@ -508,7 +506,7 @@ const knoxelRect = new function()
       }
       if (record && type === 'recursive')
       {
-        const infoPosition = {x: -leftTop.x + visualTheme.rect.strokeWidth/2, y: -leftTop.y + visualTheme.rect.strokeWidth/2};
+        const infoPosition = {x: -leftTop.x, y: -leftTop.y};
         const info = createForeignObject({x: infoPosition.x, y: infoPosition.y, record});
         rectGroup.appendChild(info);
       }
@@ -553,7 +551,7 @@ const knoxelRect = new function()
     const knyteTrace = {};
     const hostKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
     knyteTrace[hostKnyteId] = true;
-    const {w, h} = getFigureDimensions(knoxelId, knyteTrace, undefined, visualTheme.rect.strokeWidth);
+    const {w, h} = getFigureDimensions(knoxelId, knyteTrace);
     const {x1, y1, x2, y2, x3, y3} = computeArrowShape(
       w, h, position.x, position.y, knoxelId, hostKnyteId, visualTheme.arrow.strokeWidth);
     arrowShape.points.getItem(0).x = x1;
