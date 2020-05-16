@@ -2135,9 +2135,21 @@ function onKeyDownWindow(e)
       const knyteId = knoxels[knoxelId];
       const {record} = informationMap[knyteId];
       const recordeditorDialog = document.getElementById('recordeditor');
-      // TODO:: make correct input initialisation by record type and value
-      const recordeditorInput = recordeditorDialog.getElementsByTagName('input')[0];
+      let recordtype;
+      if (!record || record.viewer === recordViewers.centeredOneliner)
+        recordtype = 'oneliner';
+      else if (record || record.viewer === recordViewers.multiliner)
+        recordtype = 'multiliner';
+      let recordeditorInput;
+      if (recordtype === 'oneliner')
+        recordeditorInput = document.getElementById('recordinput.oneliner');
+      else if (recordtype === 'multiliner')
+        recordeditorInput = document.getElementById('recordinput.multiliner');
+      document.getElementById('recordinput.oneliner').value = '';
+      document.getElementById('recordinput.multiliner').value = '';
       recordeditorInput.value = record ? record.data : '';
+      document.getElementById('recordtype').value = recordtype;
+      document.getElementById('recordtype').onchange();
       recordeditorDialog.returnValue = '';
       recordeditorDialog.dataset.knyteId = knyteId;
       recordeditorDialog.addEventListener('close', onCloseDialog);

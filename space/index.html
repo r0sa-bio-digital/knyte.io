@@ -134,9 +134,9 @@
         <textarea id="recordinput.multiliner" onkeydown="onKeyDownRecordeditor(event);"></textarea>
       </div>
       <p>
-        <button onclick="onClickRecordeditorClose();">
-          cancel (esc)
-        </button>
+        <span>
+          press esc to cancel
+        </span>
         <button onclick="onClickRecordeditorOk();">
           OK (alt+enter)
         </button>
@@ -149,12 +149,6 @@
           onClickRecordeditorOk();
         else if (e.code === 'Escape' && !e.shiftKey && !e.altKey && !e.metaKey)
           onClickRecordeditorClose();
-      }
-      
-      function onClickRecordeditorClose()
-      {
-        const recordeditorDialog = document.getElementById('recordeditor');
-        recordeditorDialog.cancel();  
       }
       
       function onClickRecordeditorOk()
