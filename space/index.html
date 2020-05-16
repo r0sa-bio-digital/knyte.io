@@ -122,16 +122,16 @@
     <dialog id="recordeditor" onkeypress="onKeyPressRecordeditor(event);">
       <p>
         Edit knyte record as
-        <select>
-          <option>oneliner</option>
-          <option>formatted multiliner</option>
+        <select id="recordtype" onchange="onChangeRecordtype();">
+          <option value="oneliner">oneliner</option>
+          <option value="multiliner">multiliner</option>
         </select>
       </p>
       <div>
-        <input>
+        <input id="recordinput.oneliner">
       </div>
       <div>
-        <textarea style="tab-size: 4;" onkeydown="onKeyDownRecordeditor(event);"></textarea>
+        <textarea id="recordinput.multiliner" onkeydown="onKeyDownRecordeditor(event);"></textarea>
       </div>
       <p>
         <button onclick="onClickRecordeditorClose();">
@@ -154,15 +154,35 @@
       function onClickRecordeditorClose()
       {
         const recordeditorDialog = document.getElementById('recordeditor');
-        recordeditorDialog.close();  
+        recordeditorDialog.cancel();  
       }
       
       function onClickRecordeditorOk()
       {
         const recordeditorDialog = document.getElementById('recordeditor');
-        const recordeditorInput = recordeditorDialog.getElementsByTagName('input')[0];
-        recordeditorDialog.returnValue = recordeditorInput.value;
+        const recordtype = document.getElementById('recordtype').value;
+        if (recordtype === 'oneliner')
+          recordeditorDialog.returnValue = document.getElementById('recordinput.oneliner').value;
+        else if (recordtype === 'multiliner')
+          recordeditorDialog.returnValue = document.getElementById('recordinput.multiliner').value;
+        else
+          recordeditorDialog.returnValue = '';
         recordeditorDialog.close();
+      }
+      
+      function onChangeRecordtype()
+      {
+        const recordtype = document.getElementById('recordtype').value;
+        if (recordtype === 'oneliner')
+        {
+          document.getElementById('recordinput.oneliner').style.display = 'block';
+          document.getElementById('recordinput.multiliner').style.display = 'none';
+        }
+        if (recordtype === 'multiliner')
+        {
+          document.getElementById('recordinput.oneliner').style.display = 'none';
+          document.getElementById('recordinput.multiliner').style.display = 'block';
+        }
       }
       
       function onKeyDownRecordeditor(e)
@@ -212,6 +232,8 @@
           e.preventDefault();
         }
       }
+      
+      onChangeRecordtype();
     </script>
   </body>
 </html>

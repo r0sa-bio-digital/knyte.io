@@ -9,6 +9,19 @@ body {
   overflow: hidden;
 }
 
+textarea {
+  font-family: inherit;
+  tab-size: 4;
+}
+
+button {
+  font-family: inherit;
+}
+
+select {
+  font-family: inherit;
+}
+
 .spaceRoot {
   user-select: none;
 }

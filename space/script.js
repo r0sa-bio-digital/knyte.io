@@ -717,6 +717,11 @@ const recordViewers = new function()
     return '<div style="display: flex; height: 100%; justify-content: center; align-items: center;">' +
       data + '</div>';
   };
+  this.multiliner = function(data)
+  {
+    const padding = 2*visualTheme.rect.strokeWidth;
+    return '<div style="white-space: pre; text-align: left; padding: ' + padding + 'px;">' + data + '</div>';
+  };
   this.strightCode = function(data)
   {
     return data;
@@ -1962,9 +1967,15 @@ function getSizeOfRecord(data, viewer)
 function getOnelinerRecordByData(data)
 {
   const newDataSize = getSizeOfRecord(data, recordViewers.centeredOneliner);
-  const padding = 2*visualTheme.rect.strokeWidth;
+  const padding = 2*visualTheme.rect.strokeWidth; // TODO: move padding to view function and avoid copypaste
   const size = {w: newDataSize.w + padding, h: newDataSize.h + padding};
   return {data: data, viewer: recordViewers.centeredOneliner, size};
+}
+
+function getMultilinerRecordByData(data)
+{
+  const size = getSizeOfRecord(data, recordViewers.multiliner);
+  return {data: data, viewer: recordViewers.multiliner, size};
 }
 
 function onKeyDownWindow(e)
@@ -2091,30 +2102,46 @@ function onKeyDownWindow(e)
     }
     else if (!e.shiftKey && e.altKey && !e.metaKey)
     {
+      function onCancelDialog(e)
+      {
+        e.target.removeEventListener('close', onCloseDialog);
+        e.target.removeEventListener('cancel', onCancelDialog);
+      }
+      
       function onCloseDialog(e)
       {
         e.target.removeEventListener('close', onCloseDialog);
+        e.target.removeEventListener('cancel', onCancelDialog);
+        const knyteId = e.target.dataset.knyteId;
+        if (!knyteId)
+          return;
         const newData = e.target.returnValue;
-        if (newData)
+        const recordtype = document.getElementById('recordtype').value;
+        if (recordtype === 'oneliner')
         {
-          if (informationMap[knyteId].record)
-            informationMap[knyteId].record.data = newData;
-          else
-            informationMap[knyteId].record = getOnelinerRecordByData(newData);
-          setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
-          handleSpacemapChanged();
+          informationMap[knyteId].record = getOnelinerRecordByData(newData);
         }
+        else if (recordtype === 'multiliner')
+        {
+          informationMap[knyteId].record = getMultilinerRecordByData(newData);
+        }
+        else
+          console.error('unknown recordtype: ' + recordtype);
+        setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+        handleSpacemapChanged();
       }
       
       const knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
       const knyteId = knoxels[knoxelId];
       const {record} = informationMap[knyteId];
       const recordeditorDialog = document.getElementById('recordeditor');
+      // TODO:: make correct input initialisation by record type and value
       const recordeditorInput = recordeditorDialog.getElementsByTagName('input')[0];
       recordeditorInput.value = record ? record.data : '';
-      recordeditorDialog.returnValue = null;
+      recordeditorDialog.returnValue = '';
       recordeditorDialog.dataset.knyteId = knyteId;
       recordeditorDialog.addEventListener('close', onCloseDialog);
+      recordeditorDialog.addEventListener('cancel', onCancelDialog);
       setTimeout(function(){recordeditorDialog.showModal();}, 0);
     }
   }
@@ -2164,6 +2191,7 @@ function onKeyDownWindow(e)
       function onCloseDialog(e)
       {
         e.target.removeEventListener('close', onCloseDialog);
+        const knyteId = e.target.dataset.knyteId;
         const newColor = e.target.returnValue;
         if (newColor)
         {

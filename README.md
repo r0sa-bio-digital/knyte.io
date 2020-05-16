@@ -15,7 +15,7 @@
 ----------------------
 * bio-digital concept
 * knoxel space
-* attached knyte web
+* attached knyte cloud
 * attached information map
 * command history
 * full circle functionality
@@ -61,7 +61,10 @@
       * с bubble'ом на knoxel'е того же knyte'а - назначить knoxel как terminal для bubbled knoxel'я
       * с bubble'ом в другом месте - сбросить terminal для ghosted knoxel'я
     * enter
-      * в режиме пространства - вызвать редактор information record'а для knoxel'я под курсором
+      * в режиме пространства - вызвать default information record editor для knoxel'я под курсором
+      * в режиме редактора - установить внесённые изменения
+    * alt + enter
+      * в режиме пространства - вызвать unified information record editor для knoxel'я под курсором
       * в режиме редактора - установить внесённые изменения
     * c
       * в режиме пространства - вызвать редактор color'а для knyte.record knoxel'я под курсором
