@@ -2490,16 +2490,41 @@ function getConnectsByDataMatchFunction(knyteId, match, type)
 
 function runBlockHandleClick(button)
 {
-  function onComplete(success)
+  function onComplete(success, nextKnyteId)
   {
     status.textContent = 'ready';
     ready.textContent = success ? 'success' : 'failed';
     ready.style.backgroundColor = success ? visualThemeColors.success : visualThemeColors.fail;
+    if (nextKnyteId)
+    {
+      // TODO:: run button of exect knoxel
+      // what if we have >1 instances of the knyte in the space?
+      // what if we have no any instances of the knyte in current space, but they are in some other space?
+      // maybe we should visualise running block in all knyte instances?
+      const hostKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
+      const hostSpace = informationMap[hostKnyteId].space;
+      let nextKnoxelId;
+      for (let knoxelId in knoxels)
+        if (knoxels[knoxelId] === nextKnyteId && knoxelId in hostSpace)
+          nextKnoxelId = knoxelId;
+      if (nextKnoxelId)
+      {
+        const nextKnoxelElement = document.getElementById(nextKnoxelId);
+        const nextKnoxelForeignObject = nextKnoxelElement.getElementsByTagName('foreignObject')[0];
+        const nextKnoxelButton = nextKnoxelForeignObject.getElementsByTagName('button')[0];
+        runBlockHandleClick(nextKnoxelButton);
+      }
+    }
   }
   
   function matchCode(data)
   {
     return data === 'code';
+  }
+  
+  function matchNext(data)
+  {
+    return data === 'next';
   }
   
   function matchDataParameter(data)
@@ -2525,10 +2550,13 @@ function runBlockHandleClick(button)
   ready.textContent = '...';
   ready.style.backgroundColor = '';
   const codeKnytes = getConnectsByDataMatchFunction(knyteId, matchCode, 'terminal');
-  const linkKnyteId = codeKnytes[0];
-  const codeKnyteId = linkKnyteId ? knyteVectors[linkKnyteId].initialKnyteId : undefined;
+  const codeLinkKnyteId = codeKnytes[0];
+  const codeKnyteId = codeLinkKnyteId ? knyteVectors[codeLinkKnyteId].initialKnyteId : undefined;
   const codeRecord = codeKnyteId ? informationMap[codeKnyteId].record : undefined;
   let codeText = codeRecord ? codeRecord.data : '';
+  const nextKnytes = getConnectsByDataMatchFunction(knyteId, matchNext, 'initial');
+  const nextLinkKnyteId = nextKnytes[0];
+  const nextKnyteId = nextLinkKnyteId ? knyteVectors[nextLinkKnyteId].terminalKnyteId : undefined;
   const inputKnytes = getConnectsByDataMatchFunction(knyteId, matchDataParameter, 'terminal');
   const outputKnytes = getConnectsByDataMatchFunction(knyteId, matchDataParameter, 'initial');
   const namesSequence = [];
@@ -2572,7 +2600,9 @@ function runBlockHandleClick(button)
   try
   {
     if (codeKnytes.length > 1)
-      throw Error('run block knyte ' + knyteId + ' has more than 1 code parameters');
+      throw Error('run block knyte ' + knyteId + ' has more than 1 code links');
+    if (nextKnytes.length > 1)
+      throw Error('run block knyte ' + knyteId + ' has more than 1 next links');
     const namesMap = {};
     for (let i = 0; i < namesSequence.length; ++i)
     {
@@ -2631,7 +2661,7 @@ function runBlockHandleClick(button)
         }
         finally
         {
-          onComplete(codeComplete);
+          onComplete(codeComplete, nextKnyteId);
         }
       }, 
       1000
