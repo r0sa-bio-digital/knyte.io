@@ -4,6 +4,8 @@ const visualThemeColors = {
   text: '#101010',
   navigation: '#ffffdd',
   control: '#160f19',
+  success: '#55ff84',
+  fail: '#ff5d5d',
   elements: [
     '#79e6d9',
     '#a4a4e4',

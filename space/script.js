@@ -2451,13 +2451,13 @@ const codeTemplates = {
   runBlock: function(knyteId) {return '<div style="width: 200px; height: 24px; margin: 8px;">' +
     '<button\n' +
       '\tdata-knyte-id="' + knyteId + '"' +
-      '\tonclick="runBlockHandleClick(this); event.stopPropagation();"\n' +
+      '\tonclick="event.stopPropagation(); runBlockHandleClick(this);"\n' +
       '\tonfocus="this.blur();"\n' +
     '>\n' +
       '\trun\n' +
     '</button>\n' +
     '<span class="runStatus" title="status">ready</span>\n' +
-    '<span class="runResult" title="last result">none</span>' +
+    '<span class="runResult" title="last result" style="padding: 2px;">none</span>' +
   '</div>'},
 };
 
@@ -2481,10 +2481,11 @@ function getConnectsByRecordData(knyteId, data, type)
 
 function runBlockHandleClick(button)
 {
-  function onComplete()
+  function onComplete(success)
   {
     status.textContent = 'ready';
-    ready.textContent = 'success';
+    ready.textContent = success ? 'success' : 'failed';
+    ready.style.backgroundColor = success ? visualThemeColors.success : visualThemeColors.fail;
   }
   
   const root = button.parentElement;
@@ -2492,21 +2493,34 @@ function runBlockHandleClick(button)
   const ready = root.getElementsByClassName('runResult')[0];
   const knyteId = button.dataset.knyteId;
   status.textContent = 'working';
-  ready.textContent = '...'
+  ready.textContent = '...';
+  ready.style.backgroundColor = '';
   const codeKnytes = getConnectsByRecordData(knyteId, 'code', 'terminal');
-  if (codeKnytes.length > 1)
-  {
-    status.textContent = 'ready';
-    ready.textContent = 'failed';
-    console.error('run block knyte ' + knyteId + ' has more than 1 code parameters');
-    return;
-  }
   const linkKnyteId = codeKnytes[0];
   const codeKnyteId = linkKnyteId ? knyteVectors[linkKnyteId].initialKnyteId : undefined;
   const codeRecord = codeKnyteId ? informationMap[codeKnyteId].record : undefined;
   const codeText = codeRecord ? codeRecord.data : '';
-  const codeFunction = new Function(codeText);
-  setTimeout(function(){codeFunction(); onComplete();}, 1000);
+  let runComplete = false;
+  try
+  {
+    if (codeKnytes.length > 1)
+      throw Error('run block knyte ' + knyteId + ' has more than 1 code parameters');
+    const codeFunction = new Function(codeText);
+    setTimeout(
+      function(){let codeComplete = false; try{codeFunction(); codeComplete = true;} finally{onComplete(codeComplete);}}, 
+      1000
+    );
+    runComplete = true;
+  }
+  finally
+  {
+    if (!runComplete)
+    {
+      status.textContent = 'ready';
+      ready.textContent = 'failed';
+      ready.style.backgroundColor = visualThemeColors.fail;
+    }
+  }
 }
 
 function spacemapChangedHandler()
