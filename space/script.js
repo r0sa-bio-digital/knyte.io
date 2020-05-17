@@ -1988,6 +1988,12 @@ function getMultilinerRecordByData(data)
   return {data: data, viewer: recordViewers.multiliner, size};
 }
 
+function getInteractiveRecordByData(data)
+{
+  const size = getSizeOfRecord(data, recordViewers.strightCode);
+  return {data: data, viewer: recordViewers.strightCode, size};
+}
+
 function onKeyDownWindow(e)
 {
   if (document.getElementById('colorpicker').open || document.getElementById('recordeditor').open)
@@ -2143,6 +2149,10 @@ function onKeyDownWindow(e)
         {
           informationMap[knyteId].record = getMultilinerRecordByData(newData);
         }
+        else if (recordtype === 'interactive')
+        {
+          informationMap[knyteId].record = getInteractiveRecordByData(newData);
+        }
         else
           console.error('unknown recordtype: ' + recordtype);
         setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
@@ -2156,15 +2166,14 @@ function onKeyDownWindow(e)
       let recordtype;
       if (!record || record.viewer === recordViewers.centeredOneliner)
         recordtype = 'oneliner';
-      else if (record || record.viewer === recordViewers.multiliner)
+      else if (record && record.viewer === recordViewers.multiliner)
         recordtype = 'multiliner';
-      let recordeditorInput;
-      if (recordtype === 'oneliner')
-        recordeditorInput = document.getElementById('recordinput.oneliner');
-      else if (recordtype === 'multiliner')
-        recordeditorInput = document.getElementById('recordinput.multiliner');
+      else if (record && record.viewer === recordViewers.strightCode)
+        recordtype = 'interactive';
+      let recordeditorInput = document.getElementById('recordinput.' + recordtype);
       document.getElementById('recordinput.oneliner').value = '';
       document.getElementById('recordinput.multiliner').value = '';
+      document.getElementById('recordinput.interactive').value = '';
       recordeditorInput.value = record ? record.data : '';
       document.getElementById('recordtype').value = recordtype;
       document.getElementById('recordtype').onchange();

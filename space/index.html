@@ -125,6 +125,7 @@
         <select id="recordtype" onchange="onChangeRecordtype();">
           <option value="oneliner">oneliner</option>
           <option value="multiliner">multiliner</option>
+          <option value="interactive">interactive</option>
         </select>
       </p>
       <div style="min-height: 256px;">
@@ -133,6 +134,10 @@
         </div>
         <div>
           <textarea id="recordinput.multiliner" style="white-space: pre; min-width: 320px; min-height: 64px;"
+            rows="16" cols="80" onkeydown="onKeyDownRecordeditor(event);"></textarea>
+        </div>
+        <div>
+          <textarea id="recordinput.interactive" style="white-space: pre; min-width: 320px; min-height: 64px;"
             rows="16" cols="80" onkeydown="onKeyDownRecordeditor(event);"></textarea>
         </div>
       </div>
@@ -158,12 +163,7 @@
       {
         const recordeditorDialog = document.getElementById('recordeditor');
         const recordtype = document.getElementById('recordtype').value;
-        if (recordtype === 'oneliner')
-          recordeditorDialog.returnValue = document.getElementById('recordinput.oneliner').value;
-        else if (recordtype === 'multiliner')
-          recordeditorDialog.returnValue = document.getElementById('recordinput.multiliner').value;
-        else
-          recordeditorDialog.returnValue = '';
+        recordeditorDialog.returnValue = document.getElementById('recordinput.' + recordtype).value;
         recordeditorDialog.close();
       }
       
@@ -174,11 +174,19 @@
         {
           document.getElementById('recordinput.oneliner').style.display = 'block';
           document.getElementById('recordinput.multiliner').style.display = 'none';
+          document.getElementById('recordinput.interactive').style.display = 'none';
         }
         if (recordtype === 'multiliner')
         {
           document.getElementById('recordinput.oneliner').style.display = 'none';
           document.getElementById('recordinput.multiliner').style.display = 'block';
+          document.getElementById('recordinput.interactive').style.display = 'none';
+        }
+        if (recordtype === 'interactive')
+        {
+          document.getElementById('recordinput.oneliner').style.display = 'none';
+          document.getElementById('recordinput.multiliner').style.display = 'none';
+          document.getElementById('recordinput.interactive').style.display = 'block';
         }
       }
       
