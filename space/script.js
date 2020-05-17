@@ -715,12 +715,13 @@ const recordViewers = new function()
   this.centeredOneliner = function(data)
   {
     return '<div style="display: flex; height: 100%; justify-content: center; align-items: center;">' +
-      data + '</div>';
+      getHtmlFromText(data) + '</div>';
   };
   this.multiliner = function(data)
   {
     const padding = 2*visualTheme.rect.strokeWidth;
-    return '<div style="white-space: pre; text-align: left; padding: ' + padding + 'px;">' + data + '</div>';
+    return '<div style="white-space: pre; text-align: left; tab-size: 4; padding: ' + padding + 'px;">' +
+      getHtmlFromText(data) + '</div>';
   };
   this.strightCode = function(data)
   {
@@ -1964,6 +1965,15 @@ function getSizeOfRecord(data, viewer)
   return {w: rect.width, h: rect.height};
 }
 
+function getHtmlFromText(text)
+{
+  const autosizer = document.getElementById('autosizer');
+  autosizer.textContent = text;
+  const code = autosizer.innerHTML;
+  autosizer.innerHTML = '';
+  return code;
+}
+
 function getOnelinerRecordByData(data)
 {
   const newDataSize = getSizeOfRecord(data, recordViewers.centeredOneliner);
@@ -2092,6 +2102,14 @@ function onKeyDownWindow(e)
       const knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
       const knyteId = knoxels[knoxelId];
       const {record} = informationMap[knyteId];
+      let recordtype;
+      if (!record || record.viewer === recordViewers.centeredOneliner)
+        recordtype = 'oneliner';
+      if (recordtype !== 'oneliner')
+      {
+        alert('Record type not supported by simple editor. Please, run unified editor by alt+enter.');
+        return;
+      }
       const newData = prompt('Edit knyte value', record ? record.data : '');
       if (newData !== null)
       {
@@ -2154,7 +2172,7 @@ function onKeyDownWindow(e)
       recordeditorDialog.dataset.knyteId = knyteId;
       recordeditorDialog.addEventListener('close', onCloseDialog);
       recordeditorDialog.addEventListener('cancel', onCancelDialog);
-      setTimeout(function(){recordeditorDialog.showModal();}, 0);
+      setTimeout(function(){recordeditorDialog.showModal(); recordeditorInput.focus();}, 0);
     }
   }
   else if (e.code === 'KeyS')

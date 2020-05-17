@@ -127,11 +127,14 @@
           <option value="multiliner">multiliner</option>
         </select>
       </p>
-      <div>
-        <input id="recordinput.oneliner">
-      </div>
-      <div>
-        <textarea id="recordinput.multiliner" onkeydown="onKeyDownRecordeditor(event);"></textarea>
+      <div style="min-height: 256px;">
+        <div>
+          <input id="recordinput.oneliner" size="64">
+        </div>
+        <div>
+          <textarea id="recordinput.multiliner" style="white-space: pre; min-width: 320px; min-height: 64px;"
+            rows="16" cols="80" onkeydown="onKeyDownRecordeditor(event);"></textarea>
+        </div>
       </div>
       <p>
         <span>
