@@ -181,7 +181,9 @@
 
       function onClickRunBlock()
       {
-        document.getElementById('recordinput.interactive').value = codeTemplates.runBlock;
+        const recordeditorDialog = document.getElementById('recordeditor');
+        document.getElementById('recordinput.interactive').value = codeTemplates.runBlock(
+          recordeditorDialog.dataset.knyteId);
       }
       
       function onKeyDownRecordeditor(e)

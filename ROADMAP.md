@@ -712,6 +712,7 @@
   * при изменении knoxel.color перекрашивать не только обводку rect'а и линию arrow, но и маркеры на концах arrow
   * объединить knoxels, knoxelVectors и knoxelViews в knoxelSpace со следующей структурой
     * knoxelSpace[knoxelId] = {knyteId, vector: {initialKnoxelId, terminalKnoxelId}, collapse, color}
+  * переименовать knyteVectors в knyteCloud
 * множественное выделение knoxel'ей и совместимость с ним всех реализованных функций
 * пространственная навигация по пространствам knoxel'ей
   * сюда же входит масштабирование и позиционирование содержимого knoxel'ей

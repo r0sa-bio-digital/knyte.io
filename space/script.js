@@ -11,6 +11,9 @@ let spacemapKnoxelId;
 let handleSpacemapChanged = function() {};
 const knyteVectors = {}; // knyte id --> {initialKnyteId, terminalKnyteId}
 const knoxelVectors = {}; // knoxel id --> {initialKnoxelId, terminalKnoxelId}
+const knyteConnects = {}; // knyte id --> {knyte id: true}
+const knyteInitialConnects = {}; // knyte id --> {knyte id: true}
+const knyteTerminalConnects = {}; // knyte id --> {knyte id: true}
 const informationMap = {}; // knyte id --> {color, space: {knoxel id --> position}, record: {data, viewer}, size}
 const knoxels = {}; // knoxel id --> knyte id
 const knoxelViews = {}; // knoxel id --> {collapse, color}
@@ -85,6 +88,38 @@ const knit = new function()
   this.new = function() {return textUuidV4();};
 }
 
+function updateKnyteConnects(knyteId, connectType, connectOperation, connectKnyteId)
+{
+  if (!knyteId || !connectKnyteId)
+    return;
+  if (connectType === 'initial')
+  {
+    if (connectOperation === 'add')
+    {
+      knyteConnects[knyteId][connectKnyteId] = true;
+      knyteInitialConnects[knyteId][connectKnyteId] = true;
+    }
+    else if (connectOperation === 'remove')
+    {
+      delete knyteConnects[knyteId][connectKnyteId];
+      delete knyteInitialConnects[knyteId][connectKnyteId];
+    }
+  }
+  else if (connectType === 'terminal')
+  {
+    if (connectOperation === 'add')
+    {
+      knyteConnects[knyteId][connectKnyteId] = true;
+      knyteTerminalConnects[knyteId][connectKnyteId] = true;
+    }
+    else if (connectOperation === 'remove')
+    {
+      delete knyteConnects[knyteId][connectKnyteId];
+      delete knyteTerminalConnects[knyteId][connectKnyteId];
+    }
+  }
+}
+
 function addKnyte(desc)
 {
   // desc: {knyteId, initialKnyteId, terminalKnyteId, color}
@@ -92,6 +127,11 @@ function addKnyte(desc)
     initialKnyteId: desc.initialKnyteId,
     terminalKnyteId: desc.terminalKnyteId
   };
+  knyteConnects[desc.knyteId] = {};
+  knyteInitialConnects[desc.knyteId] = {};
+  knyteTerminalConnects[desc.knyteId] = {};
+  updateKnyteConnects(desc.initialKnyteId, 'initial', 'add', desc.knyteId);
+  updateKnyteConnects(desc.terminalKnyteId, 'terminal', 'add', desc.knyteId);
   informationMap[desc.knyteId] = {color: desc.color, space: {}};
 }
 
@@ -1245,16 +1285,22 @@ function cleanupKnoxelVectorsByKnyteVector(desc)
 function assignKnyteVectorInitial(desc)
 {
   // desc: {jointKnyteId, initialKnyteId}
+  const priorInitialKnyteId = knyteVectors[desc.jointKnyteId].initialKnyteId;
   knyteVectors[desc.jointKnyteId].initialKnyteId = desc.initialKnyteId;
   const {initialKnyteId, terminalKnyteId} = knyteVectors[desc.jointKnyteId];
+  updateKnyteConnects(priorInitialKnyteId, 'initial', 'remove', desc.jointKnyteId);
+  updateKnyteConnects(initialKnyteId, 'initial', 'add', desc.jointKnyteId);
   cleanupKnoxelVectorsByKnyteVector({jointKnyteId: desc.jointKnyteId, initialKnyteId, terminalKnyteId});
 }
 
 function assignKnyteVectorTerminal(desc)
 {
   // desc: {jointKnyteId, terminalKnyteId}
+  const priorTerminalKnyteId = knyteVectors[desc.jointKnyteId].terminalKnyteId;
   knyteVectors[desc.jointKnyteId].terminalKnyteId = desc.terminalKnyteId;
   const {initialKnyteId, terminalKnyteId} = knyteVectors[desc.jointKnyteId];
+  updateKnyteConnects(priorTerminalKnyteId, 'terminal', 'remove', desc.jointKnyteId);
+  updateKnyteConnects(terminalKnyteId, 'terminal', 'add', desc.jointKnyteId);
   cleanupKnoxelVectorsByKnyteVector({jointKnyteId: desc.jointKnyteId, initialKnyteId, terminalKnyteId});
 }
 
@@ -2402,8 +2448,9 @@ function onKeyDownWindow(e)
 }
 
 const codeTemplates = {
-  runBlock: '<div style="width: 200px; height: 24px; margin: 8px;">' +
+  runBlock: function(knyteId) {return '<div style="width: 200px; height: 24px; margin: 8px;">' +
     '<button\n' +
+      '\tdata-knyte-id="' + knyteId + '"' +
       '\tonclick="runBlockHandleClick(this); event.stopPropagation();"\n' +
       '\tonfocus="this.blur();"\n' +
     '>\n' +
@@ -2411,8 +2458,26 @@ const codeTemplates = {
     '</button>\n' +
     '<span class="runStatus" title="status">ready</span>\n' +
     '<span class="runResult" title="last result">none</span>' +
-  '</div>',
+  '</div>'},
 };
+
+function getConnectsByRecordData(knyteId, data, type)
+{
+  const result = [];
+  let connects = knyteConnects;
+  if (type === 'initial')
+    connects = knyteInitialConnects;
+  else if (type === 'terminal')
+    connects = knyteTerminalConnects;
+  const connectedKnytes = connects[knyteId];
+  for (let connectedKnyteId in connectedKnytes)
+  {
+    const {record} = informationMap[connectedKnyteId];
+    if (record && record.data === data)
+      result.push(connectedKnyteId);
+  }
+  return result;
+}
 
 function runBlockHandleClick(button)
 {
@@ -2425,9 +2490,22 @@ function runBlockHandleClick(button)
   const root = button.parentElement;
   const status = root.getElementsByClassName('runStatus')[0];
   const ready = root.getElementsByClassName('runResult')[0];
+  const knyteId = button.dataset.knyteId;
   status.textContent = 'working';
   ready.textContent = '...'
-  setTimeout(function(){console.log('q'); onComplete();}, 1000);
+  const codeKnytes = getConnectsByRecordData(knyteId, 'code', 'terminal');
+  if (codeKnytes.length > 1)
+  {
+    status.textContent = 'ready';
+    ready.textContent = 'failed';
+    console.error('run block knyte ' + knyteId + ' has more than 1 code parameters');
+    return;
+  }
+  const linkKnyteId = codeKnytes[0];
+  const codeKnyteId = linkKnyteId ? knyteVectors[linkKnyteId].initialKnyteId : undefined;
+  const codeRecord = codeKnyteId ? informationMap[codeKnyteId].record : undefined;
+  const codeText = codeRecord ? codeRecord.data : '';
+  setTimeout(function(){console.log(codeText); onComplete();}, 1000);
 }
 
 function spacemapChangedHandler()
