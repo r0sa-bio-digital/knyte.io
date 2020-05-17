@@ -2505,7 +2505,8 @@ function runBlockHandleClick(button)
   const codeKnyteId = linkKnyteId ? knyteVectors[linkKnyteId].initialKnyteId : undefined;
   const codeRecord = codeKnyteId ? informationMap[codeKnyteId].record : undefined;
   const codeText = codeRecord ? codeRecord.data : '';
-  setTimeout(function(){console.log(codeText); onComplete();}, 1000);
+  const codeFunction = new Function(codeText);
+  setTimeout(function(){codeFunction(); onComplete();}, 1000);
 }
 
 function spacemapChangedHandler()
