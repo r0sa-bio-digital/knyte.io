@@ -2414,6 +2414,35 @@ function onKeyDownWindow(e)
   }
 }
 
+const codeTemplates = {
+  runBlock: '<div style="width: 200px; height: 24px; margin: 8px;">' +
+    '<button\n' +
+      '\tonclick="runBlockHandleClick(this); event.stopPropagation();"\n' +
+      '\tonfocus="this.blur();"\n' +
+    '>\n' +
+      '\trun\n' +
+    '</button>\n' +
+    '<span class="runStatus" title="status">ready</span>\n' +
+    '<span class="runResult" title="last result">none</span>' +
+  '</div>',
+};
+
+function runBlockHandleClick(button)
+{
+  function onComplete()
+  {
+    status.textContent = 'ready';
+    ready.textContent = 'success';
+  }
+  
+  const root = button.parentElement;
+  const status = root.getElementsByClassName('runStatus')[0];
+  const ready = root.getElementsByClassName('runResult')[0];
+  status.textContent = 'working';
+  ready.textContent = '...'
+  setTimeout(function(){console.log('q'); onComplete();}, 1000);
+}
+
 function spacemapChangedHandler()
 {
   // rebuild spacemapKnoxelId space: add knoxels for all new knytes; recreate all arrows.

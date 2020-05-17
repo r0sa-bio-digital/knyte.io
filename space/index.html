@@ -129,16 +129,19 @@
         </select>
       </p>
       <div style="min-height: 256px;">
-        <div>
+        <div id="recorddiv.oneliner" class="recorddiv">
           <input id="recordinput.oneliner" size="64">
         </div>
-        <div>
+        <div id="recorddiv.multiliner" class="recorddiv">
           <textarea id="recordinput.multiliner" style="white-space: pre; min-width: 320px; min-height: 64px;"
             rows="16" cols="80" onkeydown="onKeyDownRecordeditor(event);"></textarea>
         </div>
-        <div>
+        <div id="recorddiv.interactive" class="recorddiv">
           <textarea id="recordinput.interactive" style="white-space: pre; min-width: 320px; min-height: 64px;"
-            rows="16" cols="80" onkeydown="onKeyDownRecordeditor(event);"></textarea>
+            rows="15" cols="80" onkeydown="onKeyDownRecordeditor(event);"></textarea>
+          <div style="text-align: left;">
+            <button onclick="onClickRunBlock();">run block</button>
+          </div>
         </div>
       </div>
       <p>
@@ -170,24 +173,15 @@
       function onChangeRecordtype()
       {
         const recordtype = document.getElementById('recordtype').value;
-        if (recordtype === 'oneliner')
-        {
-          document.getElementById('recordinput.oneliner').style.display = 'block';
-          document.getElementById('recordinput.multiliner').style.display = 'none';
-          document.getElementById('recordinput.interactive').style.display = 'none';
-        }
-        if (recordtype === 'multiliner')
-        {
-          document.getElementById('recordinput.oneliner').style.display = 'none';
-          document.getElementById('recordinput.multiliner').style.display = 'block';
-          document.getElementById('recordinput.interactive').style.display = 'none';
-        }
-        if (recordtype === 'interactive')
-        {
-          document.getElementById('recordinput.oneliner').style.display = 'none';
-          document.getElementById('recordinput.multiliner').style.display = 'none';
-          document.getElementById('recordinput.interactive').style.display = 'block';
-        }
+        const recorddivs = document.getElementsByClassName('recorddiv');
+        for (let i = 0; i < recorddivs.length; ++i)
+          recorddivs[i].style.display = 'none';
+        document.getElementById('recorddiv.' + recordtype).style.display = 'block';
+      }
+
+      function onClickRunBlock()
+      {
+        document.getElementById('recordinput.interactive').value = codeTemplates.runBlock;
       }
       
       function onKeyDownRecordeditor(e)
