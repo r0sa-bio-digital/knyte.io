@@ -2459,7 +2459,7 @@ function onKeyDownWindow(e)
 const codeTemplates = {
   runBlock: function(knyteId) {return '<div style="width: 200px; height: 24px; margin: 8px;">' +
     '<button\n' +
-      '\tdata-knyte-id="' + knyteId + '"' +
+      '\tdata-knyte-id="' + knyteId + '"\n' +
       '\tonclick="event.stopPropagation(); runBlockHandleClick(this);"\n' +
       '\tonfocus="this.blur();"\n' +
     '>\n' +
