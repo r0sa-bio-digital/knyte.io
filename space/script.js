@@ -2027,6 +2027,34 @@ function getInteractiveRecordByData(data)
   return {data: data, viewer: recordViewers.strightCode, size};
 }
 
+function setKnyteRecordData(knyteId, recordtype, newData)
+{
+  if (recordtype === 'oneliner')
+  {
+    informationMap[knyteId].record = getOnelinerRecordByData(newData);
+  }
+  else if (recordtype === 'multiliner')
+  {
+    informationMap[knyteId].record = getMultilinerRecordByData(newData);
+  }
+  else if (recordtype === 'interactive')
+  {
+    informationMap[knyteId].record = getInteractiveRecordByData(newData);
+  }
+  else
+    console.error('unknown recordtype: ' + recordtype);
+}
+
+function getRecordtype(record)
+{
+  if (!record || record.viewer === recordViewers.centeredOneliner)
+    return 'oneliner';
+  else if (record && record.viewer === recordViewers.multiliner)
+    return 'multiliner';
+  else if (record && record.viewer === recordViewers.strightCode)
+    return 'interactive';
+}
+
 function onKeyDownWindow(e)
 {
   if (document.getElementById('colorpicker').open || document.getElementById('recordeditor').open)
@@ -2172,22 +2200,9 @@ function onKeyDownWindow(e)
         const knyteId = e.target.dataset.knyteId;
         if (!knyteId)
           return;
-        const newData = e.target.returnValue;
         const recordtype = document.getElementById('recordtype').value;
-        if (recordtype === 'oneliner')
-        {
-          informationMap[knyteId].record = getOnelinerRecordByData(newData);
-        }
-        else if (recordtype === 'multiliner')
-        {
-          informationMap[knyteId].record = getMultilinerRecordByData(newData);
-        }
-        else if (recordtype === 'interactive')
-        {
-          informationMap[knyteId].record = getInteractiveRecordByData(newData);
-        }
-        else
-          console.error('unknown recordtype: ' + recordtype);
+        const newData = e.target.returnValue;
+        setKnyteRecordData(knyteId, recordtype, newData);
         setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
         handleSpacemapChanged();
       }
@@ -2195,14 +2210,7 @@ function onKeyDownWindow(e)
       const knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
       const knyteId = knoxels[knoxelId];
       const {record} = informationMap[knyteId];
-      const recordeditorDialog = document.getElementById('recordeditor');
-      let recordtype;
-      if (!record || record.viewer === recordViewers.centeredOneliner)
-        recordtype = 'oneliner';
-      else if (record && record.viewer === recordViewers.multiliner)
-        recordtype = 'multiliner';
-      else if (record && record.viewer === recordViewers.strightCode)
-        recordtype = 'interactive';
+      const recordtype = getRecordtype(record);
       let recordeditorInput = document.getElementById('recordinput.' + recordtype);
       document.getElementById('recordinput.oneliner').value = '';
       document.getElementById('recordinput.multiliner').value = '';
@@ -2210,6 +2218,7 @@ function onKeyDownWindow(e)
       recordeditorInput.value = record ? record.data : '';
       document.getElementById('recordtype').value = recordtype;
       document.getElementById('recordtype').onchange();
+      const recordeditorDialog = document.getElementById('recordeditor');
       recordeditorDialog.returnValue = '';
       recordeditorDialog.dataset.knyteId = knyteId;
       recordeditorDialog.addEventListener('close', onCloseDialog);
@@ -2519,7 +2528,7 @@ function runBlockHandleClick(button)
   const linkKnyteId = codeKnytes[0];
   const codeKnyteId = linkKnyteId ? knyteVectors[linkKnyteId].initialKnyteId : undefined;
   const codeRecord = codeKnyteId ? informationMap[codeKnyteId].record : undefined;
-  const codeText = codeRecord ? codeRecord.data : '';
+  let codeText = codeRecord ? codeRecord.data : '';
   const inputKnytes = getConnectsByDataMatchFunction(knyteId, matchDataParameter, 'terminal');
   const outputKnytes = getConnectsByDataMatchFunction(knyteId, matchDataParameter, 'initial');
   const namesSequence = [];
@@ -2540,10 +2549,9 @@ function runBlockHandleClick(button)
       inputNamesSequence.push(inputName);
     }
   }
-  console.log(inputKnytes);
-  console.log(inputs);
   const outputNamesSequence = [];
   const outputs = {};
+  const outputNameToKnyteMap = {};
   for (let i = 0; i < outputKnytes.length; ++i)
   {
     const outputLinkKnyteId = outputKnytes[i];
@@ -2557,10 +2565,9 @@ function runBlockHandleClick(button)
       outputs[outputName] = outputValue;
       namesSequence.push(outputName);
       outputNamesSequence.push(outputName);
+      outputNameToKnyteMap[outputName] = outputKnyteId;
     }
   }
-  console.log(outputKnytes);
-  console.log(outputs);
   let runComplete = false;
   try
   {
@@ -2582,6 +2589,21 @@ function runBlockHandleClick(button)
       formalParametersList += '"' + name + '", ';
       actualParametersList += (i > 0 ? ', ' : '') + '"' + inputs[name] + '"';
     }
+    if (outputNamesSequence.length)
+    {
+      let outputParametersDefinition = 'let ';
+      let outputParametersReturn = '\nreturn {';
+      for (let i = 0; i < outputNamesSequence.length; ++i)
+      {
+        const name = outputNamesSequence[i];
+        outputParametersDefinition += (i > 0 ? ', ' : '') + name;
+        outputParametersReturn += (i > 0 ? ', ' : '') + name;
+      }
+      outputParametersDefinition += '; // autogenerated code line\n';
+      outputParametersReturn += '}; // autogenerated code line';
+      codeText = outputParametersDefinition + codeText + outputParametersReturn;
+    }
+    codeText = '"use strict";\n' + codeText;
     const codeFunction = eval('new Function(' + formalParametersList + 'codeText)');
     setTimeout(
       function()
@@ -2589,7 +2611,22 @@ function runBlockHandleClick(button)
         let codeComplete = false;
         try
         {
-          eval('codeFunction(' + actualParametersList + ')');
+          const results = eval('codeFunction(' + actualParametersList + ')');
+          let gotOutput = false;
+          for (let resultName in results)
+          {
+            const resultKnyteId = outputNameToKnyteMap[resultName];
+            const resultValue = results[resultName];
+            const {record} = informationMap[resultKnyteId];
+            const recordtype = getRecordtype(record);
+            setKnyteRecordData(resultKnyteId, recordtype, resultValue);
+            gotOutput = true;
+          }
+          if (gotOutput)
+          {
+            setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+            handleSpacemapChanged();
+          }
           codeComplete = true;
         }
         finally
