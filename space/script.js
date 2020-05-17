@@ -2730,7 +2730,7 @@ function onLoadBody(e)
   // create master and spacemap knoxels
   const position = {x: visualTheme.rect.defaultWidth, y: visualTheme.rect.defaultHeight};
   addKnoxel({hostKnyteId: spacemapKnyteId, knyteId: masterKnyteId, knoxelId: masterKnoxelId, position});
-  addKnoxel({hostKnyteId: masterKnyteId, knyteId: spacemapKnyteId, knoxelId: spacemapKnoxelId, position});
+  addKnoxel({hostKnyteId: spacemapKnyteId, knyteId: spacemapKnyteId, knoxelId: spacemapKnoxelId, position});
   // setup event handlers
   spaceRootElement.addEventListener('click', onClickSpaceRoot, false);
   spaceRootElement.addEventListener('mousedown', onMouseDownSpaceRoot, false);
