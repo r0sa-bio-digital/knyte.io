@@ -2461,7 +2461,7 @@ const codeTemplates = {
   '</div>'},
 };
 
-function getConnectsByRecordData(knyteId, data, type)
+function getConnectsByDataMatchFunction(knyteId, match, type)
 {
   const result = [];
   let connects = knyteConnects;
@@ -2473,7 +2473,7 @@ function getConnectsByRecordData(knyteId, data, type)
   for (let connectedKnyteId in connectedKnytes)
   {
     const {record} = informationMap[connectedKnyteId];
-    if (record && record.data === data)
+    if (record && match(record.data))
       result.push(connectedKnyteId);
   }
   return result;
@@ -2488,6 +2488,26 @@ function runBlockHandleClick(button)
     ready.style.backgroundColor = success ? visualThemeColors.success : visualThemeColors.fail;
   }
   
+  function matchCode(data)
+  {
+    return data === 'code';
+  }
+  
+  function matchDataParameter(data)
+  {
+    return data.length > 2 && data[0] === '(' && data[data.length-1] === ')';
+  }
+
+  function matchKnoxelParameter(data)
+  {
+    return data.length > 2 && data[0] === '[' && data[data.length-1] === ']';
+  }
+  
+  function extractParameterName(data)
+  {
+    return data.substr(1, data.length-2);
+  }
+  
   const root = button.parentElement;
   const status = root.getElementsByClassName('runStatus')[0];
   const ready = root.getElementsByClassName('runResult')[0];
@@ -2495,19 +2515,88 @@ function runBlockHandleClick(button)
   status.textContent = 'working';
   ready.textContent = '...';
   ready.style.backgroundColor = '';
-  const codeKnytes = getConnectsByRecordData(knyteId, 'code', 'terminal');
+  const codeKnytes = getConnectsByDataMatchFunction(knyteId, matchCode, 'terminal');
   const linkKnyteId = codeKnytes[0];
   const codeKnyteId = linkKnyteId ? knyteVectors[linkKnyteId].initialKnyteId : undefined;
   const codeRecord = codeKnyteId ? informationMap[codeKnyteId].record : undefined;
   const codeText = codeRecord ? codeRecord.data : '';
+  const inputKnytes = getConnectsByDataMatchFunction(knyteId, matchDataParameter, 'terminal');
+  const outputKnytes = getConnectsByDataMatchFunction(knyteId, matchDataParameter, 'initial');
+  const namesSequence = [];
+  const inputNamesSequence = [];
+  const inputs = {};
+  for (let i = 0; i < inputKnytes.length; ++i)
+  {
+    const inputLinkKnyteId = inputKnytes[i];
+    const inputKnyteId = inputLinkKnyteId ? knyteVectors[inputLinkKnyteId].initialKnyteId : undefined;
+    const inputLinkRecord = inputLinkKnyteId ? informationMap[inputLinkKnyteId].record : undefined;
+    const inputRecord = inputKnyteId ? informationMap[inputKnyteId].record : undefined;
+    const inputValue = inputRecord ? inputRecord.data : '';
+    const inputName = inputLinkRecord ? extractParameterName(inputLinkRecord.data) : '';
+    if (inputName)
+    {
+      inputs[inputName] = inputValue;
+      namesSequence.push(inputName);
+      inputNamesSequence.push(inputName);
+    }
+  }
+  console.log(inputKnytes);
+  console.log(inputs);
+  const outputNamesSequence = [];
+  const outputs = {};
+  for (let i = 0; i < outputKnytes.length; ++i)
+  {
+    const outputLinkKnyteId = outputKnytes[i];
+    const outputKnyteId = outputLinkKnyteId ? knyteVectors[outputLinkKnyteId].terminalKnyteId : undefined;
+    const outputLinkRecord = outputLinkKnyteId ? informationMap[outputLinkKnyteId].record : undefined;
+    const outputRecord = outputKnyteId ? informationMap[outputKnyteId].record : undefined;
+    const outputValue = outputRecord ? outputRecord.data : '';
+    const outputName = outputLinkRecord ? extractParameterName(outputLinkRecord.data) : '';
+    if (outputName)
+    {
+      outputs[outputName] = outputValue;
+      namesSequence.push(outputName);
+      outputNamesSequence.push(outputName);
+    }
+  }
+  console.log(outputKnytes);
+  console.log(outputs);
   let runComplete = false;
   try
   {
     if (codeKnytes.length > 1)
       throw Error('run block knyte ' + knyteId + ' has more than 1 code parameters');
-    const codeFunction = new Function(codeText);
+    const namesMap = {};
+    for (let i = 0; i < namesSequence.length; ++i)
+    {
+      const name = namesSequence[i];
+      if (name in namesMap)
+        throw Error('duplicated parameter name: ' + name);
+      namesMap[name] = true;
+    }
+    let formalParametersList = '';
+    let actualParametersList = '';
+    for (let i = 0; i < inputNamesSequence.length; ++i)
+    {
+      const name = inputNamesSequence[i];
+      formalParametersList += '"' + name + '", ';
+      actualParametersList += (i > 0 ? ', ' : '') + '"' + inputs[name] + '"';
+    }
+    const codeFunction = eval('new Function(' + formalParametersList + 'codeText)');
     setTimeout(
-      function(){let codeComplete = false; try{codeFunction(); codeComplete = true;} finally{onComplete(codeComplete);}}, 
+      function()
+      {
+        let codeComplete = false;
+        try
+        {
+          eval('codeFunction(' + actualParametersList + ')');
+          codeComplete = true;
+        }
+        finally
+        {
+          onComplete(codeComplete);
+        }
+      }, 
       1000
     );
     runComplete = true;
