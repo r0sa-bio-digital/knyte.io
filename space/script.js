@@ -2293,6 +2293,12 @@ function onKeyDownWindow(e)
         handleSpacemapChanged();
       }
     }
+    else if (!e.shiftKey && !e.altKey && e.metaKey)
+    {
+      e.stopPropagation();
+      e.preventDefault();
+      saveAppState();
+    }
   }
   else if (e.code === 'KeyD')
   {

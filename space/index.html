@@ -247,7 +247,8 @@
         'dragenter', 
         function(e)
         {
-          e.stopPropagation(); e.preventDefault();
+          e.stopPropagation();
+          e.preventDefault();
           dropPrompt.style.display = 'block';
         }, 
         false
@@ -256,7 +257,8 @@
         'dragleave', 
         function(e)
         {
-          e.stopPropagation(); e.preventDefault();
+          e.stopPropagation();
+          e.preventDefault();
           dropPrompt.style.display = 'none';
         }, 
         false
@@ -265,7 +267,8 @@
         'dragover', 
         function(e)
         {
-          e.stopPropagation(); e.preventDefault();
+          e.stopPropagation();
+          e.preventDefault();
           e.dataTransfer.dropEffect = 'copy';
         }, 
         false
@@ -274,7 +277,8 @@
         'drop', 
         function(e)
         {
-          e.stopPropagation(); e.preventDefault();
+          e.stopPropagation();
+          e.preventDefault();
           dropPrompt.style.display = 'none';
           loadAppState(e.dataTransfer.files);
         }, 
