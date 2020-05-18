@@ -1,5 +1,6 @@
 /* global visualThemeColors */
 /* global intersect */
+/* global saveAs */
 
 let svgNameSpace;
 let spaceRootElement;
@@ -7,16 +8,49 @@ let spaceBackElement;
 let spaceForwardElement;
 let spaceMapElement;
 let spaceHostElement;
-let spacemapKnoxelId;
 let handleSpacemapChanged = function() {};
+
+// state variables to save/load
+let spacemapKnoxelId;
 const knyteVectors = {}; // knyte id --> {initialKnyteId, terminalKnyteId}
 const knoxelVectors = {}; // knoxel id --> {initialKnoxelId, terminalKnoxelId}
 const knyteConnects = {}; // knyte id --> {knyte id: true}
 const knyteInitialConnects = {}; // knyte id --> {knyte id: true}
 const knyteTerminalConnects = {}; // knyte id --> {knyte id: true}
-const informationMap = {}; // knyte id --> {color, space: {knoxel id --> position}, record: {data, viewer}, size}
+const informationMap = {}; // knyte id --> {color, space: {knoxel id --> position}, record: {data, viewertype}, size}
 const knoxels = {}; // knoxel id --> knyte id
 const knoxelViews = {}; // knoxel id --> {collapse, color}
+
+function saveAppState()
+{
+  const state = {spacemapKnoxelId, knyteVectors, knoxelVectors,
+    knyteConnects, knyteInitialConnects, knyteTerminalConnects, informationMap, knoxels, knoxelViews};
+  const stateText = JSON.stringify(state)//, null, '\t');
+  const blob = new Blob([stateText], {type: "text/plain;charset=utf-8"});
+  saveAs(blob, 'knoxelSpace.json');
+}
+
+function loadAppState(state)
+{
+  function assignObject(source, destination)
+  {
+    for (let key in destination)
+      delete destination[key];
+    for (let key in source)
+      destination[key] = source[key];
+  }
+  
+  spacemapKnoxelId = state.spacemapKnoxelId;
+  assignObject(state.knyteVectors, knyteVectors);
+  assignObject(state.knoxelVectors, knoxelVectors);
+  assignObject(state.knyteConnects, knyteConnects);
+  assignObject(state.knyteInitialConnects, knyteInitialConnects);
+  assignObject(state.knyteTerminalConnects, knyteTerminalConnects);
+  assignObject(state.informationMap, informationMap);
+  assignObject(state.knoxels, knoxels);
+  assignObject(state.knoxelViews, knoxelViews);
+}
+
 const arrows = {}; // arrow id --> {initialKnoxelId, terminalKnoxelId}
 const spaceBackStack = []; // [previous space root knoxel id]
 const spaceForwardStack = []; // [next space root knoxel id]
@@ -308,7 +342,7 @@ const knoxelRect = new function()
       const {w, h} = desc.record && desc.record.size ? desc.record.size : {w: 0, h: 0};
       info.setAttribute('width', w);
       info.setAttribute('height', h);
-      info.innerHTML = desc.record.viewer(desc.record.data);
+      info.innerHTML = recordViewers[desc.record.viewertype](desc.record.data);
       return info;
     }
     
@@ -692,7 +726,7 @@ const knoxelSpaceRoot = new function()
     spaceRootElement.style.backgroundColor = color;
     const spaceRootRecord = document.getElementById('record');
     const foreignObject = spaceRootRecord.getElementsByTagName('foreignObject')[0];
-    foreignObject.innerHTML = record && knoxelId !== spacemapKnoxelId ? record.viewer(record.data) : '';
+    foreignObject.innerHTML = record && knoxelId !== spacemapKnoxelId ? recordViewers[record.viewertype](record.data) : '';
     const {w, h} = record && record.size ? record.size : {w: 0, h: 0};
     foreignObject.setAttribute('width', w);
     foreignObject.setAttribute('height', h);
@@ -751,7 +785,7 @@ const knoxelArrow = new function()
 
 const recordViewers = new function()
 {
-  this.centeredOneliner = function(data)
+  this.oneliner = function(data)
   {
     return '<div style="display: flex; height: 100%; justify-content: center; align-items: center;">' +
       getHtmlFromText(data) + '</div>';
@@ -762,7 +796,7 @@ const recordViewers = new function()
     return '<div style="white-space: pre; text-align: left; tab-size: 4; padding: ' + padding + 'px;">' +
       getHtmlFromText(data) + '</div>';
   };
-  this.strightCode = function(data)
+  this.interactive = function(data)
   {
     return data;
   };
@@ -1989,10 +2023,10 @@ function joinActiveBubble(desc)
   setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
 }
 
-function getSizeOfRecord(data, viewer)
+function getSizeOfRecord(data, viewertype)
 {
   const autosizer = document.getElementById('autosizer');
-  autosizer.innerHTML = viewer(data);
+  autosizer.innerHTML = recordViewers[viewertype](data);
   const rect = autosizer.getBoundingClientRect();
   autosizer.innerHTML = '';
   return {w: rect.width, h: rect.height};
@@ -2009,22 +2043,25 @@ function getHtmlFromText(text)
 
 function getOnelinerRecordByData(data)
 {
-  const newDataSize = getSizeOfRecord(data, recordViewers.centeredOneliner);
+  const viewertype = 'oneliner';
+  const newDataSize = getSizeOfRecord(data, viewertype);
   const padding = 2*visualTheme.rect.strokeWidth; // TODO: move padding to view function and avoid copypaste
   const size = {w: newDataSize.w + padding, h: newDataSize.h + padding};
-  return {data: data, viewer: recordViewers.centeredOneliner, size};
+  return {data: data, viewertype, size};
 }
 
 function getMultilinerRecordByData(data)
 {
-  const size = getSizeOfRecord(data, recordViewers.multiliner);
-  return {data: data, viewer: recordViewers.multiliner, size};
+  const viewertype = 'multiliner';
+  const size = getSizeOfRecord(data, viewertype);
+  return {data: data, viewertype, size};
 }
 
 function getInteractiveRecordByData(data)
 {
-  const size = getSizeOfRecord(data, recordViewers.strightCode);
-  return {data: data, viewer: recordViewers.strightCode, size};
+  const viewertype = 'interactive';
+  const size = getSizeOfRecord(data, viewertype);
+  return {data: data, viewertype, size};
 }
 
 function setKnyteRecordData(knyteId, recordtype, newData)
@@ -2047,12 +2084,7 @@ function setKnyteRecordData(knyteId, recordtype, newData)
 
 function getRecordtype(record)
 {
-  if (!record || record.viewer === recordViewers.centeredOneliner)
-    return 'oneliner';
-  else if (record && record.viewer === recordViewers.multiliner)
-    return 'multiliner';
-  else if (record && record.viewer === recordViewers.strightCode)
-    return 'interactive';
+  return record ? record.viewertype : 'oneliner';
 }
 
 function onKeyDownWindow(e)
@@ -2169,10 +2201,7 @@ function onKeyDownWindow(e)
       const knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
       const knyteId = knoxels[knoxelId];
       const {record} = informationMap[knyteId];
-      let recordtype;
-      if (!record || record.viewer === recordViewers.centeredOneliner)
-        recordtype = 'oneliner';
-      if (recordtype !== 'oneliner')
+      if (record && record.viewertype !== 'oneliner')
       {
         alert('Record type not supported by simple editor. Please, run unified editor by alt+enter.');
         return;
