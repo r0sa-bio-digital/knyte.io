@@ -237,5 +237,49 @@
       
       onChangeRecordtype();
     </script>
+    <div id="dropPrompt" style="display: none;">
+      drop knoxel space file to load
+    </div>
+    <script>
+			const dropZone = document.body;
+      const dropPrompt = document.getElementById('dropPrompt');
+			dropZone.addEventListener(
+				'dragenter', 
+				function(e)
+        {
+          e.stopPropagation(); e.preventDefault();
+          dropPrompt.style.display = 'block';
+        }, 
+				false
+			);
+			dropZone.addEventListener(
+				'dragleave', 
+				function(e)
+        {
+          e.stopPropagation(); e.preventDefault();
+          dropPrompt.style.display = 'none';
+        }, 
+				false
+			);
+			dropZone.addEventListener(
+				'dragover', 
+				function(e)
+				{
+					e.stopPropagation(); e.preventDefault();
+					e.dataTransfer.dropEffect = 'copy';
+				}, 
+				false
+			);
+			dropZone.addEventListener(
+				'drop', 
+				function(e)
+				{
+					e.stopPropagation(); e.preventDefault();
+          dropPrompt.style.display = 'none';
+					loadAppState(e.dataTransfer.files);
+				}, 
+				false
+			);
+    </script>
   </body>
 </html>

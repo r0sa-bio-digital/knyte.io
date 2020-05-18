@@ -11,6 +11,7 @@ let spaceHostElement;
 let handleSpacemapChanged = function() {};
 
 // state variables to save/load
+let masterKnoxelId;
 let spacemapKnoxelId;
 const knyteVectors = {}; // knyte id --> {initialKnyteId, terminalKnyteId}
 const knoxelVectors = {}; // knoxel id --> {initialKnoxelId, terminalKnoxelId}
@@ -21,39 +22,11 @@ const informationMap = {}; // knyte id --> {color, space: {knoxel id --> positio
 const knoxels = {}; // knoxel id --> knyte id
 const knoxelViews = {}; // knoxel id --> {collapse, color}
 
-function saveAppState()
-{
-  const state = {spacemapKnoxelId, knyteVectors, knoxelVectors,
-    knyteConnects, knyteInitialConnects, knyteTerminalConnects, informationMap, knoxels, knoxelViews};
-  const stateText = JSON.stringify(state)//, null, '\t');
-  const blob = new Blob([stateText], {type: "text/plain;charset=utf-8"});
-  saveAs(blob, 'knoxelSpace.json');
-}
-
-function loadAppState(state)
-{
-  function assignObject(source, destination)
-  {
-    for (let key in destination)
-      delete destination[key];
-    for (let key in source)
-      destination[key] = source[key];
-  }
-  
-  spacemapKnoxelId = state.spacemapKnoxelId;
-  assignObject(state.knyteVectors, knyteVectors);
-  assignObject(state.knoxelVectors, knoxelVectors);
-  assignObject(state.knyteConnects, knyteConnects);
-  assignObject(state.knyteInitialConnects, knyteInitialConnects);
-  assignObject(state.knyteTerminalConnects, knyteTerminalConnects);
-  assignObject(state.informationMap, informationMap);
-  assignObject(state.knoxels, knoxels);
-  assignObject(state.knoxelViews, knoxelViews);
-}
-
+// state variables to reset on load
 const arrows = {}; // arrow id --> {initialKnoxelId, terminalKnoxelId}
 const spaceBackStack = []; // [previous space root knoxel id]
 const spaceForwardStack = []; // [next space root knoxel id]
+
 const visualTheme = {
   rect: {
     strokeWidth: 4,
@@ -120,6 +93,56 @@ const knit = new function()
   // singleton properties
   this.empty = textUuidV4(true);
   this.new = function() {return textUuidV4();};
+}
+
+function saveAppState()
+{
+  const state = {masterKnoxelId, spacemapKnoxelId, knyteVectors, knoxelVectors,
+    knyteConnects, knyteInitialConnects, knyteTerminalConnects, informationMap, knoxels, knoxelViews};
+  const stateText = JSON.stringify(state, null, '\t');
+  const blob = new Blob([stateText], {type: "text/plain;charset=utf-8"});
+  saveAs(blob, 'knoxelSpace.json');
+}
+
+function loadAppState(files)
+{
+  function assignAppState(state)
+  {
+    function assignObject(source, destination)
+    {
+      for (let key in destination)
+        delete destination[key];
+      for (let key in source)
+        destination[key] = source[key];
+    }
+
+    masterKnoxelId = state.masterKnoxelId;
+    spacemapKnoxelId = state.spacemapKnoxelId;
+    assignObject(state.knyteVectors, knyteVectors);
+    assignObject(state.knoxelVectors, knoxelVectors);
+    assignObject(state.knyteConnects, knyteConnects);
+    assignObject(state.knyteInitialConnects, knyteInitialConnects);
+    assignObject(state.knyteTerminalConnects, knyteTerminalConnects);
+    assignObject(state.informationMap, informationMap);
+    assignObject(state.knoxels, knoxels);
+    assignObject(state.knoxelViews, knoxelViews);
+    for (let key in arrows)
+      delete arrows[key];
+    spaceBackStack.length = 0;
+    spaceForwardStack.length = 0;
+  }
+
+  // TODO: implement files count and format check
+  const file = files[0];
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const state = JSON.parse(e.target.result);
+    assignAppState(state);
+    setSpaceRootKnoxel({knoxelId: masterKnoxelId});
+    handleSpacemapChanged();
+    setNavigationControlState({});
+  };
+  reader.readAsText(file);
 }
 
 function updateKnyteConnects(knyteId, connectType, connectOperation, connectKnyteId)
@@ -2778,7 +2801,7 @@ function onLoadBody(e)
   svgNameSpace = spaceRootElement.getAttribute('xmlns');
   // create master knyte
   const masterKnyteId = knit.new();
-  const masterKnoxelId = knit.new();
+  masterKnoxelId = knit.new();
   const masterColor = visualTheme.rect.fillColor;
   addKnyte({knyteId: masterKnyteId, color: masterColor});
   // create spacemap knyte

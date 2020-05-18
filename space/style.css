@@ -90,3 +90,15 @@ select {
   width: 3em;
   height: 3em;
 }
+
+#dropPrompt {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  left: 0;
+  top: 0;
+  font-size: 48px;
+  pointer-events: none;
+  color: #000000;
+  background-color: #ffffdd88;
+}
