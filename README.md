@@ -32,7 +32,9 @@
   * <https://knyte-io.glitch.me/space>
   * <https://www.knyte.io/space>
 * управление
+  * drop file on app screen - загрузить стейт системы из json-файла
   * shortcuts
+    * cmd + s - сохранить стейт системы в json-файл
     * cmd + click - создать новый knyte и knoxel для него в указанной точке пространства
     * click в knoxel - перейти в пространство knoxel'я
     * space
