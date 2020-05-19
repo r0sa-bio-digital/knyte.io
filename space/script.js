@@ -2616,6 +2616,13 @@ function runBlockHandleClick(button)
   {
     return data.substr(1, data.length-2);
   }
+  
+  function getNumberOrBoolOrString(data)
+  {
+    if (!data)
+      return '""';
+    return isNaN(data) && data !== 'true' && data !== 'false' ? '"' + data + '"' : data;
+  }
 
   const knyteId = button.dataset.knyteId;
   const newData = codeTemplates.runBlock.busy;
@@ -2692,7 +2699,7 @@ function runBlockHandleClick(button)
     {
       const name = inputNamesSequence[i];
       formalParametersList += '"' + name + '", ';
-      actualParametersList += (i > 0 ? ', ' : '') + '"' + inputs[name] + '"';
+      actualParametersList += (i > 0 ? ', ' : '') + getNumberOrBoolOrString(inputs[name]);
     }
     if (outputNamesSequence.length)
     {
