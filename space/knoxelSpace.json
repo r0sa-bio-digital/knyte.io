@@ -1430,7 +1430,7 @@
 			"color": "#bb99ff",
 			"space": {},
 			"record": {
-				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"88e24b5f-4fac-4219-a1da-716d9a0bd14c\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
+				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"88e24b5f-4fac-4219-a1da-716d9a0bd14c\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this.dataset.knyteId);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
 				"viewertype": "interactive",
 				"size": {
 					"w": 216,
@@ -1442,7 +1442,7 @@
 			"color": "#bb99ff",
 			"space": {},
 			"record": {
-				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"d21e6420-17ab-4b79-9c81-3ca2eafaf168\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
+				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"d21e6420-17ab-4b79-9c81-3ca2eafaf168\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this.dataset.knyteId);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
 				"viewertype": "interactive",
 				"size": {
 					"w": 216,
@@ -1545,7 +1545,7 @@
 			"color": "#bb99ff",
 			"space": {},
 			"record": {
-				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"2d6fbd03-addf-4a42-a0d7-fc4697a92b52\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
+				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"2d6fbd03-addf-4a42-a0d7-fc4697a92b52\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this.dataset.knyteId);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
 				"viewertype": "interactive",
 				"size": {
 					"w": 216,
@@ -1776,7 +1776,7 @@
 			"color": "#bb99ff",
 			"space": {},
 			"record": {
-				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"57c62dfa-7807-4c44-a6b1-cb101302aed9\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
+				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"57c62dfa-7807-4c44-a6b1-cb101302aed9\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this.dataset.knyteId);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
 				"viewertype": "interactive",
 				"size": {
 					"w": 216,
@@ -1824,7 +1824,7 @@
 			"color": "#bb99ff",
 			"space": {},
 			"record": {
-				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"08d9f2f0-7fb3-403a-952e-a4fe46acff1c\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
+				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"08d9f2f0-7fb3-403a-952e-a4fe46acff1c\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this.dataset.knyteId);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
 				"viewertype": "interactive",
 				"size": {
 					"w": 216,
@@ -2013,7 +2013,7 @@
 			"color": "#bb99ff",
 			"space": {},
 			"record": {
-				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"4ddcb498-15ea-4bc2-921e-7ee3e130786e\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
+				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"4ddcb498-15ea-4bc2-921e-7ee3e130786e\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this.dataset.knyteId);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
 				"viewertype": "interactive",
 				"size": {
 					"w": 216,
@@ -2037,7 +2037,7 @@
 			"color": "#bb99ff",
 			"space": {},
 			"record": {
-				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"17696ea5-4240-46b0-a468-2496f04443e4\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
+				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"17696ea5-4240-46b0-a468-2496f04443e4\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this.dataset.knyteId);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
 				"viewertype": "interactive",
 				"size": {
 					"w": 216,
@@ -2061,7 +2061,7 @@
 			"color": "#bb99ff",
 			"space": {},
 			"record": {
-				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"f94bd957-9536-4279-ada1-4ba9a663f870\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
+				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"f94bd957-9536-4279-ada1-4ba9a663f870\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this.dataset.knyteId);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
 				"viewertype": "interactive",
 				"size": {
 					"w": 216,
@@ -2097,7 +2097,7 @@
 			"color": "#bb99ff",
 			"space": {},
 			"record": {
-				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"ca430474-b4bc-4903-b633-5f42eab91585\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
+				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"ca430474-b4bc-4903-b633-5f42eab91585\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this.dataset.knyteId);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
 				"viewertype": "interactive",
 				"size": {
 					"w": 216,
@@ -2109,7 +2109,7 @@
 			"color": "#bb99ff",
 			"space": {},
 			"record": {
-				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"bf47aa3a-143c-4886-a5bf-edb41f66f1a4\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
+				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"bf47aa3a-143c-4886-a5bf-edb41f66f1a4\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this.dataset.knyteId);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
 				"viewertype": "interactive",
 				"size": {
 					"w": 216,
@@ -2121,7 +2121,7 @@
 			"color": "#bb99ff",
 			"space": {},
 			"record": {
-				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"34d4fca7-1359-4efc-961f-410f65b871e6\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
+				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"34d4fca7-1359-4efc-961f-410f65b871e6\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this.dataset.knyteId);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
 				"viewertype": "interactive",
 				"size": {
 					"w": 216,
@@ -2352,7 +2352,7 @@
 			"color": "#bb99ff",
 			"space": {},
 			"record": {
-				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"6e7b6b88-f4c6-42ca-af96-ec8e0227ee5d\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
+				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"6e7b6b88-f4c6-42ca-af96-ec8e0227ee5d\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this.dataset.knyteId);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
 				"viewertype": "interactive",
 				"size": {
 					"w": 216,
@@ -2364,7 +2364,7 @@
 			"color": "#bb99ff",
 			"space": {},
 			"record": {
-				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"69f86591-0a6e-42ca-9053-bc45dfa46899\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
+				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"69f86591-0a6e-42ca-9053-bc45dfa46899\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this.dataset.knyteId);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
 				"viewertype": "interactive",
 				"size": {
 					"w": 216,
@@ -2400,7 +2400,7 @@
 			"color": "#bb99ff",
 			"space": {},
 			"record": {
-				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"252d5070-535e-4cf5-aecd-cb2e9c623cf2\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
+				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"252d5070-535e-4cf5-aecd-cb2e9c623cf2\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this.dataset.knyteId);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
 				"viewertype": "interactive",
 				"size": {
 					"w": 216,
@@ -2412,7 +2412,7 @@
 			"color": "#fddd88",
 			"space": {},
 			"record": {
-				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"fe686fe7-3a64-4222-9dfe-1432405055de\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
+				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"fe686fe7-3a64-4222-9dfe-1432405055de\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this.dataset.knyteId);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
 				"viewertype": "interactive",
 				"size": {
 					"w": 216,
@@ -2448,7 +2448,7 @@
 			"color": "#bb99ff",
 			"space": {},
 			"record": {
-				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"8168e4d3-ce5f-491a-a5f2-a3a86dcb39c3\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
+				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"8168e4d3-ce5f-491a-a5f2-a3a86dcb39c3\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this.dataset.knyteId);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
 				"viewertype": "interactive",
 				"size": {
 					"w": 216,
@@ -2460,7 +2460,7 @@
 			"color": "#bb99ff",
 			"space": {},
 			"record": {
-				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"0a02c5b0-d5dc-4759-bbe3-c3daedd0f1b4\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
+				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"0a02c5b0-d5dc-4759-bbe3-c3daedd0f1b4\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this.dataset.knyteId);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
 				"viewertype": "interactive",
 				"size": {
 					"w": 216,
@@ -2512,7 +2512,7 @@
 			"color": "#5571f1",
 			"space": {},
 			"record": {
-				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"942b84b9-11a0-4c9e-9221-7c4857677a0b\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
+				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\"><button\n\tdata-knyte-id=\"942b84b9-11a0-4c9e-9221-7c4857677a0b\"\n\tonclick=\"event.stopPropagation(); runBlockHandleClick(this.dataset.knyteId);\"\n\tonfocus=\"this.blur();\"\n>\n\trun\n</button>\n<span class=\"runStatus\" title=\"status\">ready</span>\n<span class=\"runResult\" title=\"last result\" style=\"padding: 2px;\">none</span></div>",
 				"viewertype": "interactive",
 				"size": {
 					"w": 216,
@@ -2665,7 +2665,7 @@
 			"color": "#bb99ff",
 			"space": {},
 			"record": {
-				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\">\n\t<button\n\t\tdata-knyte-id=\"9bdb0b02-f9b8-4943-bd1c-735a633990e2\"\n\t\tonclick=\"event.stopPropagation(); runBlockHandleClick(this);\"\n\t\tonfocus=\"this.blur();\"\n\t>\n\t\trun\n\t</button>\n\t<span title=\"status\">ready</span>\n</div>",
+				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\">\n\t<button\n\t\tdata-knyte-id=\"9bdb0b02-f9b8-4943-bd1c-735a633990e2\"\n\t\tonclick=\"event.stopPropagation(); runBlockHandleClick(this.dataset.knyteId);\"\n\t\tonfocus=\"this.blur();\"\n\t>\n\t\trun\n\t</button>\n\t<span title=\"status\">ready</span>\n</div>",
 				"viewertype": "interactive",
 				"size": {
 					"w": 216,
@@ -2689,7 +2689,7 @@
 			"color": "#bb99ff",
 			"space": {},
 			"record": {
-				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\">\n\t<button\n\t\tdata-knyte-id=\"e7a69940-f85c-4583-8ab2-3f5a7c40de5e\"\n\t\tonclick=\"event.stopPropagation(); runBlockHandleClick(this);\"\n\t\tonfocus=\"this.blur();\"\n\t>\n\t\trun\n\t</button>\n\t<span title=\"status\">ready</span>\n</div>",
+				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\">\n\t<button\n\t\tdata-knyte-id=\"e7a69940-f85c-4583-8ab2-3f5a7c40de5e\"\n\t\tonclick=\"event.stopPropagation(); runBlockHandleClick(this.dataset.knyteId);\"\n\t\tonfocus=\"this.blur();\"\n\t>\n\t\trun\n\t</button>\n\t<span title=\"status\">ready</span>\n</div>",
 				"viewertype": "interactive",
 				"size": {
 					"w": 216,
@@ -2713,7 +2713,7 @@
 			"color": "#bb99ff",
 			"space": {},
 			"record": {
-				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\">\n\t<button\n\t\tdata-knyte-id=\"e7a62b39-9163-4355-8e21-df3674d44ecf\"\n\t\tonclick=\"event.stopPropagation(); runBlockHandleClick(this);\"\n\t\tonfocus=\"this.blur();\"\n\t>\n\t\trun\n\t</button>\n\t<span title=\"status\">ready</span>\n</div>",
+				"data": "<div style=\"width: 200px; height: 24px; margin: 8px;\">\n\t<button\n\t\tdata-knyte-id=\"e7a62b39-9163-4355-8e21-df3674d44ecf\"\n\t\tonclick=\"event.stopPropagation(); runBlockHandleClick(this.dataset.knyteId);\"\n\t\tonfocus=\"this.blur();\"\n\t>\n\t\trun\n\t</button>\n\t<span title=\"status\">ready</span>\n</div>",
 				"viewertype": "interactive",
 				"size": {
 					"w": 216,

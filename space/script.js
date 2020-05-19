@@ -2525,7 +2525,7 @@ const codeTemplates = {
       return '<div style="width: 200px; height: 24px; margin: 8px;">\n' +
         '\t<button\n' +
           '\t\tdata-knyte-id="' + knyteId + '"\n' +
-          '\t\tonclick="event.stopPropagation(); runBlockHandleClick(this);"\n' +
+          '\t\tonclick="event.stopPropagation(); runBlockHandleClick(this.dataset.knyteId);"\n' +
           '\t\tonfocus="this.blur();"\n' +
         '\t>\n' +
           '\t\trun\n' +
@@ -2560,7 +2560,7 @@ function getConnectsByDataMatchFunction(knyteId, match, type)
   return result;
 }
 
-function runBlockHandleClick(button)
+function runBlockHandleClick(knyteId)
 {
   function onComplete(success, nextKnyteId)
   {
@@ -2571,25 +2571,7 @@ function runBlockHandleClick(button)
     handleSpacemapChanged();
     
     if (nextKnyteId)
-    {
-      // TODO:: run button of exect knoxel
-      // what if we have >1 instances of the knyte in the space?
-      // what if we have no any instances of the knyte in current space, but they are in some other space?
-      // maybe we should visualise running block in all knyte instances?
-      const hostKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
-      const hostSpace = informationMap[hostKnyteId].space;
-      let nextKnoxelId;
-      for (let knoxelId in knoxels)
-        if (knoxels[knoxelId] === nextKnyteId && knoxelId in hostSpace)
-          nextKnoxelId = knoxelId;
-      if (nextKnoxelId)
-      {
-        const nextKnoxelElement = document.getElementById(nextKnoxelId);
-        const nextKnoxelForeignObject = nextKnoxelElement.getElementsByTagName('foreignObject')[0];
-        const nextKnoxelButton = nextKnoxelForeignObject.getElementsByTagName('button')[0];
-        runBlockHandleClick(nextKnoxelButton);
-      }
-    }
+      runBlockHandleClick(nextKnyteId);
   }
   
   function matchCode(data)
@@ -2624,7 +2606,6 @@ function runBlockHandleClick(button)
     return isNaN(data) && data !== 'true' && data !== 'false' ? '"' + data + '"' : data;
   }
 
-  const knyteId = button.dataset.knyteId;
   const newData = codeTemplates.runBlock.busy;
   setKnyteRecordData(knyteId, 'interactive', newData);
   setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
