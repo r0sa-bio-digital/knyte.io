@@ -2515,17 +2515,31 @@ function onKeyDownWindow(e)
 }
 
 const codeTemplates = {
-  runBlock: function(knyteId) {return '<div style="width: 200px; height: 24px; margin: 8px;">' +
-    '<button\n' +
-      '\tdata-knyte-id="' + knyteId + '"\n' +
-      '\tonclick="event.stopPropagation(); runBlockHandleClick(this);"\n' +
-      '\tonfocus="this.blur();"\n' +
-    '>\n' +
-      '\trun\n' +
-    '</button>\n' +
-    '<span class="runStatus" title="status">ready</span>\n' +
-    '<span class="runResult" title="last result" style="padding: 2px;">none</span>' +
-  '</div>'},
+  runBlock: {
+    ready: function(knyteId, type) {
+      const checks = {
+        init: '',
+        succeed: '\t<span title="check" style="padding: 2px; background-color: ' + visualThemeColors.success +';">ok</span>\n',
+        failed: '\t<span title="check" style="padding: 2px; background-color: ' + visualThemeColors.fail +';">error</span>\n',
+      };
+      return '<div style="width: 200px; height: 24px; margin: 8px;">\n' +
+        '\t<button\n' +
+          '\t\tdata-knyte-id="' + knyteId + '"\n' +
+          '\t\tonclick="event.stopPropagation(); runBlockHandleClick(this);"\n' +
+          '\t\tonfocus="this.blur();"\n' +
+        '\t>\n' +
+          '\t\trun\n' +
+        '\t</button>\n' +
+        '\t<span title="status">ready</span>\n' +
+        checks[type] +
+      '</div>';
+    },
+    busy: '<div style="width: 200px; height: 24px; margin: 8px;">\n' +
+      '\t<button disabled>run</button>\n' +
+      '\t<span title="status">busy</span>\n' +
+      '\t<span title="check" style="padding: 2px;">...</span>\n' +
+    '</div>',
+  },
 };
 
 function getConnectsByDataMatchFunction(knyteId, match, type)
@@ -2550,9 +2564,12 @@ function runBlockHandleClick(button)
 {
   function onComplete(success, nextKnyteId)
   {
-    status.textContent = 'ready';
-    ready.textContent = success ? 'success' : 'failed';
-    ready.style.backgroundColor = success ? visualThemeColors.success : visualThemeColors.fail;
+    const newData = codeTemplates.runBlock.ready(knyteId, success ? 'succeed' : 'failed');
+    setKnyteRecordData(knyteId, 'interactive', newData);
+    setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+    refreshActiveRect({position: mouseMovePosition});
+    handleSpacemapChanged();
+    
     if (nextKnyteId)
     {
       // TODO:: run button of exect knoxel
@@ -2599,14 +2616,14 @@ function runBlockHandleClick(button)
   {
     return data.substr(1, data.length-2);
   }
-  
-  const root = button.parentElement;
-  const status = root.getElementsByClassName('runStatus')[0];
-  const ready = root.getElementsByClassName('runResult')[0];
+
   const knyteId = button.dataset.knyteId;
-  status.textContent = 'working';
-  ready.textContent = '...';
-  ready.style.backgroundColor = '';
+  const newData = codeTemplates.runBlock.busy;
+  setKnyteRecordData(knyteId, 'interactive', newData);
+  setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+  refreshActiveRect({position: mouseMovePosition});
+  handleSpacemapChanged();
+  
   const codeKnytes = getConnectsByDataMatchFunction(knyteId, matchCode, 'terminal');
   const codeLinkKnyteId = codeKnytes[0];
   const codeKnyteId = codeLinkKnyteId ? knyteVectors[codeLinkKnyteId].initialKnyteId : undefined;
@@ -2730,9 +2747,11 @@ function runBlockHandleClick(button)
   {
     if (!runComplete)
     {
-      status.textContent = 'ready';
-      ready.textContent = 'failed';
-      ready.style.backgroundColor = visualThemeColors.fail;
+      const newData = codeTemplates.runBlock.ready(knyteId, 'failed');
+      setKnyteRecordData(knyteId, 'interactive', newData);
+      setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+      refreshActiveRect({position: mouseMovePosition});
+      handleSpacemapChanged();
     }
   }
 }
