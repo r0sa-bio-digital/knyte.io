@@ -2548,7 +2548,7 @@ const codeTemplates = {
   },
 };
 
-function getConnectsByDataMatchFunction(knyteId, match, type)
+function getConnectsByDataMatchFunction(knyteId, match, token, type)
 {
   const result = [];
   let connects = knyteConnects;
@@ -2560,7 +2560,7 @@ function getConnectsByDataMatchFunction(knyteId, match, type)
   for (let connectedKnyteId in connectedKnytes)
   {
     const {record} = informationMap[connectedKnyteId];
-    if (record && match(record.data))
+    if (record && match(record.data, token))
       result.push(connectedKnyteId);
   }
   return result;
@@ -2580,14 +2580,9 @@ function runBlockHandleClick(knyteId)
       runBlockHandleClick(nextKnyteId);
   }
   
-  function matchCode(data)
+  function matchToken(data, token)
   {
-    return data === 'code';
-  }
-  
-  function matchNext(data)
-  {
-    return data === 'next';
+    return data === token;
   }
   
   function matchDataParameter(data)
@@ -2618,16 +2613,32 @@ function runBlockHandleClick(knyteId)
   refreshActiveRect({position: mouseMovePosition});
   handleSpacemapChanged();
   
-  const codeKnytes = getConnectsByDataMatchFunction(knyteId, matchCode, 'terminal');
+  const codeKnytes = getConnectsByDataMatchFunction(knyteId, matchToken, 'code', 'terminal');
   const codeLinkKnyteId = codeKnytes[0];
   const codeKnyteId = codeLinkKnyteId ? knyteVectors[codeLinkKnyteId].initialKnyteId : undefined;
   const codeRecord = codeKnyteId ? informationMap[codeKnyteId].record : undefined;
   let codeText = codeRecord ? codeRecord.data : '';
-  const nextKnytes = getConnectsByDataMatchFunction(knyteId, matchNext, 'initial');
+
+  const nextKnytes = getConnectsByDataMatchFunction(knyteId, matchToken, 'next', 'initial');
   const nextLinkKnyteId = nextKnytes[0];
   const nextKnyteId = nextLinkKnyteId ? knyteVectors[nextLinkKnyteId].terminalKnyteId : undefined;
-  const inputKnytes = getConnectsByDataMatchFunction(knyteId, matchDataParameter, 'terminal');
-  const outputKnytes = getConnectsByDataMatchFunction(knyteId, matchDataParameter, 'initial');
+  const inputKnytes = getConnectsByDataMatchFunction(knyteId, matchDataParameter, undefined, 'terminal');
+  const outputKnytes = getConnectsByDataMatchFunction(knyteId, matchDataParameter, undefined, 'initial');
+
+  const ifKnytes = getConnectsByDataMatchFunction(knyteId, matchToken, 'if', 'terminal');
+  const ifLinkKnyteId = ifKnytes[0];
+  const ifKnyteId = ifLinkKnyteId ? knyteVectors[ifLinkKnyteId].initialKnyteId : undefined;
+  const ifRecord = ifKnyteId ? informationMap[ifKnyteId].record : undefined;
+  let ifText = ifRecord ? ifRecord.data : '';
+
+  const thenKnytes = getConnectsByDataMatchFunction(knyteId, matchToken, 'then', 'initial');
+  const thenLinkKnyteId = thenKnytes[0];
+  const thenKnyteId = thenLinkKnyteId ? knyteVectors[thenLinkKnyteId].terminalKnyteId : undefined;
+
+  const elseKnytes = getConnectsByDataMatchFunction(knyteId, matchToken, 'else', 'initial');
+  const elseLinkKnyteId = elseKnytes[0];
+  const elseKnyteId = elseLinkKnyteId ? knyteVectors[elseLinkKnyteId].terminalKnyteId : undefined;
+
   const namesSequence = [];
   const inputNamesSequence = [];
   const inputs = {};
@@ -2672,6 +2683,14 @@ function runBlockHandleClick(knyteId)
       throw Error('run block knyte ' + knyteId + ' has more than 1 code links');
     if (nextKnytes.length > 1)
       throw Error('run block knyte ' + knyteId + ' has more than 1 next links');
+    if (ifKnytes.length > 1)
+      throw Error('run block knyte ' + knyteId + ' has more than 1 if links');
+    if (thenKnytes.length > 1)
+      throw Error('run block knyte ' + knyteId + ' has more than 1 then links');
+    if (elseKnytes.length > 1)
+      throw Error('run block knyte ' + knyteId + ' has more than 1 else links');
+    if (!ifKnytes.length && (thenKnytes.length || elseKnytes.length))
+      throw Error('run block knyte ' + knyteId + ' has then/else links without if link');
     const namesMap = {};
     for (let i = 0; i < namesSequence.length; ++i)
     {
