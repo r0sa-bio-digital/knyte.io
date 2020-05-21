@@ -2629,7 +2629,7 @@ function runBlockHandleClick(knyteId)
   const ifLinkKnyteId = ifKnytes[0];
   const ifKnyteId = ifLinkKnyteId ? knyteVectors[ifLinkKnyteId].initialKnyteId : undefined;
   const ifRecord = ifKnyteId ? informationMap[ifKnyteId].record : undefined;
-  let ifText = ifRecord ? ifRecord.data : '';
+  const ifText = ifRecord ? ifRecord.data : '';
 
   const thenKnytes = getConnectsByDataMatchFunction(knyteId, matchToken, 'then', 'initial');
   const thenLinkKnyteId = thenKnytes[0];
@@ -2691,6 +2691,8 @@ function runBlockHandleClick(knyteId)
       throw Error('run block knyte ' + knyteId + ' has more than 1 else links');
     if (!ifKnytes.length && (thenKnytes.length || elseKnytes.length))
       throw Error('run block knyte ' + knyteId + ' has then/else links without if link');
+    if ((ifKnytes.length || thenKnytes.length || elseKnytes.length) && (codeKnytes.length || nextKnytes.length))
+      throw Error('run block knyte ' + knyteId + ' has mixed code-next and if-then-else links');
     const namesMap = {};
     for (let i = 0; i < namesSequence.length; ++i)
     {
@@ -2722,44 +2724,75 @@ function runBlockHandleClick(knyteId)
       codeText = outputParametersDefinition + codeText + outputParametersReturn;
     }
     const useStrict = '"use strict";\n';
-    const evalKey = formalParametersList + codeText;
-    const evalText = 'new Function(' + formalParametersList + 'useStrict + codeText)';
-    if (!(knyteId in knyteEvalCode))
-      knyteEvalCode[knyteId] = {};
-    if (!(evalKey in knyteEvalCode[knyteId]))
-      knyteEvalCode[knyteId][evalKey] = eval(evalText);
-    const codeFunction = knyteEvalCode[knyteId][evalKey];
-    setTimeout(
-      function()
-      {
-        let codeComplete = false;
-        try
+    if (ifKnyteId)
+    {
+      const evalConditionKey = 'return (' + ifText + ');';
+      const evalConditionText = 'new Function(' + formalParametersList + 'useStrict + "return (" + ifText + ");")';
+      if (!(knyteId in knyteEvalCode))
+        knyteEvalCode[knyteId] = {};
+      if (!(evalConditionKey in knyteEvalCode[knyteId]))
+        knyteEvalCode[knyteId][evalConditionKey] = eval(evalConditionText);
+      const conditionFunction = knyteEvalCode[knyteId][evalConditionKey];
+      setTimeout(
+        function()
         {
-          const results = eval('codeFunction(' + actualParametersList + ')');
-          let gotOutput = false;
-          for (let resultName in results)
+          let conditionComplete = false;
+          let conditionKnyteId;
+          try
           {
-            const resultKnyteId = outputNameToKnyteMap[resultName];
-            const resultValue = results[resultName];
-            const {record} = informationMap[resultKnyteId];
-            const recordtype = getRecordtype(record);
-            setKnyteRecordData(resultKnyteId, recordtype, resultValue);
-            gotOutput = true;
+            const result = eval('conditionFunction(' + actualParametersList + ')');
+            conditionKnyteId = result ? thenKnyteId : elseKnyteId;
+            conditionComplete = true;
           }
-          if (gotOutput)
+          finally
           {
-            setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
-            handleSpacemapChanged();
+            onComplete(conditionComplete, conditionKnyteId);
           }
-          codeComplete = true;
-        }
-        finally
+        }, 
+        1000
+      );
+    }
+    else
+    {
+      const evalKey = formalParametersList + codeText;
+      const evalText = 'new Function(' + formalParametersList + 'useStrict + codeText)';
+      if (!(knyteId in knyteEvalCode))
+        knyteEvalCode[knyteId] = {};
+      if (!(evalKey in knyteEvalCode[knyteId]))
+        knyteEvalCode[knyteId][evalKey] = eval(evalText);
+      const codeFunction = knyteEvalCode[knyteId][evalKey];
+      setTimeout(
+        function()
         {
-          onComplete(codeComplete, nextKnyteId);
-        }
-      }, 
-      1000
-    );
+          let codeComplete = false;
+          try
+          {
+            const results = eval('codeFunction(' + actualParametersList + ')');
+            let gotOutput = false;
+            for (let resultName in results)
+            {
+              const resultKnyteId = outputNameToKnyteMap[resultName];
+              const resultValue = results[resultName];
+              const {record} = informationMap[resultKnyteId];
+              const recordtype = getRecordtype(record);
+              setKnyteRecordData(resultKnyteId, recordtype, resultValue);
+              gotOutput = true;
+            }
+            if (gotOutput)
+            {
+              setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+              handleSpacemapChanged();
+            }
+            codeComplete = true;
+          }
+          finally
+          {
+            onComplete(codeComplete, nextKnyteId);
+          }
+        }, 
+        1000
+      );
+    }
     runComplete = true;
   }
   finally
