@@ -2602,7 +2602,7 @@ function runBlockHandleClick(knyteId)
   
   function getNumberOrBoolOrString(data)
   {
-    if (!data)
+    if (data === undefined || data === '')
       return '""';
     return isNaN(data) && data !== 'true' && data !== 'false' ? '"' + data + '"' : data;
   }
