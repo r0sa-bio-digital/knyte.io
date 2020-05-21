@@ -100,8 +100,11 @@ function saveAppState()
 {
   const state = {masterKnoxelId, spacemapKnoxelId, knyteVectors, knoxelVectors,
     knyteConnects, knyteInitialConnects, knyteTerminalConnects, informationMap, knoxels, knoxelViews};
-  const stateText = JSON.stringify(state, null, '\t');
-  const blob = new Blob([stateText], {type: "text/plain;charset=utf-8"});
+  const keys = [];
+  const keyMap = {};
+  JSON.stringify(state, (key, value) => {if (!(key in keyMap)) {keyMap[key] = true; keys.push(key);} return value;});
+  const stateText = JSON.stringify(state, keys.sort(), '\t');
+  const blob = new Blob([stateText], {type: 'text/plain;charset=utf-8'});
   saveAs(blob, 'knoxelSpace.json');
 }
 
@@ -2288,7 +2291,7 @@ function onKeyDownWindow(e)
       const knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
       const knyteId = knoxels[knoxelId];
       const {record} = informationMap[knyteId];
-      const newSize = prompt('Edit knyte size', record && record.size ? JSON.stringify(record.size) : '{"w": 0, "h": 0}');
+      const newSize = prompt('Edit knyte size', JSON.stringify(record && record.size ? record.size : {w: 0, h: 0}, ['w', 'h']));
       if (newSize)
       {
         record.size = JSON.parse(newSize);
