@@ -2528,7 +2528,6 @@ const codeTemplates = {
     ready: function(knyteId, type) {
       const checks = {
         init: '',
-        succeed: '\t<span title="check" style="padding: 2px; background-color: ' + visualThemeColors.success +';">ok</span>\n',
         failed: '\t<span title="check" style="padding: 2px; background-color: ' + visualThemeColors.fail +';">error</span>\n',
       };
       return '<div style="width: 200px; height: 24px; margin: 8px;">\n' +
@@ -2573,7 +2572,7 @@ function runBlockHandleClick(knyteId)
 {
   function onComplete(success, nextKnyteId)
   {
-    const newData = codeTemplates.runBlock.ready(knyteId, success ? 'succeed' : 'failed');
+    const newData = codeTemplates.runBlock.ready(knyteId, success ? 'init' : 'failed');
     setKnyteRecordData(knyteId, 'interactive', newData);
     setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
     refreshActiveRect({position: mouseMovePosition});
