@@ -28,6 +28,9 @@ const arrows = {}; // arrow id --> {initialKnoxelId, terminalKnoxelId}
 const spaceBackStack = []; // [previous space root knoxel id]
 const spaceForwardStack = []; // [next space root knoxel id]
 
+// global settings
+let runBlockDelay = 0;
+
 const visualTheme = {
   rect: {
     strokeWidth: 4,
@@ -2766,7 +2769,7 @@ function runBlockHandleClick(knyteId)
             onComplete(conditionComplete, conditionKnyteId);
           }
         }, 
-        1000
+        runBlockDelay
       );
     }
     else
@@ -2807,7 +2810,7 @@ function runBlockHandleClick(knyteId)
             onComplete(codeComplete, nextKnyteId);
           }
         }, 
-        1000
+        runBlockDelay
       );
     }
     runComplete = true;

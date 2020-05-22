@@ -111,10 +111,10 @@
 		"091ed4a4-8ee6-475a-be99-111de706d6ef": {
 			"color": "#bb99ff",
 			"record": {
-				"data": "then",
+				"data": "=true",
 				"size": {
-					"h": 27,
-					"w": 46.53125
+					"h": 25.77777862548828,
+					"w": 56.177085876464844
 				},
 				"viewertype": "oneliner"
 			},
@@ -910,10 +910,10 @@
 		"2955e6ef-7c8f-49fa-b195-4f37be6f3e06": {
 			"color": "#bb99ff",
 			"record": {
-				"data": "console.log('then');",
+				"data": "console.log('=true');",
 				"size": {
 					"h": 25.77777862548828,
-					"w": 200.65626525878906
+					"w": 210.2916717529297
 				},
 				"viewertype": "oneliner"
 			},
