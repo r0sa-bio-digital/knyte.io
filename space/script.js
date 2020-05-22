@@ -2578,7 +2578,7 @@ function runBlockHandleClick(knyteId)
     refreshActiveRect({position: mouseMovePosition});
     handleSpacemapChanged();
     
-    if (nextKnyteId)
+    if (success && nextKnyteId)
       runBlockHandleClick(nextKnyteId);
   }
   
