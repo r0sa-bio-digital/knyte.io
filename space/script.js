@@ -2594,12 +2594,22 @@ function runBlockHandleClick(knyteId)
   {
     return data.length > 2 && data[0] === '[' && data[data.length-1] === ']';
   }
-  
+
+  function matchCaseParameter(data)
+  {
+    return data.length > 1 && data[0] === '=';
+  }
+
   function extractParameterName(data)
   {
     return data.substr(1, data.length-2);
   }
-  
+
+  function extractCaseValue(data)
+  {
+    return data.substr(1, data.length-1);
+  }
+
   function getNumberOrBoolOrString(data)
   {
     if (data === undefined || data === '')
@@ -2630,15 +2640,22 @@ function runBlockHandleClick(knyteId)
   const ifKnyteId = ifLinkKnyteId ? knyteVectors[ifLinkKnyteId].initialKnyteId : undefined;
   const ifRecord = ifKnyteId ? informationMap[ifKnyteId].record : undefined;
   const ifText = ifRecord ? ifRecord.data : '';
-
-  const thenKnytes = getConnectsByDataMatchFunction(knyteId, matchToken, 'then', 'initial');
-  const thenLinkKnyteId = thenKnytes[0];
-  const thenKnyteId = thenLinkKnyteId ? knyteVectors[thenLinkKnyteId].terminalKnyteId : undefined;
-
   const elseKnytes = getConnectsByDataMatchFunction(knyteId, matchToken, 'else', 'initial');
   const elseLinkKnyteId = elseKnytes[0];
   const elseKnyteId = elseLinkKnyteId ? knyteVectors[elseLinkKnyteId].terminalKnyteId : undefined;
+  const caseKnytes = getConnectsByDataMatchFunction(knyteId, matchCaseParameter, undefined, 'initial');
 
+  const cases = {};
+  for (let i = 0; i < caseKnytes.length; ++i)
+  {
+    const caseLinkKnyteId = caseKnytes[i];
+    const caseKnyteId = caseLinkKnyteId ? knyteVectors[caseLinkKnyteId].terminalKnyteId: undefined;
+    const caseRecord = informationMap[caseLinkKnyteId].record;
+    const caseValue = caseRecord ? extractCaseValue(caseRecord.data) : undefined;
+    if (caseValue !== undefined && caseKnyteId)
+      cases[caseValue] = caseKnyteId;
+  }
+  
   const namesSequence = [];
   const inputNamesSequence = [];
   const inputs = {};
@@ -2685,14 +2702,14 @@ function runBlockHandleClick(knyteId)
       throw Error('run block knyte ' + knyteId + ' has more than 1 next links');
     if (ifKnytes.length > 1)
       throw Error('run block knyte ' + knyteId + ' has more than 1 if links');
-    if (thenKnytes.length > 1)
-      throw Error('run block knyte ' + knyteId + ' has more than 1 then links');
+    if (caseKnytes.length !== Object.keys(cases).length)
+      throw Error('run block knyte ' + knyteId + ' has duplicated case links');
     if (elseKnytes.length > 1)
       throw Error('run block knyte ' + knyteId + ' has more than 1 else links');
-    if (!ifKnytes.length && (thenKnytes.length || elseKnytes.length))
-      throw Error('run block knyte ' + knyteId + ' has then/else links without if link');
-    if ((ifKnytes.length || thenKnytes.length || elseKnytes.length) && (codeKnytes.length || nextKnytes.length))
-      throw Error('run block knyte ' + knyteId + ' has mixed code-next and if-then-else links');
+    if (!ifKnytes.length && (caseKnytes.length || elseKnytes.length))
+      throw Error('run block knyte ' + knyteId + ' has case/else links without if link');
+    if ((ifKnytes.length || caseKnytes.length || elseKnytes.length) && (codeKnytes.length || nextKnytes.length))
+      throw Error('run block knyte ' + knyteId + ' has mixed code-next and if-cases-else links');
     const namesMap = {};
     for (let i = 0; i < namesSequence.length; ++i)
     {
@@ -2741,7 +2758,7 @@ function runBlockHandleClick(knyteId)
           try
           {
             const result = eval('conditionFunction(' + actualParametersList + ')');
-            conditionKnyteId = result ? thenKnyteId : elseKnyteId;
+            conditionKnyteId = cases[result] ? cases[result] : elseKnyteId;
             conditionComplete = true;
           }
           finally
