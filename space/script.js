@@ -30,6 +30,7 @@ const spaceForwardStack = []; // [next space root knoxel id]
 
 // global settings
 let runBlockDelay = 0;
+const runBlockBusyList = {};
 
 const visualTheme = {
   rect: {
@@ -99,8 +100,20 @@ const knit = new function()
   this.new = function() {return textUuidV4();};
 }
 
+function checkAppBusy()
+{
+  if (Object.keys(runBlockBusyList).length > 0)
+  {
+    alert('Can\'t save/load state while code is running.\nPlease, stop all active flows first.')
+    return false;
+  }
+  return true;
+}
+
 function saveAppState()
 {
+  if (!checkAppBusy())
+    return;
   const state = {masterKnoxelId, spacemapKnoxelId, knyteVectors, knoxelVectors,
     knyteConnects, knyteInitialConnects, knyteTerminalConnects, informationMap, knoxels, knoxelViews};
   const keys = [];
@@ -141,6 +154,8 @@ function loadAppState(files)
     spaceForwardStack.length = 0;
   }
 
+  if (!checkAppBusy())
+    return;
   // TODO: implement files count and format check
   const file = files[0];
   const reader = new FileReader();
@@ -2752,9 +2767,11 @@ function runBlockHandleClick(knyteId)
       if (!(evalConditionKey in knyteEvalCode[knyteId]))
         knyteEvalCode[knyteId][evalConditionKey] = eval(evalConditionText);
       const conditionFunction = knyteEvalCode[knyteId][evalConditionKey];
+      runBlockBusyList[knyteId] = true;
       setTimeout(
         function()
         {
+          delete runBlockBusyList[knyteId];
           let conditionComplete = false;
           let conditionKnyteId;
           try
@@ -2780,9 +2797,11 @@ function runBlockHandleClick(knyteId)
       if (!(evalKey in knyteEvalCode[knyteId]))
         knyteEvalCode[knyteId][evalKey] = eval(evalText);
       const codeFunction = knyteEvalCode[knyteId][evalKey];
+      runBlockBusyList[knyteId] = true;
       setTimeout(
         function()
         {
+          delete runBlockBusyList[knyteId];
           let codeComplete = false;
           try
           {
