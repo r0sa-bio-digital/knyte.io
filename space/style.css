@@ -1,11 +1,29 @@
 body {
-  font-family: helvetica, arial, sans-serif;
+  font-family: Menlo, Consolas, Lucida Console, Courier New, monospace;
   background-color: white;
+  color: #101010;
   text-align: center;
   margin: 0;
   border: 0;
   padding: 0;
   overflow: hidden;
+}
+
+textarea {
+  font-family: inherit;
+  tab-size: 4;
+}
+
+input {
+  font-family: inherit;
+}
+
+button {
+  font-family: inherit;
+}
+
+select {
+  font-family: inherit;
 }
 
 .spaceRoot {
@@ -54,4 +72,33 @@ body {
 .hostIcon {
   width: 40px;
   height: 40px;  
+}
+
+#autosizer {
+  position: absolute;
+  visibility: hidden;
+  height: auto;
+  width: auto;
+  white-space: nowrap;  
+}
+
+#colorpicker {
+  width: 30%;
+}
+
+.colorpickerColorButton {
+  width: 3em;
+  height: 3em;
+}
+
+#dropPrompt {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  left: 0;
+  top: 0;
+  font-size: 48px;
+  pointer-events: none;
+  color: #000000;
+  background-color: #ffffdd88;
 }
