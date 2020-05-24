@@ -5,33 +5,21 @@
 с точки зрения практической программной разработки
 и био-цифровых технологий.
 
-Хостинг
--------
-* Исходники: <https://github.com/r0sa-bio-digital/knyte.io/>
-* Статика и IDE: <https://knyte-io.glitch.me>
+Хостинг проекта
+---------------
 * Официальная страница: <https://www.knyte.io>
-
-Размерности разработки
-----------------------
-* bio-digital concept
-* knoxel space
-* attached knyte cloud
-* attached information map
-* command history
-* full circle functionality
-  * documentation, modelling, programming, data base, frontend
-* self-definition
-  * clone knowledge base using only knowledge base tools
-* collaborative work and cloud run-time
-* unified bio-digital language
-* full cycle ecosystem
+* Статика и IDE: <https://knyte-io.glitch.me>
+* Репозиторий с исходниками: <https://github.com/r0sa-bio-digital/knyte.io/>
 
 Прототип пространства
 ---------------------
-* ссылка
-  * <https://knyte-io.glitch.me/space>
-  * <https://www.knyte.io/space>
-* управление
+* Ссылки на модули
+  * Интерактивный прототип: <https://www.knyte.io/space>
+  * Спецификация Knoxel Space: <https://github.com/r0sa-bio-digital/knyte.io/blob/master/space/knoxelSpace.json>
+    * документ в собственном формате Knoxel Space
+    * для использования его нужно сохранить локально в json-файл
+      * и затем загрузить в систему как стейт
+* Управление
   * drop file on app screen - загрузить стейт системы из json-файла
   * console global variables
     * runBlockDelay - задержка (в миллисекундах) при запуске кода каждого выплняемого run block'а
@@ -93,3 +81,18 @@
     * space back - возврат в предыдущее пространство
     * space forward - повторный вход в следующее пространство
     * space host - переход в пространство, где расположен ghosted knoxel
+    
+Размерности разработки
+----------------------
+* bio-digital concept
+* knoxel space
+* attached knyte cloud
+* attached information map
+* command history
+* full circle functionality
+  * documentation, modelling, programming, data base, frontend
+* self-definition
+  * clone knowledge base using only knowledge base tools
+* collaborative work and cloud run-time
+* unified bio-digital language
+* full cycle ecosystem
