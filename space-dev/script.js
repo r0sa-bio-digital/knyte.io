@@ -756,6 +756,8 @@ const knoxelRect = new function()
   
   this.getRootByTarget = function(targetElement)
   {
+    if (targetElement === null)
+      return null;
     let element = targetElement;
     while (element.classList.value !== 'mouseOverRect' && element !== spaceRootElement)
       element = element.parentElement;
@@ -1322,7 +1324,7 @@ function onClickRect(e)
   const targetKnoxelElement = knoxelRect.getRootByTarget(e.target);
   if (!e.shiftKey && !e.altKey && !e.metaKey)
   {
-    if (targetKnoxelElement.id !== spaceRootElement.dataset.knoxelId)
+    if (targetKnoxelElement && targetKnoxelElement.id !== spaceRootElement.dataset.knoxelId)
     {
       spaceBackStack.push(spaceRootElement.dataset.knoxelId);
       spaceForwardStack.length = 0;
@@ -2140,7 +2142,7 @@ function onKeyDownWindow(e)
     return;
   const mouseoverTarget = document.elementFromPoint(mouseMovePagePosition.x, mouseMovePagePosition.y);
   const mouseoverElement = knoxelRect.getRootByTarget(mouseoverTarget);
-  const mouseoverKnoxelId = mouseoverElement.classList.value === 'mouseOverRect'
+  const mouseoverKnoxelId = (mouseoverElement && mouseoverElement.classList.value === 'mouseOverRect')
     ? mouseoverElement.id : null;
   if (e.code === 'Escape')
   {
