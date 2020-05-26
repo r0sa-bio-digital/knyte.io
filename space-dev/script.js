@@ -31,6 +31,16 @@ const spaceForwardStack = []; // [next space root knoxel id]
 // global settings
 let runBlockDelay = 0;
 const runBlockBusyList = {};
+const windowsOperationalSystem = navigator.appVersion.indexOf('Win') > -1;
+
+MouseEvent.prototype.cmdKey = function()
+{
+  return windowsOperationalSystem ? this.ctrlKey : this.metaKey;
+}
+KeyboardEvent.prototype.cmdKey = function()
+{
+  return windowsOperationalSystem ? this.ctrlKey : this.metaKey;
+}
 
 const visualTheme = {
   rect: {
@@ -1322,7 +1332,7 @@ function addKnoxelRect(desc)
 function onClickRect(e)
 {
   const targetKnoxelElement = knoxelRect.getRootByTarget(e.target);
-  if (!e.shiftKey && !e.altKey && !e.metaKey)
+  if (!e.shiftKey && !e.altKey && !e.cmdKey())
   {
     if (targetKnoxelElement && targetKnoxelElement.id !== spaceRootElement.dataset.knoxelId)
     {
@@ -1509,7 +1519,7 @@ function onClickSpaceRoot(e)
 {
   const mousePosition = {x: e.clientX, y: e.clientY};
   const mousePagePosition = {x: e.pageX, y: e.pageY};
-  if (!e.shiftKey && !e.altKey && e.metaKey)
+  if (!e.shiftKey && !e.altKey && e.cmdKey())
   {
     const knyteId = knit.new();
     const color = visualTheme.rect.fillColor;
@@ -2167,7 +2177,7 @@ function onKeyDownWindow(e)
     !activeInitialGhost.knoxelId && !activeTerminalGhost.knoxelId &&
     !activeInitialBubble.knoxelId && !activeTerminalBubble.knoxelId)
   {
-    if (!e.shiftKey && !e.altKey && !e.metaKey)
+    if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
       const position = mouseMovePosition;
       if (!activeGhost.knoxelId)
@@ -2203,7 +2213,7 @@ function onKeyDownWindow(e)
     !activeInitialGhost.knoxelId && !activeTerminalGhost.knoxelId &&
     !activeInitialBubble.knoxelId && !activeTerminalBubble.knoxelId)
   {
-    if (!e.shiftKey && !e.altKey && !e.metaKey)
+    if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
       const position = mouseMovePosition;
       if (!activeBubble.knoxelId)
@@ -2245,7 +2255,7 @@ function onKeyDownWindow(e)
   }
   else if (e.code === 'Enter')
   {
-    if (!e.shiftKey && !e.altKey && !e.metaKey)
+    if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
       const knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
       const knyteId = knoxels[knoxelId];
@@ -2263,7 +2273,7 @@ function onKeyDownWindow(e)
         handleSpacemapChanged();
       }
     }
-    else if (!e.shiftKey && e.altKey && !e.metaKey)
+    else if (!e.shiftKey && e.altKey && !e.cmdKey())
     {
       function onCancelDialog(e)
       {
@@ -2306,7 +2316,7 @@ function onKeyDownWindow(e)
   }
   else if (e.code === 'KeyS')
   {
-    if (!e.shiftKey && !e.altKey && !e.metaKey)
+    if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
       const knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
       const knyteId = knoxels[knoxelId];
@@ -2319,7 +2329,7 @@ function onKeyDownWindow(e)
         handleSpacemapChanged();
       }
     }
-    else if (!e.shiftKey && !e.altKey && e.metaKey)
+    else if (!e.shiftKey && !e.altKey && e.cmdKey())
     {
       e.stopPropagation();
       e.preventDefault();
@@ -2328,7 +2338,7 @@ function onKeyDownWindow(e)
   }
   else if (e.code === 'KeyD')
   {
-    if (!e.shiftKey && !e.altKey && !e.metaKey)
+    if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
       const knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
       const collapse = knoxelViews[knoxelId].collapse;
@@ -2351,7 +2361,7 @@ function onKeyDownWindow(e)
   }
   else if (e.code === 'KeyC')
   {
-    if (!e.shiftKey && !e.altKey && !e.metaKey)
+    if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
       function onCloseDialog(e)
       {
@@ -2384,7 +2394,7 @@ function onKeyDownWindow(e)
   }
   else if (e.code === 'KeyV')
   {
-    if (!e.shiftKey && !e.altKey && !e.metaKey)
+    if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
       const knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
       const color = knoxelViews[knoxelId].color;
@@ -2399,7 +2409,7 @@ function onKeyDownWindow(e)
   }
   else if (e.code === 'KeyO')
   {
-    if (!e.shiftKey && !e.altKey && !e.metaKey)
+    if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
       const knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
       prompt('Knoxel id:', knoxelId);
@@ -2407,7 +2417,7 @@ function onKeyDownWindow(e)
   }
   else if (e.code === 'KeyY')
   {
-    if (!e.shiftKey && !e.altKey && !e.metaKey)
+    if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
       const knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
       const knyteId = knoxels[knoxelId];
@@ -2417,7 +2427,7 @@ function onKeyDownWindow(e)
   else if (e.code === 'KeyZ' && !activeTerminalGhost.knoxelId && !activeGhost.knoxelId && !activeBubble.knoxelId &&
     !activeInitialBubble.knoxelId && !activeTerminalBubble.knoxelId)
   {
-    if (!e.shiftKey && !e.altKey && !e.metaKey)
+    if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
       const position = mouseMovePosition;
       if (!activeInitialGhost.knoxelId)
@@ -2448,7 +2458,7 @@ function onKeyDownWindow(e)
   else if (e.code === 'KeyX' && !activeInitialGhost.knoxelId && !activeGhost.knoxelId && !activeBubble.knoxelId &&
     !activeInitialBubble.knoxelId && !activeTerminalBubble.knoxelId)
   {
-    if (!e.shiftKey && !e.altKey && !e.metaKey)
+    if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
       const position = mouseMovePosition;
       if (!activeTerminalGhost.knoxelId)
@@ -2479,7 +2489,7 @@ function onKeyDownWindow(e)
   else if (e.code === 'KeyN' && !activeTerminalBubble.knoxelId && !activeGhost.knoxelId && !activeBubble.knoxelId &&
     !activeInitialGhost.knoxelId && !activeTerminalGhost.knoxelId)
   {
-    if (!e.shiftKey && !e.altKey && !e.metaKey)
+    if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
       const position = mouseMovePosition;
       if (!activeInitialBubble.knoxelId)
@@ -2510,7 +2520,7 @@ function onKeyDownWindow(e)
   else if (e.code === 'KeyM' && !activeInitialBubble.knoxelId && !activeGhost.knoxelId && !activeBubble.knoxelId &&
     !activeInitialGhost.knoxelId && !activeTerminalGhost.knoxelId)
   {
-    if (!e.shiftKey && !e.altKey && !e.metaKey)
+    if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
       const position = mouseMovePosition;
       if (!activeTerminalBubble.knoxelId)
