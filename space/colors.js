@@ -1,6 +1,7 @@
 const visualThemeColors = {
   stroke: '#160f19',
   fill: '#bb99ff',
+  masterFill: '#bb99ff',
   text: '#101010',
   navigation: '#ffffdd',
   control: '#160f19',

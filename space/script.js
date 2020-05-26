@@ -2929,7 +2929,7 @@ function onLoadBody(e)
   // create master knyte
   const masterKnyteId = knit.new();
   masterKnoxelId = knit.new();
-  const masterColor = visualTheme.rect.fillColor;
+  const masterColor = visualThemeColors.masterFill;
   addKnyte({knyteId: masterKnyteId, color: masterColor});
   // create spacemap knyte
   const spacemapKnyteId = knit.new();
