@@ -2828,7 +2828,6 @@ function runBlockHandleClick(knyteId)
             promiseResults.then(
               function(results)
               {
-                delete runBlockBusyList[knyteId];
                 let gotOutput = false;
                 for (let resultName in results)
                 {
@@ -2851,6 +2850,7 @@ function runBlockHandleClick(knyteId)
             ).finally(
               function()
               {
+                delete runBlockBusyList[knyteId];
                 onComplete(codeComplete, nextKnyteId);                
               }
             );
@@ -2859,7 +2859,10 @@ function runBlockHandleClick(knyteId)
           finally
           {
             if (!promiseComplete)
+            {
+              delete runBlockBusyList[knyteId];
               onComplete(false);
+            }
           }
         }, 
         runBlockDelay
