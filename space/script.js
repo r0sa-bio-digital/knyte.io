@@ -2826,8 +2826,10 @@ function runBlockHandleClick(knyteId)
                 let gotOutput = false;
                 for (let resultName in results)
                 {
-                  const resultKnyteId = outputNameToKnyteMap[resultName];
                   const resultValue = results[resultName];
+                  if (resultValue === undefined)
+                    continue;
+                  const resultKnyteId = outputNameToKnyteMap[resultName];
                   const {record} = informationMap[resultKnyteId];
                   const recordtype = getRecordtype(record);
                   setKnyteRecordData(resultKnyteId, recordtype, resultValue);
