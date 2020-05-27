@@ -700,12 +700,12 @@
 		"19887912-3f32-4dd7-a1ed-430ee4972792": {
 			"color": "#ff5d5d",
 			"record": {
-				"data": "Эта функция не может записать результат в (result)",
+				"data": "Альтернативная реализация функции без await\nне сможет записать данные результат в (result).",
 				"size": {
-					"h": 27,
-					"w": 489.640625
+					"h": 54.984375,
+					"w": 468.4453125
 				},
-				"viewertype": "oneliner"
+				"viewertype": "multiliner"
 			},
 			"space": {}
 		},
@@ -1629,48 +1629,44 @@
 			"color": "#bb99ff",
 			"space": {
 				"05730532-2d1a-47a8-8114-05eb0ecf26c3": {
-					"x": 908,
-					"y": 509
+					"x": 692,
+					"y": 353
 				},
 				"17a7739d-1f93-4ea5-8fef-f508397e827a": {
-					"x": 432,
-					"y": 440
+					"x": 230,
+					"y": 362
 				},
 				"345c8f08-661d-48f3-bfdc-18d769cc460d": {
 					"x": 446,
 					"y": 35
 				},
-				"60bc1461-6d59-4874-a214-2caf510954c0": {
-					"x": 419,
-					"y": 508
-				},
 				"65563f7e-1faf-4071-98c5-06d0566c9510": {
-					"x": 424,
-					"y": 223
+					"x": 229,
+					"y": 209
 				},
 				"990ceae1-ffc0-4caf-84a2-d8b4356d5476": {
-					"x": 647,
-					"y": 154
+					"x": 437,
+					"y": 210
 				},
 				"9d0350bc-0605-458e-a479-c192f8c3178a": {
-					"x": 230,
-					"y": 97
+					"x": 229,
+					"y": 88
 				},
 				"b8ed5483-bee5-4fce-9a18-2dc3add117a2": {
-					"x": 425,
-					"y": 324
+					"x": 229,
+					"y": 279
 				},
 				"ba884f5f-6998-4e42-91cb-8e675cd22340": {
-					"x": 903,
-					"y": 375
+					"x": 692,
+					"y": 497
 				},
 				"c6e3c18c-611b-4499-b149-dbec8813ca74": {
-					"x": 330,
-					"y": 158
+					"x": 230,
+					"y": 144
 				},
 				"e137b5a5-67c0-4f18-8e92-bb30507c52d6": {
-					"x": 825,
-					"y": 93
+					"x": 1231,
+					"y": 208
 				}
 			}
 		},
@@ -2796,6 +2792,10 @@
 				"47d9c34d-d6aa-4cd8-b6d5-91b20fe44c05": {
 					"x": 195,
 					"y": 227
+				},
+				"60bc1461-6d59-4874-a214-2caf510954c0": {
+					"x": 108,
+					"y": 97
 				},
 				"64de1514-6ad7-4139-b841-89a2d4bd9ef8": {
 					"x": 127,
@@ -6082,12 +6082,12 @@
 			"space": {}
 		},
 		"dce9e9a5-3254-4454-942e-f1b0821b85ab": {
-			"color": "#ff5d5d",
+			"color": "#bb99ff",
 			"record": {
-				"data": "Эта функция не работает вне async-контекста",
+				"data": "",
 				"size": {
-					"h": 27,
-					"w": 422.21875
+					"h": 8,
+					"w": 8
 				},
 				"viewertype": "oneliner"
 			},
@@ -6201,11 +6201,12 @@
 		"e2d07a51-370b-4ebc-b207-b064fd67beaf": {
 			"color": "#bb99ff",
 			"record": {
+				"data": "",
 				"size": {
-					"h": 8,
-					"w": 8
+					"h": 15.984375,
+					"w": 15.984375
 				},
-				"viewertype": "oneliner"
+				"viewertype": "multiliner"
 			},
 			"space": {}
 		},
@@ -6515,10 +6516,10 @@
 		"f490881b-b9ee-4e2d-90a6-0e605f30f164": {
 			"color": "#bb99ff",
 			"record": {
-				"data": "const response = await fetch(request);\nconst json = await response.json();\nresult = JSON.stringify(json);",
+				"data": "const response = await fetch(request);\nconst json = await response.json();\nresult = JSON.stringify(json, null, '\\t');",
 				"size": {
-					"h": 73,
-					"w": 382.046875
+					"h": 74.484375,
+					"w": 420.328125
 				},
 				"viewertype": "multiliner"
 			},
@@ -7445,7 +7446,7 @@
 			"terminalKnoxelId": "c4bb5a54-206d-4b35-b1d4-68254c9f9de5"
 		},
 		"b8ed5483-bee5-4fce-9a18-2dc3add117a2": {
-			"initialKnoxelId": "ba884f5f-6998-4e42-91cb-8e675cd22340",
+			"initialKnoxelId": "17a7739d-1f93-4ea5-8fef-f508397e827a",
 			"terminalKnoxelId": "65563f7e-1faf-4071-98c5-06d0566c9510"
 		},
 		"c294b01b-92d0-4419-b44d-c6454082917b": {
@@ -11262,9 +11263,7 @@
 		"0066e518-5cf5-49f8-b4d1-e515e6fdb8c6": {
 			"0066e518-5cf5-49f8-b4d1-e515e6fdb8c6": true
 		},
-		"00c52aa8-9540-4344-8269-03b74e078549": {
-			"f4a4d451-410a-4872-ab1c-c6cf14a55b87": true
-		},
+		"00c52aa8-9540-4344-8269-03b74e078549": {},
 		"01bc131c-09ae-41d8-8e60-44fb0964fedc": {},
 		"0328d67e-42c6-474a-8f68-89224af9f06b": {},
 		"03c39a31-cbb6-45ef-ac89-a1ada039c4e2": {
@@ -11941,7 +11940,9 @@
 		"f2a7dae5-d4e5-4b5d-9342-7efad414aa7d": {
 			"595dedbc-6e77-4b30-8d39-25fa134d50cd": true
 		},
-		"f490881b-b9ee-4e2d-90a6-0e605f30f164": {},
+		"f490881b-b9ee-4e2d-90a6-0e605f30f164": {
+			"f4a4d451-410a-4872-ab1c-c6cf14a55b87": true
+		},
 		"f4a4d451-410a-4872-ab1c-c6cf14a55b87": {},
 		"f4e8ac5d-1321-467b-a0a5-2284a6a1ed32": {},
 		"f5e077fb-74cc-417a-995b-a0e1cfd223b1": {
@@ -11982,9 +11983,7 @@
 	},
 	"knyteInitialConnects": {
 		"0066e518-5cf5-49f8-b4d1-e515e6fdb8c6": {},
-		"00c52aa8-9540-4344-8269-03b74e078549": {
-			"f4a4d451-410a-4872-ab1c-c6cf14a55b87": true
-		},
+		"00c52aa8-9540-4344-8269-03b74e078549": {},
 		"01bc131c-09ae-41d8-8e60-44fb0964fedc": {},
 		"0328d67e-42c6-474a-8f68-89224af9f06b": {},
 		"03c39a31-cbb6-45ef-ac89-a1ada039c4e2": {
@@ -12516,7 +12515,9 @@
 		"f2a7dae5-d4e5-4b5d-9342-7efad414aa7d": {
 			"595dedbc-6e77-4b30-8d39-25fa134d50cd": true
 		},
-		"f490881b-b9ee-4e2d-90a6-0e605f30f164": {},
+		"f490881b-b9ee-4e2d-90a6-0e605f30f164": {
+			"f4a4d451-410a-4872-ab1c-c6cf14a55b87": true
+		},
 		"f4a4d451-410a-4872-ab1c-c6cf14a55b87": {},
 		"f4e8ac5d-1321-467b-a0a5-2284a6a1ed32": {},
 		"f5e077fb-74cc-417a-995b-a0e1cfd223b1": {
@@ -13757,7 +13758,7 @@
 		"f2a7dae5-d4e5-4b5d-9342-7efad414aa7d": {},
 		"f490881b-b9ee-4e2d-90a6-0e605f30f164": {},
 		"f4a4d451-410a-4872-ab1c-c6cf14a55b87": {
-			"initialKnyteId": "00c52aa8-9540-4344-8269-03b74e078549",
+			"initialKnyteId": "f490881b-b9ee-4e2d-90a6-0e605f30f164",
 			"terminalKnyteId": "567268e6-b782-4047-96f5-48d456bb8342"
 		},
 		"f4e8ac5d-1321-467b-a0a5-2284a6a1ed32": {},
