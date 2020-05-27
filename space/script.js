@@ -2803,7 +2803,8 @@ function runBlockHandleClick(knyteId)
     else
     {
       const evalKey = formalParametersList + codeText;
-      const evalText = 'new Function(' + formalParametersList + 'useStrict + codeText)';
+      const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+      const evalText = 'new AsyncFunction(' + formalParametersList + 'useStrict + codeText)';
       if (!(knyteId in knyteEvalCode))
         knyteEvalCode[knyteId] = {};
       if (!(evalKey in knyteEvalCode[knyteId]))
@@ -2813,31 +2814,44 @@ function runBlockHandleClick(knyteId)
       setTimeout(
         function()
         {
-          delete runBlockBusyList[knyteId];
-          let codeComplete = false;
+          let promiseComplete = false;
           try
           {
-            const results = eval('codeFunction(' + actualParametersList + ')');
-            let gotOutput = false;
-            for (let resultName in results)
-            {
-              const resultKnyteId = outputNameToKnyteMap[resultName];
-              const resultValue = results[resultName];
-              const {record} = informationMap[resultKnyteId];
-              const recordtype = getRecordtype(record);
-              setKnyteRecordData(resultKnyteId, recordtype, resultValue);
-              gotOutput = true;
-            }
-            if (gotOutput)
-            {
-              setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
-              handleSpacemapChanged();
-            }
-            codeComplete = true;
+            let codeComplete = false;
+            const promiseResults = eval('codeFunction(' + actualParametersList + ')');
+            promiseResults.then(
+              function(results)
+              {
+                delete runBlockBusyList[knyteId];
+                let gotOutput = false;
+                for (let resultName in results)
+                {
+                  const resultKnyteId = outputNameToKnyteMap[resultName];
+                  const resultValue = results[resultName];
+                  const {record} = informationMap[resultKnyteId];
+                  const recordtype = getRecordtype(record);
+                  setKnyteRecordData(resultKnyteId, recordtype, resultValue);
+                  gotOutput = true;
+                }
+                if (gotOutput)
+                {
+                  setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+                  handleSpacemapChanged();
+                }
+                codeComplete = true;
+              }
+            ).finally(
+              function()
+              {
+                onComplete(codeComplete, nextKnyteId);                
+              }
+            );
+            promiseComplete = true;
           }
           finally
           {
-            onComplete(codeComplete, nextKnyteId);
+            if (!promiseComplete)
+              onComplete(false);
           }
         }, 
         runBlockDelay
