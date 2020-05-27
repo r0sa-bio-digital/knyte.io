@@ -2772,7 +2772,7 @@ function runBlockHandleClick(knyteId)
     const useStrict = '"use strict";\n';
     if (ifKnyteId)
     {
-      const evalConditionKey = 'return (' + ifText + ');';
+      const evalConditionKey = 'if-case-else' + formalParametersList + ifText;
       const evalConditionText = 'new Function(' + formalParametersList + 'useStrict + "return (" + ifText + ");")';
       if (!(knyteId in knyteEvalCode))
         knyteEvalCode[knyteId] = {};
@@ -2802,7 +2802,7 @@ function runBlockHandleClick(knyteId)
     }
     else
     {
-      const evalKey = formalParametersList + codeText;
+      const evalKey = 'code-next' + formalParametersList + codeText;
       const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
       const evalText = 'new AsyncFunction(' + formalParametersList + 'useStrict + codeText)';
       if (!(knyteId in knyteEvalCode))
