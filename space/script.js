@@ -2595,8 +2595,8 @@ function getConnectsByDataMatchFunction(knyteId, match, token, type)
   return result;
 }
 
-function escapeDoubleQuotes(s) {
-  return s.replace(/\\/g, '\\\\').replace(/\x22/g, '\\\x22');
+function escapeStringToCode(s) {
+  return s.replace(/\\/g, '\\\\').replace(/\"/g, '\\\"').replace(/\n/g, '\\n');
 }
 
 function runBlockHandleClick(knyteId)
@@ -2648,7 +2648,7 @@ function runBlockHandleClick(knyteId)
     if (data === undefined || data === '')
       return '""';
     return isNaN(data) && data !== 'true' && data !== 'false'
-      ? '"' + escapeDoubleQuotes(data) + '"'
+      ? '"' + escapeStringToCode(data) + '"'
       : data;
   }
 
