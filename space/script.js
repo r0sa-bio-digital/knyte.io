@@ -31,15 +31,15 @@ const spaceForwardStack = []; // [next space root knoxel id]
 // global settings
 let runBlockDelay = 0;
 const runBlockBusyList = {};
-const windowsOperationalSystem = navigator.appVersion.indexOf('Win') > -1;
+const useCtrlInsteadOfMeta = navigator.appVersion.indexOf('Mac') < 0; // for 'Win' and 'Linux'
 
 MouseEvent.prototype.cmdKey = function()
 {
-  return windowsOperationalSystem ? this.ctrlKey : this.metaKey;
+  return useCtrlInsteadOfMeta ? this.ctrlKey : this.metaKey;
 }
 KeyboardEvent.prototype.cmdKey = function()
 {
-  return windowsOperationalSystem ? this.ctrlKey : this.metaKey;
+  return useCtrlInsteadOfMeta ? this.ctrlKey : this.metaKey;
 }
 
 const visualTheme = {
