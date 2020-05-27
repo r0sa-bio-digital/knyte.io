@@ -2853,36 +2853,6 @@ function runBlockHandleClick(knyteId)
             if (!promiseComplete)
               onComplete(false);
           }
-          
-          /* // sync implementation commented and replaced by async implementation above //
-          delete runBlockBusyList[knyteId];
-          let codeComplete = false;
-          try
-          {
-            const results = eval('codeFunction(' + actualParametersList + ')');
-            let gotOutput = false;
-            for (let resultName in results)
-            {
-              const resultKnyteId = outputNameToKnyteMap[resultName];
-              const resultValue = results[resultName];
-              const {record} = informationMap[resultKnyteId];
-              const recordtype = getRecordtype(record);
-              setKnyteRecordData(resultKnyteId, recordtype, resultValue);
-              gotOutput = true;
-            }
-            if (gotOutput)
-            {
-              setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
-              handleSpacemapChanged();
-            }
-            codeComplete = true;
-          }
-          finally
-          {
-            onComplete(codeComplete, nextKnyteId);
-          }
-          */
-          
         }, 
         runBlockDelay
       );
