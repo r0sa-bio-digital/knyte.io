@@ -2625,7 +2625,9 @@ function runBlockHandleClick(knyteId)
 
   function matchKnoxelParameter(data)
   {
-    return data.length > 2 && data[0] === '[' && data[data.length-1] === ']';
+    // can't use [] or {} to don't mismatch with json arrays and objects
+    // don't want to use <> because of poor metaphora
+    return data.length > 2 && data[0] === '|' && data[data.length-1] === '|';
   }
 
   function matchCaseParameter(data)
@@ -2651,6 +2653,13 @@ function runBlockHandleClick(knyteId)
       ? '"' + escapeStringToCode(data) + '"'
       : data;
   }
+  
+  const typeValidators = {
+    string: function() {},
+    number: function() {},
+    bool: function() {},
+    json: function() {},
+  };
 
   const newData = codeTemplates.runBlock.busy;
   setKnyteRecordData(knyteId, 'interactive', newData);
@@ -2748,10 +2757,15 @@ function runBlockHandleClick(knyteId)
     const namesMap = {};
     for (let i = 0; i < namesSequence.length; ++i)
     {
-      const name = namesSequence[i];
+      const nameType = namesSequence[i].split(':');
+      const name = nameType[0];
+      const type = nameType[1];
       if (name in namesMap)
         throw Error('duplicated parameter name: ' + name);
-      namesMap[name] = true;
+      const typeValidator = type ? typeValidators[type] : typeValidators['string'];
+      if (!typeValidator)
+        throw Error('type validator not found for (' + namesSequence[i] + ')');
+      namesMap[name] = typeValidator;
     }
     let formalParametersList = '';
     let actualParametersList = '';
@@ -2759,6 +2773,7 @@ function runBlockHandleClick(knyteId)
     {
       const name = inputNamesSequence[i];
       formalParametersList += '"' + name + '", ';
+      // TODO: use typeValidator here
       actualParametersList += (i > 0 ? ', ' : '') + getNumberOrBoolOrString(inputs[name]);
     }
     if (outputNamesSequence.length)
@@ -2829,6 +2844,10 @@ function runBlockHandleClick(knyteId)
               function(results)
               {
                 let gotOutput = false;
+                for (let resultName in results)
+                {
+                  // TODO: use typeValidator here to check all reesults before setKnyteRecordData
+                }
                 for (let resultName in results)
                 {
                   const resultValue = results[resultName];
