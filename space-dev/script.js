@@ -2645,21 +2645,35 @@ function runBlockHandleClick(knyteId)
     return data.substr(1, data.length-1);
   }
 
-  function getNumberOrBoolOrString(data)
-  {
-    if (data === undefined || data === '')
-      return '""';
-    return isNaN(data) && data !== 'true' && data !== 'false'
-      ? '"' + escapeStringToCode(data) + '"'
-      : data;
-  }
-  
   const typeValidators = {
-    string: function() {},
-    number: function() {},
-    bool: function() {},
-    json: function() {},
+    string: function(value) {return true;},
+    number: function(value) {return !isNaN(value);},
+    bool: function(value) {return value === 'true' || value === 'false';},
+    json: function(value) {
+      let success = false;
+      try
+      {
+        JSON.parse(value);
+        success = true;
+      }
+      catch (e)
+      {
+        console.warn(e);
+      }
+      return success;
+    },
   };
+  
+  function getValueCode(typeValidator, value)
+  {
+    if (typeValidator === typeValidators.string)
+    {
+      if (value === undefined || value === '')
+        return '""';
+      return '"' + escapeStringToCode(value) + '"';
+    }
+    return value;
+  }
 
   const newData = codeTemplates.runBlock.busy;
   setKnyteRecordData(knyteId, 'interactive', newData);
@@ -2765,16 +2779,19 @@ function runBlockHandleClick(knyteId)
       const typeValidator = type ? typeValidators[type] : typeValidators['string'];
       if (!typeValidator)
         throw Error('type validator not found for (' + namesSequence[i] + ')');
-      namesMap[name] = typeValidator;
+      namesMap[name] = {type, typeValidator};
     }
     let formalParametersList = '';
     let actualParametersList = '';
     for (let i = 0; i < inputNamesSequence.length; ++i)
     {
-      const name = inputNamesSequence[i];
+      const name = inputNamesSequence[i].split(':')[0];
       formalParametersList += '"' + name + '", ';
-      // TODO: use typeValidator here
-      actualParametersList += (i > 0 ? ', ' : '') + getNumberOrBoolOrString(inputs[name]);
+      const {typeValidator} = namesMap[name];
+      const value = inputs[inputNamesSequence[i]];
+      if (!typeValidator(value))
+        throw Error('invalid value for (' + inputNamesSequence[i] + '): ' + value);
+      actualParametersList += (i > 0 ? ', ' : '') + getValueCode(typeValidator, value);
     }
     if (outputNamesSequence.length)
     {
@@ -2782,7 +2799,7 @@ function runBlockHandleClick(knyteId)
       let outputParametersReturn = '\nreturn {';
       for (let i = 0; i < outputNamesSequence.length; ++i)
       {
-        const name = outputNamesSequence[i];
+        const name = outputNamesSequence[i].split(':')[0];
         outputParametersDefinition += (i > 0 ? ', ' : '') + name;
         outputParametersReturn += (i > 0 ? ', ' : '') + name;
       }
@@ -2846,7 +2863,10 @@ function runBlockHandleClick(knyteId)
                 let gotOutput = false;
                 for (let resultName in results)
                 {
-                  // TODO: use typeValidator here to check all results before setKnyteRecordData
+                  const {type, typeValidator} = namesMap[resultName];
+                  const value = results[resultName];
+                  if (!typeValidator(value))
+                    throw Error('invalid value for (' + resultName + ':' + type + '): ' + value);
                 }
                 for (let resultName in results)
                 {
