@@ -2595,6 +2595,11 @@ function getConnectsByDataMatchFunction(knyteId, match, token, type)
   return result;
 }
 
+function isString(s)
+{
+  return s !== null && s !== undefined && s.constructor === String;
+}
+
 function escapeStringToCode(s) {
   return s.replace(/\\/g, '\\\\').replace(/\"/g, '\\\"').replace(/\n/g, '\\n');
 }
@@ -2625,7 +2630,9 @@ function runBlockHandleClick(knyteId)
 
   function matchKnoxelParameter(data)
   {
-    return data.length > 2 && data[0] === '[' && data[data.length-1] === ']';
+    // can't use [] or {} to don't mismatch with json arrays and objects
+    // don't want to use <> because of poor metaphora
+    return data.length > 2 && data[0] === '|' && data[data.length-1] === '|';
   }
 
   function matchCaseParameter(data)
@@ -2643,13 +2650,40 @@ function runBlockHandleClick(knyteId)
     return data.substr(1, data.length-1);
   }
 
-  function getNumberOrBoolOrString(data)
+  const typeValidators = {
+    string: function(value) {return true;},
+    number: function(value) {
+      return !isNaN(value) && 
+        value !== 'true' && value !== 'false' && value !== true && value !== false;
+    },
+    bool: function(value) {
+      return value === 'true' || value === 'false' || value === true || value === false;
+    },
+    json: function(value) {
+      let success = false;
+      try
+      {
+        if (isString(value))
+          JSON.parse(value);
+        success = true;
+      }
+      catch (e)
+      {
+        console.warn(e);
+      }
+      return success;
+    },
+  };
+  
+  function getValueCode(typeValidator, value)
   {
-    if (data === undefined || data === '')
-      return '""';
-    return isNaN(data) && data !== 'true' && data !== 'false'
-      ? '"' + escapeStringToCode(data) + '"'
-      : data;
+    if (typeValidator === typeValidators.string)
+    {
+      if (value === undefined || value === '')
+        return '""';
+      return '"' + escapeStringToCode(value) + '"';
+    }
+    return value;
   }
 
   const newData = codeTemplates.runBlock.busy;
@@ -2725,7 +2759,8 @@ function runBlockHandleClick(knyteId)
       outputs[outputName] = outputValue;
       namesSequence.push(outputName);
       outputNamesSequence.push(outputName);
-      outputNameToKnyteMap[outputName] = outputKnyteId;
+      const name = outputName.split(':')[0];
+      outputNameToKnyteMap[name] = outputKnyteId;
     }
   }
   let runComplete = false;
@@ -2748,18 +2783,27 @@ function runBlockHandleClick(knyteId)
     const namesMap = {};
     for (let i = 0; i < namesSequence.length; ++i)
     {
-      const name = namesSequence[i];
+      const nameType = namesSequence[i].split(':');
+      const name = nameType[0];
+      const type = nameType[1];
       if (name in namesMap)
         throw Error('duplicated parameter name: ' + name);
-      namesMap[name] = true;
+      const typeValidator = type ? typeValidators[type] : typeValidators.string;
+      if (!typeValidator)
+        throw Error('type validator not found for (' + namesSequence[i] + ')');
+      namesMap[name] = {type, typeValidator};
     }
     let formalParametersList = '';
     let actualParametersList = '';
     for (let i = 0; i < inputNamesSequence.length; ++i)
     {
-      const name = inputNamesSequence[i];
+      const name = inputNamesSequence[i].split(':')[0];
       formalParametersList += '"' + name + '", ';
-      actualParametersList += (i > 0 ? ', ' : '') + getNumberOrBoolOrString(inputs[name]);
+      const {typeValidator} = namesMap[name];
+      const value = inputs[inputNamesSequence[i]];
+      if (!typeValidator(value))
+        throw Error('invalid value for (' + inputNamesSequence[i] + '): ' + value);
+      actualParametersList += (i > 0 ? ', ' : '') + getValueCode(typeValidator, value);
     }
     if (outputNamesSequence.length)
     {
@@ -2767,7 +2811,7 @@ function runBlockHandleClick(knyteId)
       let outputParametersReturn = '\nreturn {';
       for (let i = 0; i < outputNamesSequence.length; ++i)
       {
-        const name = outputNamesSequence[i];
+        const name = outputNamesSequence[i].split(':')[0];
         outputParametersDefinition += (i > 0 ? ', ' : '') + name;
         outputParametersReturn += (i > 0 ? ', ' : '') + name;
       }
@@ -2831,9 +2875,18 @@ function runBlockHandleClick(knyteId)
                 let gotOutput = false;
                 for (let resultName in results)
                 {
-                  const resultValue = results[resultName];
+                  const {type, typeValidator} = namesMap[resultName];
+                  const value = results[resultName];
+                  if (!typeValidator(value))
+                    throw Error('invalid value for (' + resultName + ':' + type + '): ' + value);
+                }
+                for (let resultName in results)
+                {
+                  let resultValue = results[resultName];
                   if (resultValue === undefined)
                     continue;
+                  if (!isString(resultValue))
+                    resultValue = JSON.stringify(resultValue);
                   const resultKnyteId = outputNameToKnyteMap[resultName];
                   const {record} = informationMap[resultKnyteId];
                   const recordtype = getRecordtype(record);
