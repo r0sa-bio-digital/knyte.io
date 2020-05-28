@@ -2595,6 +2595,11 @@ function getConnectsByDataMatchFunction(knyteId, match, token, type)
   return result;
 }
 
+function isString(s)
+{
+  return s !== null && s !== undefined && s.constructor === String;
+}
+
 function escapeStringToCode(s) {
   return s.replace(/\\/g, '\\\\').replace(/\"/g, '\\\"').replace(/\n/g, '\\n');
 }
@@ -2647,13 +2652,19 @@ function runBlockHandleClick(knyteId)
 
   const typeValidators = {
     string: function(value) {return true;},
-    number: function(value) {return !isNaN(value);},
-    bool: function(value) {return value === 'true' || value === 'false';},
+    number: function(value) {
+      return !isNaN(value) && 
+        value !== 'true' && value !== 'false' && value !== true && value !== false;
+    },
+    bool: function(value) {
+      return value === 'true' || value === 'false' || value === true || value === false;
+    },
     json: function(value) {
       let success = false;
       try
       {
-        JSON.parse(value);
+        if (isString(value))
+          JSON.parse(value);
         success = true;
       }
       catch (e)
@@ -2748,7 +2759,8 @@ function runBlockHandleClick(knyteId)
       outputs[outputName] = outputValue;
       namesSequence.push(outputName);
       outputNamesSequence.push(outputName);
-      outputNameToKnyteMap[outputName] = outputKnyteId;
+      const name = outputName.split(':')[0];
+      outputNameToKnyteMap[name] = outputKnyteId;
     }
   }
   let runComplete = false;
@@ -2776,7 +2788,7 @@ function runBlockHandleClick(knyteId)
       const type = nameType[1];
       if (name in namesMap)
         throw Error('duplicated parameter name: ' + name);
-      const typeValidator = type ? typeValidators[type] : typeValidators['string'];
+      const typeValidator = type ? typeValidators[type] : typeValidators.string;
       if (!typeValidator)
         throw Error('type validator not found for (' + namesSequence[i] + ')');
       namesMap[name] = {type, typeValidator};
