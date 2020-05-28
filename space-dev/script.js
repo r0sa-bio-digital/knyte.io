@@ -2846,7 +2846,7 @@ function runBlockHandleClick(knyteId)
                 let gotOutput = false;
                 for (let resultName in results)
                 {
-                  // TODO: use typeValidator here to check all reesults before setKnyteRecordData
+                  // TODO: use typeValidator here to check all results before setKnyteRecordData
                 }
                 for (let resultName in results)
                 {
