@@ -2885,8 +2885,7 @@ function runBlockHandleClick(knyteId)
                   let resultValue = results[resultName];
                   if (resultValue === undefined)
                     continue;
-                  const {type} = namesMap[resultName];
-                  if (type === 'json' && !isString(resultValue))
+                  if (!isString(resultValue))
                     resultValue = JSON.stringify(resultValue);
                   const resultKnyteId = outputNameToKnyteMap[resultName];
                   const {record} = informationMap[resultKnyteId];
