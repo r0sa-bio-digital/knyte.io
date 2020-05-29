@@ -1519,13 +1519,21 @@ function onClickSpaceRoot(e)
 {
   const mousePosition = {x: e.clientX, y: e.clientY};
   const mousePagePosition = {x: e.pageX, y: e.pageY};
-  if (!e.shiftKey && !e.altKey && e.cmdKey())
+  if (!e.shiftKey && e.cmdKey())
   {
     const knyteId = knit.new();
     const color = visualTheme.rect.fillColor;
     addKnyte({knyteId, color});
     addKnoxelRect({knyteId, hostKnoxelId: spaceRootElement.dataset.knoxelId, position: mousePosition});
-    knoxelSpaceRoot.update();
+    if (e.altKey)
+    {
+      const recordtype = 'interactive';
+      const data = codeTemplates.runBlock.ready(knyteId, 'init');
+      setKnyteRecordData(knyteId, recordtype, data);
+      setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+    }
+    else
+      knoxelSpaceRoot.update();
     handleSpacemapChanged();
   }
 }
