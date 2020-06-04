@@ -2158,6 +2158,12 @@ function onKeyDownWindow(e)
 {
   if (document.getElementById('colorpicker').open || document.getElementById('recordeditor').open)
     return;
+  const allowedBrowserCommand = (e.code === 'KeyR' && !e.altKey && e.cmdKey()) || 
+    ((e.code === 'Minus' || e.code === 'Equal') && !e.shiftKey && !e.altKey && e.cmdKey());
+  if (allowedBrowserCommand)
+    return;
+  e.stopPropagation();
+  e.preventDefault();
   const mouseoverTarget = document.elementFromPoint(mouseMovePagePosition.x, mouseMovePagePosition.y);
   const mouseoverElement = knoxelRect.getRootByTarget(mouseoverTarget);
   const mouseoverKnoxelId = (mouseoverElement && mouseoverElement.classList.value === 'mouseOverRect')
@@ -2339,8 +2345,6 @@ function onKeyDownWindow(e)
     }
     else if (!e.shiftKey && !e.altKey && e.cmdKey())
     {
-      e.stopPropagation();
-      e.preventDefault();
       saveAppState();
     }
   }
