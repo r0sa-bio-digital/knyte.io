@@ -2159,6 +2159,8 @@ function onKeyDownWindow(e)
   if (document.getElementById('colorpicker').open || document.getElementById('recordeditor').open)
     return;
   const allowedBrowserCommand = (e.code === 'KeyR' && !e.altKey && e.cmdKey()) || 
+    (e.code === 'KeyI' && !e.shiftKey && e.altKey && e.cmdKey()) || 
+    (e.code === 'F12' && !e.shiftKey && !e.altKey && !e.cmdKey()) || 
     ((e.code === 'Minus' || e.code === 'Equal') && !e.shiftKey && !e.altKey && e.cmdKey());
   if (allowedBrowserCommand)
     return;
