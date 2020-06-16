@@ -28,6 +28,7 @@
   * shortcuts
     * cmd + s - сохранить стейт системы в json-файл
     * cmd + click - создать новый knyte и knoxel для него в указанной точке пространства
+    * cmd + alt + click - создать новый run block knyte и knoxel для него в указанной точке пространства
     * click в knoxel - перейти в пространство knoxel'я
     * space
       * без ghost'а - создать ghost для выбранного knoxel'я

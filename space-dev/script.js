@@ -1519,13 +1519,21 @@ function onClickSpaceRoot(e)
 {
   const mousePosition = {x: e.clientX, y: e.clientY};
   const mousePagePosition = {x: e.pageX, y: e.pageY};
-  if (!e.shiftKey && !e.altKey && e.cmdKey())
+  if (!e.shiftKey && e.cmdKey())
   {
     const knyteId = knit.new();
     const color = visualTheme.rect.fillColor;
     addKnyte({knyteId, color});
     addKnoxelRect({knyteId, hostKnoxelId: spaceRootElement.dataset.knoxelId, position: mousePosition});
-    knoxelSpaceRoot.update();
+    if (e.altKey)
+    {
+      const recordtype = 'interactive';
+      const data = codeTemplates.runBlock.ready(knyteId, 'init');
+      setKnyteRecordData(knyteId, recordtype, data);
+      setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+    }
+    else
+      knoxelSpaceRoot.update();
     handleSpacemapChanged();
   }
 }
@@ -2150,6 +2158,14 @@ function onKeyDownWindow(e)
 {
   if (document.getElementById('colorpicker').open || document.getElementById('recordeditor').open)
     return;
+  const allowedBrowserCommand = (e.code === 'KeyR' && !e.altKey && e.cmdKey()) || 
+    (e.code === 'KeyI' && !e.shiftKey && e.altKey && e.cmdKey()) || 
+    (e.code === 'F12' && !e.shiftKey && !e.altKey && !e.cmdKey()) || 
+    ((e.code === 'Minus' || e.code === 'Equal') && !e.shiftKey && !e.altKey && e.cmdKey());
+  if (allowedBrowserCommand)
+    return;
+  e.stopPropagation();
+  e.preventDefault();
   const mouseoverTarget = document.elementFromPoint(mouseMovePagePosition.x, mouseMovePagePosition.y);
   const mouseoverElement = knoxelRect.getRootByTarget(mouseoverTarget);
   const mouseoverKnoxelId = (mouseoverElement && mouseoverElement.classList.value === 'mouseOverRect')
@@ -2331,8 +2347,6 @@ function onKeyDownWindow(e)
     }
     else if (!e.shiftKey && !e.altKey && e.cmdKey())
     {
-      e.stopPropagation();
-      e.preventDefault();
       saveAppState();
     }
   }
