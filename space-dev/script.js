@@ -114,6 +114,8 @@ const knit = new function()
 const steeringGear = new function()
 {
   const panSpeed = 0.4;
+  const zoomScale = 0.4;
+  const zoomNormalization = 1.0 / 360.0;
   
   function setCTM(element, matrix) // CTM - current transform matrix
   {
@@ -147,6 +149,16 @@ const steeringGear = new function()
     delta.y *= panSpeed * ctm.a;
     setCTM(element, ctm.inverse().translate(delta.x, delta.y));
     handleSteeringChanged();
+  };
+
+  this.zoom = function(element, position, delta)
+  {
+    const z = Math.pow(1 + zoomScale, zoomNormalization * delta);
+    var p = this.spaceToScreenPosition(element, position);
+    // Compute new scale matrix in current mouse position
+    var k = spaceRootElement.createSVGMatrix().translate(p.x, p.y).
+      scale(z).translate(-p.x, -p.y);
+    setCTM(element, element.getCTM().multiply(k));
   };
 }
 
@@ -2638,6 +2650,13 @@ function onMouseWheelWindow(e)
     const steeringElement = document.getElementById('steering');
     const panDelta = {x: e.wheelDeltaX, y: e.wheelDeltaY};
     steeringGear.pan(steeringElement, panDelta);
+    e.stopPropagation();
+    e.preventDefault();
+  }
+  if (e.shiftKey && !e.altKey && !e.cmdKey())
+  {
+    const steeringElement = document.getElementById('steering');
+    steeringGear.zoom(steeringElement, mouseMovePosition, e.wheelDelta);
     e.stopPropagation();
     e.preventDefault();
   }
