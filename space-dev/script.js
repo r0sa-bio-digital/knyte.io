@@ -154,12 +154,18 @@ const steeringGear = new function()
   this.zoom = function(element, position, delta)
   {
     const z = Math.pow(1 + zoomScale, zoomNormalization * delta);
-    var p = this.spaceToScreenPosition(element, position);
+    var p = this.screenToSpacePosition(element, position);
     // Compute new scale matrix in current mouse position
     var k = spaceRootElement.createSVGMatrix().translate(p.x, p.y).
       scale(z).translate(-p.x, -p.y);
     setCTM(element, element.getCTM().multiply(k));
+    handleSteeringChanged();
   };
+
+  this.getZoom = function(element)
+  {
+    return 1.0 / element.getCTM().a;
+  }
 }
 
 function checkAppBusy()
