@@ -277,14 +277,15 @@ function addKnoxel(desc)
 
 const knoxelRect = new function()
 {
-  function computeArrowShape(w, h, x, y, knoxelId, hostKnyteId, arrowStrokeWidth)
+  function computeArrowShape(w, h, x, y, knoxelId, hostKnyteId, arrowStrokeWidth, ghost)
   {
     const hostSpace = informationMap[hostKnyteId].space;
     const endpoints = knoxelVectors[knoxelId];
     const l = visualTheme.arrow.defaultLength;
     const {x1, y1, x2, y2, x3, y3, initialCross, terminalCross} = endpoints
       ? getArrowPointsByKnoxels({arrowSpace: hostSpace, jointKnoxelId: knoxelId,
-        initialKnoxelId: endpoints.initialKnoxelId, terminalKnoxelId: endpoints.terminalKnoxelId, x, y, w, h, arrowStrokeWidth})
+        initialKnoxelId: endpoints.initialKnoxelId, terminalKnoxelId: endpoints.terminalKnoxelId,
+        x, y, w, h, arrowStrokeWidth, ghost})
       : {x1: (w - l)/2, y1: h/2, x2: w/2, y2: h/2, x3: (w + l)/2, y3: h/2, initialCross: false, terminalCross: false};
     return {x1, y1, x2, y2, x3, y3, initialCross, terminalCross};
   }
@@ -723,7 +724,7 @@ const knoxelRect = new function()
     knyteTrace[hostKnyteId] = true;
     const {w, h} = getFigureDimensions(knoxelId, knyteTrace);
     const {x1, y1, x2, y2, x3, y3} = computeArrowShape(
-      w, h, position.x, position.y, knoxelId, hostKnyteId, visualTheme.arrow.strokeWidth);
+      w, h, position.x, position.y, knoxelId, hostKnyteId, visualTheme.arrow.strokeWidth, ghost);
     arrowShape.points.getItem(0).x = x1;
     arrowShape.points.getItem(0).y = y1;
     arrowShape.points.getItem(1).x = x2;
@@ -1155,10 +1156,19 @@ function getArrowPointsByRects(desc)
 
 function getArrowPointsByKnoxels(desc)
 {
-  // desc: {arrowSpace, jointKnoxelId, initialKnoxelId, terminalKnoxelId, w, h, arrowStrokeWidth}
+  // desc: {arrowSpace, jointKnoxelId, initialKnoxelId, terminalKnoxelId, w, h, arrowStrokeWidth, ghost}
+  const steeringElement = document.getElementById('steering');
   const jointPosition = {x: desc.x, y: desc.y};
-  const initialPosition = desc.initialKnoxelId ? desc.arrowSpace[desc.initialKnoxelId] : undefined;
-  const terminalPosition = desc.terminalKnoxelId ? desc.arrowSpace[desc.terminalKnoxelId] : undefined;
+  const initialPosition = desc.initialKnoxelId 
+    ? desc.ghost
+      ? steeringGear.spaceToScreenPosition(steeringElement, desc.arrowSpace[desc.initialKnoxelId])
+      : desc.arrowSpace[desc.initialKnoxelId]
+    : undefined;
+  const terminalPosition = desc.terminalKnoxelId
+    ? desc.ghost
+      ? steeringGear.spaceToScreenPosition(steeringElement, desc.arrowSpace[desc.terminalKnoxelId])
+      : desc.arrowSpace[desc.terminalKnoxelId]
+    : undefined;
   let x1;
   let y1;
   let x2 = jointPosition.x;
@@ -3080,6 +3090,12 @@ function spacemapChangedHandler()
 
 function steeringChangedHandler()
 {
+  if (activeGhost.knoxelId)
+  {
+    const x = mouseMovePosition.x + activeGhost.offset.x;
+    const y = mouseMovePosition.y + activeGhost.offset.y;
+    knoxelRect.updateArrowShape(activeGhost.knoxelId, {x, y}, true);
+  }
   if (activeInitialGhost.knoxelId)
     var {knoxelId, element} = activeInitialGhost;
   if (activeTerminalGhost.knoxelId)
