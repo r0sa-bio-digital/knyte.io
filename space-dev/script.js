@@ -110,6 +110,44 @@ const knit = new function()
   this.new = function() {return textUuidV4();};
 }
 
+const steeringGear = new function()
+{
+  const panSpeed = 0.4;
+  
+  function setCTM(element, matrix) // CTM - current transform matrix
+  {
+    const s = 'matrix(' +
+      matrix.a + ',' + matrix.b + ',' + matrix.c + ',' + 
+      matrix.d + ',' + matrix.e + ',' + matrix.f +
+    ')';
+    element.setAttribute('transform', s);
+  };
+  
+  this.screenToSpacePosition = function(element, screenPosition)
+  {
+    const p = spaceRootElement.createSVGPoint();
+    p.x = screenPosition.x;
+    p.y = screenPosition.y;
+    return p.matrixTransform(element.getCTM().inverse());
+  };
+
+  this.spaceToScreenPosition = function(element, position)
+  {
+    const p = spaceRootElement.createSVGPoint();
+    p.x = position.x;
+    p.y = position.y;
+    return p.matrixTransform(element.getCTM());
+  };
+
+  this.pan = function(element, delta)
+  {
+    const ctm = element.getCTM().inverse();
+    delta.x *= panSpeed * ctm.a;
+    delta.y *= panSpeed * ctm.a;
+    setCTM(element, ctm.inverse().translate(delta.x, delta.y));
+  };
+}
+
 function checkAppBusy()
 {
   if (Object.keys(runBlockBusyList).length > 0)
@@ -1339,7 +1377,7 @@ function onClickRect(e)
       spaceBackStack.push(spaceRootElement.dataset.knoxelId);
       spaceForwardStack.length = 0;
       setSpaceRootKnoxel({knoxelId: targetKnoxelElement.id});
-      refreshActiveRect({position: mouseMovePosition});
+      refreshActiveRect({screenPosition: mouseMovePosition});
       setNavigationControlState({
         backKnoxelId: spaceBackStack[spaceBackStack.length - 1]
       });
@@ -1518,13 +1556,14 @@ function replaceKnoxelInStacks(desc)
 function onClickSpaceRoot(e)
 {
   const mousePosition = {x: e.clientX, y: e.clientY};
-  const mousePagePosition = {x: e.pageX, y: e.pageY};
   if (!e.shiftKey && e.cmdKey())
   {
     const knyteId = knit.new();
     const color = visualTheme.rect.fillColor;
     addKnyte({knyteId, color});
-    addKnoxelRect({knyteId, hostKnoxelId: spaceRootElement.dataset.knoxelId, position: mousePosition});
+    const steeringElement = document.getElementById('steering');
+    const position = steeringGear.screenToSpacePosition(steeringElement, mousePosition);
+    addKnoxelRect({knyteId, hostKnoxelId: spaceRootElement.dataset.knoxelId, position});
     if (e.altKey)
     {
       const recordtype = 'interactive';
@@ -1545,7 +1584,7 @@ function onClickSpaceMap(e)
   spaceBackStack.push(spaceRootElement.dataset.knoxelId);
   spaceForwardStack.length = 0;
   setSpaceRootKnoxel({knoxelId: spacemapKnoxelId});
-  refreshActiveRect({position: mouseMovePosition});
+  refreshActiveRect({screenPosition: mouseMovePosition});
   setNavigationControlState({
     backKnoxelId: spaceBackStack[spaceBackStack.length - 1]
   });
@@ -1558,7 +1597,7 @@ function onClickSpaceHost(e)
   spaceBackStack.push(spaceRootElement.dataset.knoxelId);
   spaceForwardStack.length = 0;
   setSpaceRootKnoxel({knoxelId: activeGhost.spawnSpaceRootKnoxelId});
-  refreshActiveRect({position: mouseMovePosition});
+  refreshActiveRect({screenPosition: mouseMovePosition});
   setNavigationControlState({
     backKnoxelId: spaceBackStack[spaceBackStack.length - 1]
   });
@@ -1571,7 +1610,7 @@ function onClickSpaceBack(e)
   if (backKnoxelId)
   {
     setSpaceRootKnoxel({knoxelId: backKnoxelId});
-    refreshActiveRect({position: mouseMovePosition});
+    refreshActiveRect({screenPosition: mouseMovePosition});
     setNavigationControlState({
       backKnoxelId: spaceBackStack[spaceBackStack.length - 1],
       forwardKnoxelId: spaceForwardStack[spaceForwardStack.length - 1]
@@ -1586,7 +1625,7 @@ function onClickSpaceForward(e)
   if (forwardKnoxelId)
   {
     setSpaceRootKnoxel({knoxelId: forwardKnoxelId});
-    refreshActiveRect({position: mouseMovePosition});
+    refreshActiveRect({screenPosition: mouseMovePosition});
     setNavigationControlState({
       backKnoxelId: spaceBackStack[spaceBackStack.length - 1],
       forwardKnoxelId: spaceForwardStack[spaceForwardStack.length - 1]
@@ -1664,42 +1703,43 @@ function createActiveRect(desc)
 
 function refreshActiveRect(desc)
 {
-  // desc: {position}
+  // desc: {screenPosition}
+  const position = desc.screenPosition;
   if (activeGhost.knoxelId)
   {
     activeGhost.element.remove();
-    activeGhost.element = createActiveRect({knoxelId: activeGhost.knoxelId, position: desc.position, ghost: true});
+    activeGhost.element = createActiveRect({knoxelId: activeGhost.knoxelId, position, ghost: true});
     activeGhost.offset = {x: 0, y: 0};
   }
   if (activeBubble.knoxelId)
   {
     activeBubble.element.remove();
-    activeBubble.element = createActiveRect({knoxelId: activeBubble.knoxelId, position: desc.position, bubble: true});
+    activeBubble.element = createActiveRect({knoxelId: activeBubble.knoxelId, position, bubble: true});
     activeBubble.offset = {x: 0, y: 0};
   }
   if (activeInitialGhost.knoxelId)
   {
     activeInitialGhost.element.remove();
     activeInitialGhost.element = createActiveArrow(
-      {knoxelId: activeInitialGhost.knoxelId, position: desc.position, initial: true, ghost: true});
+      {knoxelId: activeInitialGhost.knoxelId, position, initial: true, ghost: true});
   }
   if (activeTerminalGhost.knoxelId)
   {
     activeTerminalGhost.element.remove();
     activeTerminalGhost.element = createActiveArrow(
-      {knoxelId: activeTerminalGhost.knoxelId, position: desc.position, terminal: true, ghost: true});
+      {knoxelId: activeTerminalGhost.knoxelId, position, terminal: true, ghost: true});
   }
   if (activeInitialBubble.knoxelId)
   {
     activeInitialBubble.element.remove();
     activeInitialBubble.element = createActiveArrow(
-      {knoxelId: activeInitialBubble.knoxelId, position: desc.position, initial: true, bubble: true});
+      {knoxelId: activeInitialBubble.knoxelId, position, initial: true, bubble: true});
   }
   if (activeTerminalBubble.knoxelId)
   {
     activeTerminalBubble.element.remove();
     activeTerminalBubble.element = createActiveArrow(
-      {knoxelId: activeTerminalBubble.knoxelId, position: desc.position, terminal: true, bubble: true});
+      {knoxelId: activeTerminalBubble.knoxelId, position, terminal: true, bubble: true});
   }
 }
 
@@ -1718,7 +1758,7 @@ function spawnGhostRect(desc)
   activeGhost.spawnSpaceRootKnoxelId = desc.spawnSpaceRootKnoxelId;
   activeGhost.hostKnyteId = getHostKnyteIdByKnoxelId(desc.knoxelId);
   const spawnSpaceRootKnoxelSpace = informationMap[knoxels[desc.spawnSpaceRootKnoxelId]].space;
-  activeGhost.element = createActiveRect({knoxelId: desc.knoxelId, position: desc.position, ghost: true});
+  activeGhost.element = createActiveRect({knoxelId: desc.knoxelId, position: mouseMovePosition, ghost: true});
   if (desc.selfcontained)
   {
     activeGhost.offset = {x: 0, y: 0};
@@ -1731,8 +1771,9 @@ function spawnGhostRect(desc)
     const ox = knoxelPosition.x - desc.position.x;
     const oy = knoxelPosition.y - desc.position.y;
     activeGhost.offset = {x: ox, y: oy};
-    const x = mouseMovePosition.x + activeGhost.offset.x;
-    const y = mouseMovePosition.y + activeGhost.offset.y;
+    const position = mouseMovePosition;
+    const x = position.x + activeGhost.offset.x;
+    const y = position.y + activeGhost.offset.y;
     knoxelRect.moveElement({element: activeGhost.element, x, y});
     knoxelRect.updateArrowShape(activeGhost.knoxelId, {x, y}, true);
     setGhostedMode({knoxelId: desc.knoxelId, isGhosted: true});
@@ -1763,7 +1804,7 @@ function spawnBubbleRect(desc)
   // desc: {knoxelId, position, selfcontained}
   activeBubble.knoxelId = desc.knoxelId;
   const knyteId = knoxels[desc.knoxelId];
-  activeBubble.element = createActiveRect({knoxelId: desc.knoxelId, position: desc.position, bubble: true});
+  activeBubble.element = createActiveRect({knoxelId: desc.knoxelId, position: mouseMovePosition, bubble: true});
   if (desc.selfcontained)
   {
     activeBubble.offset = {x: 0, y: 0};
@@ -1776,8 +1817,9 @@ function spawnBubbleRect(desc)
     const ox = knoxelPosition.x - desc.position.x;
     const oy = knoxelPosition.y - desc.position.y;
     activeBubble.offset = {x: ox, y: oy};
-    const x = mouseMovePosition.x + activeBubble.offset.x;
-    const y = mouseMovePosition.y + activeBubble.offset.y;
+    const position = mouseMovePosition;
+    const x = position.x + activeBubble.offset.x;
+    const y = position.y + activeBubble.offset.y;
     knoxelRect.moveElement({element: activeBubble.element, x, y});
   }
   setBubbledMode({knoxelId: activeBubble.knoxelId, knyteId, isBubbled: true});
@@ -1808,6 +1850,8 @@ function createActiveArrow(desc)
   }
   else
     originPosition = spacePosition;
+  const steeringElement = document.getElementById('steering');
+  originPosition = steeringGear.spaceToScreenPosition(steeringElement, originPosition);
   arrow.style.pointerEvents = 'none';
   arrow.setAttribute('x1', originPosition.x);
   arrow.setAttribute('y1', originPosition.y);
@@ -1954,37 +1998,38 @@ function onMouseMoveSpaceRoot(e)
 {
   mouseMovePosition = {x: e.clientX, y: e.clientY};
   mouseMovePagePosition = {x: e.pageX, y: e.pageY};
+  const position = mouseMovePosition;
   if (activeGhost.knoxelId)
   {
-    const x = mouseMovePosition.x + activeGhost.offset.x;
-    const y = mouseMovePosition.y + activeGhost.offset.y;
+    const x = position.x + activeGhost.offset.x;
+    const y = position.y + activeGhost.offset.y;
     knoxelRect.moveElement({element: activeGhost.element, x, y});
     knoxelRect.updateArrowShape(activeGhost.knoxelId, {x, y}, true);
   }
   if (activeBubble.knoxelId)
   {
-    const x = mouseMovePosition.x + activeBubble.offset.x;
-    const y = mouseMovePosition.y + activeBubble.offset.y;
+    const x = position.x + activeBubble.offset.x;
+    const y = position.y + activeBubble.offset.y;
     knoxelRect.moveElement({element: activeBubble.element, x, y});
   }
   if (activeInitialGhost.knoxelId)
   {
-    const {x, y} = mouseMovePosition;
+    const {x, y} = position;
     knoxelArrow.moveElement({knoxelId: activeInitialGhost.knoxelId, element: activeInitialGhost.element, x, y});
   }
   if (activeTerminalGhost.knoxelId)
   {
-    const {x, y} = mouseMovePosition;
+    const {x, y} = position;
     knoxelArrow.moveElement({knoxelId: activeTerminalGhost.knoxelId, element: activeTerminalGhost.element, x, y});
   }
   if (activeInitialBubble.knoxelId)
   {
-    const {x, y} = mouseMovePosition;
+    const {x, y} = position;
     knoxelArrow.moveElement({knoxelId: activeInitialBubble.knoxelId, element: activeInitialBubble.element, x, y});
   }
   if (activeTerminalBubble.knoxelId)
   {
-    const {x, y} = mouseMovePosition;
+    const {x, y} = position;
     knoxelArrow.moveElement({knoxelId: activeTerminalBubble.knoxelId, element: activeTerminalBubble.element, x, y});
   }
 }
@@ -2195,7 +2240,8 @@ function onKeyDownWindow(e)
   {
     if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
-      const position = mouseMovePosition;
+      const steeringElement = document.getElementById('steering');
+      const position = steeringGear.screenToSpacePosition(steeringElement, mouseMovePosition);
       if (!activeGhost.knoxelId)
       {
         let knoxelId = mouseoverKnoxelId;
@@ -2231,7 +2277,8 @@ function onKeyDownWindow(e)
   {
     if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
-      const position = mouseMovePosition;
+      const steeringElement = document.getElementById('steering');
+      const position = steeringGear.screenToSpacePosition(steeringElement, mouseMovePosition);
       if (!activeBubble.knoxelId)
       {
         let knoxelId = mouseoverKnoxelId;
@@ -2443,14 +2490,13 @@ function onKeyDownWindow(e)
   {
     if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
-      const position = mouseMovePosition;
       if (!activeInitialGhost.knoxelId)
       {
         if (mouseoverKnoxelId)
         {
           let knoxelId = mouseoverKnoxelId;
           const spawnSpaceRootKnoxelId = spaceRootElement.dataset.knoxelId;
-          spawnInitialGhostArrow({knoxelId, spawnSpaceRootKnoxelId, position});
+          spawnInitialGhostArrow({knoxelId, spawnSpaceRootKnoxelId, position: mouseMovePosition});
         }
       }
       else
@@ -2474,14 +2520,13 @@ function onKeyDownWindow(e)
   {
     if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
-      const position = mouseMovePosition;
       if (!activeTerminalGhost.knoxelId)
       {
         if (mouseoverKnoxelId)
         {
           let knoxelId = mouseoverKnoxelId;
           const spawnSpaceRootKnoxelId = spaceRootElement.dataset.knoxelId;
-          spawnTerminalGhostArrow({knoxelId, spawnSpaceRootKnoxelId, position});
+          spawnTerminalGhostArrow({knoxelId, spawnSpaceRootKnoxelId, position: mouseMovePosition});
         }
       }
       else
@@ -2505,14 +2550,13 @@ function onKeyDownWindow(e)
   {
     if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
-      const position = mouseMovePosition;
       if (!activeInitialBubble.knoxelId)
       {
         if (mouseoverKnoxelId)
         {
           let knoxelId = mouseoverKnoxelId;
           const spawnSpaceRootKnoxelId = spaceRootElement.dataset.knoxelId;
-          spawnInitialBubbleArrow({knoxelId, spawnSpaceRootKnoxelId, position});
+          spawnInitialBubbleArrow({knoxelId, spawnSpaceRootKnoxelId, position: mouseMovePosition});
         }
       }
       else
@@ -2536,14 +2580,13 @@ function onKeyDownWindow(e)
   {
     if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
-      const position = mouseMovePosition;
       if (!activeTerminalBubble.knoxelId)
       {
         if (mouseoverKnoxelId)
         {
           let knoxelId = mouseoverKnoxelId;
           const spawnSpaceRootKnoxelId = spaceRootElement.dataset.knoxelId;
-          spawnTerminalBubbleArrow({knoxelId, spawnSpaceRootKnoxelId, position});
+          spawnTerminalBubbleArrow({knoxelId, spawnSpaceRootKnoxelId, position: mouseMovePosition});
         }
       }
       else
@@ -2561,6 +2604,27 @@ function onKeyDownWindow(e)
         forwardKnoxelId: spaceForwardStack[spaceForwardStack.length - 1]
       });
     }
+  }
+}
+
+function onMouseWheelWindow(e)
+{
+  if (e.ctrlKey)
+  {
+    // disable pinch zoom by touchpad
+    e.stopPropagation();
+    e.preventDefault();
+    return;
+  }
+  if (document.getElementById('colorpicker').open || document.getElementById('recordeditor').open)
+    return;
+  if (!e.shiftKey && !e.altKey && !e.cmdKey())
+  {
+    const steeringElement = document.getElementById('steering');
+    const panDelta = {x: e.wheelDeltaX, y: e.wheelDeltaY};
+    steeringGear.pan(steeringElement, panDelta);
+    e.stopPropagation();
+    e.preventDefault();
   }
 }
 
@@ -2625,7 +2689,7 @@ function runBlockHandleClick(knyteId)
     const newData = codeTemplates.runBlock.ready(knyteId, success ? 'init' : 'failed');
     setKnyteRecordData(knyteId, 'interactive', newData);
     setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
-    refreshActiveRect({position: mouseMovePosition});
+    refreshActiveRect({screenPosition: mouseMovePosition});
     handleSpacemapChanged();
     
     if (success && nextKnyteId)
@@ -2703,7 +2767,7 @@ function runBlockHandleClick(knyteId)
   const newData = codeTemplates.runBlock.busy;
   setKnyteRecordData(knyteId, 'interactive', newData);
   setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
-  refreshActiveRect({position: mouseMovePosition});
+  refreshActiveRect({screenPosition: mouseMovePosition});
   handleSpacemapChanged();
   
   const codeKnytes = getConnectsByDataMatchFunction(knyteId, matchToken, 'code', 'terminal');
@@ -2944,7 +3008,7 @@ function runBlockHandleClick(knyteId)
       const newData = codeTemplates.runBlock.ready(knyteId, 'failed');
       setKnyteRecordData(knyteId, 'interactive', newData);
       setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
-      refreshActiveRect({position: mouseMovePosition});
+      refreshActiveRect({screenPosition: mouseMovePosition});
       handleSpacemapChanged();
     }
   }
@@ -3039,6 +3103,7 @@ function onLoadBody(e)
   spaceRootElement.addEventListener('mouseup', onMouseUpSpaceRoot, false);
   window.addEventListener('resize', onResizeWindow, false);
   window.addEventListener('keydown', onKeyDownWindow, false);
+  window.addEventListener('mousewheel', onMouseWheelWindow, {passive: false});
   document.getElementById('backArrowShape').addEventListener('click', onClickSpaceBack, false);
   document.getElementById('forwardArrowShape').addEventListener('click', onClickSpaceForward, false);
   document.getElementById('spaceMapButton').addEventListener('click', onClickSpaceMap, false);
