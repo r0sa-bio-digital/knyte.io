@@ -376,7 +376,7 @@ const knoxelRect = new function()
         const nestedX = x - nestedW/2;
         const nestedY = y - nestedH/2;
         const {x1, y1, x2, y2, x3, y3, initialCross, terminalCross} = computeArrowShape(nestedW, nestedH, nestedX, nestedY,
-          nestedKnoxelId, knyteId, visualTheme.recursive.strokeWidth);
+          nestedKnoxelId, knyteId, visualTheme.recursive.strokeWidth, false);
         const r = {rectId, x: nestedX, y: nestedY, leftTop: d.leftTop, w: nestedW, h: nestedH, color, strokeColor, record, 
           x1, y1, x2, y2, x3, y3, initialCross, terminalCross, type: nestedType};
         rects.push(r);
@@ -645,7 +645,7 @@ const knoxelRect = new function()
       if (!desc.bubble && hasEndpoints)
       {
         const {x1, y1, x2, y2, x3, y3, initialCross, terminalCross} = computeArrowShape(
-          w, h, x, y, desc.knoxelId, hostKnyteId, visualTheme.arrow.strokeWidth);
+          w, h, x, y, desc.knoxelId, hostKnyteId, visualTheme.arrow.strokeWidth, false);
         const arrowRoot = createArrowShape({x1, y1, x2, y2, x3, y3, initialCross, terminalCross, 
           strokeWidth: visualTheme.arrow.strokeWidth, strokeColor});
         arrowRoot.id = desc.knoxelId + '.arrow';
@@ -1183,6 +1183,7 @@ function getArrowPointsByKnoxels(desc)
 {
   // desc: {arrowSpace, jointKnoxelId, initialKnoxelId, terminalKnoxelId, x, y, w, h, arrowStrokeWidth, ghost}
   const steeringElement = document.getElementById('steering');
+  const zoom = desc.ghost ? steeringGear.getZoom(steeringElement) : 1.0;
   const jointPosition = desc.ghost
     ? steeringGear.screenToSpacePosition(steeringElement, {x: desc.x, y: desc.y})
     : {x: desc.x, y: desc.y};
@@ -1231,17 +1232,18 @@ function getArrowPointsByKnoxels(desc)
       const w = visualTheme.rect.defaultWidth;
       const h = visualTheme.rect.defaultHeight;
       const initialElement = document.getElementById(desc.initialKnoxelId);
-      const initialDimension = initialElement ? knoxelRect.getElementSize(initialElement, desc.ghost) : {w, h};
+      const initialDimension = initialElement ? knoxelRect.getElementSize(initialElement, false) : {w, h};
+      const rectStrokeOffset = visualTheme.rect.strokeWidth;
+      const arrowIntervalStrokeOffset = desc.arrowStrokeWidth * zoom;
+      initialDimension.w += rectStrokeOffset + arrowIntervalStrokeOffset;
+      initialDimension.h += rectStrokeOffset + arrowIntervalStrokeOffset;
       const initialTime = collideAABBVsLine(
         {position: initialPosition, dimension: initialDimension},
         {position1: jointPosition, position2: initialPosition}
       );
-      const rectStrokeOffset = 0.5*visualTheme.rect.strokeWidth;
-      const initialArrowStrokeOffset = 0.5*desc.arrowStrokeWidth;
-      const arrowIntervalStrokeOffset = 0.5*desc.arrowStrokeWidth;
-      const initialStrokeOffset = rectStrokeOffset + initialArrowStrokeOffset + arrowIntervalStrokeOffset;
-      x1 -= ((1 - initialTime) * directionLength + initialStrokeOffset) * directionNormalised.x;
-      y1 -= ((1 - initialTime) * directionLength + initialStrokeOffset) * directionNormalised.y;
+      const initialArrowStrokeOffset = 0.5*desc.arrowStrokeWidth * zoom;
+      x1 -= ((1 - initialTime) * directionLength + initialArrowStrokeOffset) * directionNormalised.x;
+      y1 -= ((1 - initialTime) * directionLength + initialArrowStrokeOffset) * directionNormalised.y;
     }
   }
   if (desc.terminalKnoxelId === desc.jointKnoxelId)
@@ -1279,17 +1281,18 @@ function getArrowPointsByKnoxels(desc)
       const w = visualTheme.rect.defaultWidth;
       const h = visualTheme.rect.defaultHeight;
       const terminalElement = document.getElementById(desc.terminalKnoxelId);
-      const terminalDimension = terminalElement ? knoxelRect.getElementSize(terminalElement, desc.ghost) : {w, h};
+      const terminalDimension = terminalElement ? knoxelRect.getElementSize(terminalElement, false) : {w, h};
+      const rectStrokeOffset = visualTheme.rect.strokeWidth;
+      const arrowIntervalStrokeOffset = desc.arrowStrokeWidth * zoom;
+      terminalDimension.w += rectStrokeOffset + arrowIntervalStrokeOffset;
+      terminalDimension.h += rectStrokeOffset + arrowIntervalStrokeOffset;
       const terminalTime = collideAABBVsLine(
         {position: terminalPosition, dimension: terminalDimension},
         {position1: jointPosition, position2: terminalPosition}
       );
-      const rectStrokeOffset = 0.5*visualTheme.rect.strokeWidth;
-      const terminalArrowStrokeOffset = 4.5*desc.arrowStrokeWidth;
-      const arrowIntervalStrokeOffset = 0.5*desc.arrowStrokeWidth;
-      const terminalStrokeOffset = rectStrokeOffset + terminalArrowStrokeOffset + arrowIntervalStrokeOffset;
-      x3 -= ((1 - terminalTime) * directionLength + terminalStrokeOffset) * directionNormalised.x;
-      y3 -= ((1 - terminalTime) * directionLength + terminalStrokeOffset) * directionNormalised.y;
+      const terminalArrowStrokeOffset = 4.5*desc.arrowStrokeWidth * zoom;
+      x3 -= ((1 - terminalTime) * directionLength + terminalArrowStrokeOffset) * directionNormalised.x;
+      y3 -= ((1 - terminalTime) * directionLength + terminalArrowStrokeOffset) * directionNormalised.y;
     }
   }
   const x = jointPosition.x - desc.w/2;
@@ -1300,29 +1303,10 @@ function getArrowPointsByKnoxels(desc)
   y2 -= y;
   x3 -= x;
   y3 -= y;
-  if (desc.ghost)
-  {
-    // TODO: fix arrow ghost
-    /*
-    let p;
-    p = steeringGear.screenToScreenPosition(steeringElement, {x: x1, y: y1})
-    x1 = p.x;
-    y1 = p.y;
-    //p = steeringGear.spaceToScreenPosition(steeringElement, {x: x2, y: y2})
-    //x2 = p.x;
-    //y2 = p.y;
-    p = steeringGear.spaceToScreenPosition(steeringElement, {x: x3, y: y3})
-    x3 = p.x;
-    y3 = p.y;
-    */
-    /*
-    const zoom = 1.0/steeringGear.getZoom(steeringElement);
-    x1 = zoom * (x1 - x2) + x2;
-    y1 = zoom * (y1 - y2) + y2;
-    x3 = zoom * (x3 - x2) + x2;
-    y3 = zoom * (y3 - y2) + y2;
-    */
-  }
+  x1 = (x1 - x2)/zoom + x2;
+  y1 = (y1 - y2)/zoom + y2;
+  x3 = (x3 - x2)/zoom + x2;
+  y3 = (y3 - y2)/zoom + y2;
   return {x1, y1, x2, y2, x3, y3, initialCross, terminalCross};
 }
 
@@ -1357,13 +1341,13 @@ function getArrowPointsByEndpoints(desc)
       const w = visualTheme.rect.defaultWidth;
       const h = visualTheme.rect.defaultHeight;
       const initialElement = document.getElementById(desc.initialKnoxelId);
-      const initialDimension = initialElement ? knoxelRect.getElementSize(initialElement, desc.ghost) : {w, h};
+      const initialDimension = initialElement ? knoxelRect.getElementSize(initialElement, false) : {w, h};
       const initialTime = collideAABBVsLine(
         {position: initialPosition, dimension: initialDimension},
         {position1: terminalPosition, position2: initialPosition}
       );
       const terminalElement = document.getElementById(desc.terminalKnoxelId);
-      const terminalDimension = terminalElement ? knoxelRect.getElementSize(terminalElement, desc.ghost) : {w, h};
+      const terminalDimension = terminalElement ? knoxelRect.getElementSize(terminalElement, false) : {w, h};
       const terminalTime = collideAABBVsLine(
         {position: terminalPosition, dimension: terminalDimension},
         {position1: initialPosition, position2: terminalPosition}
