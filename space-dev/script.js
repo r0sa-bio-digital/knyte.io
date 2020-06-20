@@ -792,7 +792,7 @@ const knoxelRect = new function()
     }
   };
   
-  this.getElementSize = function(element)
+  this.getElementSize = function(element, ghost)
   {
     let rectShape;
     if (element.tagName === 'g')
@@ -807,14 +807,21 @@ const knoxelRect = new function()
     }
     if (!rectShape)
       console.error('failed get size for element ' + element.id);
-    const {width, height} = rectShape.getBoundingClientRect();
+    let {width, height} = rectShape.getBoundingClientRect();
+    if (!ghost)
+    {
+      const steeringElement = document.getElementById('steering');
+      const zoom = steeringGear.getZoom(steeringElement);
+      width *= zoom;
+      height *= zoom;
+    }
     return {w: width, h: height};
   };
   
   this.moveElement = function(desc)
   {
     // desc: {element, x, y}
-    const {w, h} = this.getElementSize(desc.element);
+    const {w, h} = this.getElementSize(desc.element, true);
     const x = desc.x - w/2;
     const y = desc.y - h/2;
     if (desc.element.tagName === 'g')
@@ -1174,19 +1181,13 @@ function getArrowPointsByRects(desc)
 
 function getArrowPointsByKnoxels(desc)
 {
-  // desc: {arrowSpace, jointKnoxelId, initialKnoxelId, terminalKnoxelId, w, h, arrowStrokeWidth, ghost}
+  // desc: {arrowSpace, jointKnoxelId, initialKnoxelId, terminalKnoxelId, x, y, w, h, arrowStrokeWidth, ghost}
   const steeringElement = document.getElementById('steering');
-  const jointPosition = {x: desc.x, y: desc.y};
-  const initialPosition = desc.initialKnoxelId 
-    ? desc.ghost
-      ? steeringGear.spaceToScreenPosition(steeringElement, desc.arrowSpace[desc.initialKnoxelId])
-      : desc.arrowSpace[desc.initialKnoxelId]
-    : undefined;
-  const terminalPosition = desc.terminalKnoxelId
-    ? desc.ghost
-      ? steeringGear.spaceToScreenPosition(steeringElement, desc.arrowSpace[desc.terminalKnoxelId])
-      : desc.arrowSpace[desc.terminalKnoxelId]
-    : undefined;
+  const jointPosition = desc.ghost
+    ? steeringGear.screenToSpacePosition(steeringElement, {x: desc.x, y: desc.y})
+    : {x: desc.x, y: desc.y};
+  const initialPosition = desc.initialKnoxelId ? desc.arrowSpace[desc.initialKnoxelId] : undefined;
+  const terminalPosition = desc.terminalKnoxelId ? desc.arrowSpace[desc.terminalKnoxelId] : undefined;
   let x1;
   let y1;
   let x2 = jointPosition.x;
@@ -1230,7 +1231,7 @@ function getArrowPointsByKnoxels(desc)
       const w = visualTheme.rect.defaultWidth;
       const h = visualTheme.rect.defaultHeight;
       const initialElement = document.getElementById(desc.initialKnoxelId);
-      const initialDimension = initialElement ? knoxelRect.getElementSize(initialElement) : {w, h};
+      const initialDimension = initialElement ? knoxelRect.getElementSize(initialElement, desc.ghost) : {w, h};
       const initialTime = collideAABBVsLine(
         {position: initialPosition, dimension: initialDimension},
         {position1: jointPosition, position2: initialPosition}
@@ -1278,7 +1279,7 @@ function getArrowPointsByKnoxels(desc)
       const w = visualTheme.rect.defaultWidth;
       const h = visualTheme.rect.defaultHeight;
       const terminalElement = document.getElementById(desc.terminalKnoxelId);
-      const terminalDimension = terminalElement ? knoxelRect.getElementSize(terminalElement) : {w, h};
+      const terminalDimension = terminalElement ? knoxelRect.getElementSize(terminalElement, desc.ghost) : {w, h};
       const terminalTime = collideAABBVsLine(
         {position: terminalPosition, dimension: terminalDimension},
         {position1: jointPosition, position2: terminalPosition}
@@ -1299,6 +1300,29 @@ function getArrowPointsByKnoxels(desc)
   y2 -= y;
   x3 -= x;
   y3 -= y;
+  if (desc.ghost)
+  {
+    // TODO: fix arrow ghost
+    /*
+    let p;
+    p = steeringGear.screenToScreenPosition(steeringElement, {x: x1, y: y1})
+    x1 = p.x;
+    y1 = p.y;
+    //p = steeringGear.spaceToScreenPosition(steeringElement, {x: x2, y: y2})
+    //x2 = p.x;
+    //y2 = p.y;
+    p = steeringGear.spaceToScreenPosition(steeringElement, {x: x3, y: y3})
+    x3 = p.x;
+    y3 = p.y;
+    */
+    /*
+    const zoom = 1.0/steeringGear.getZoom(steeringElement);
+    x1 = zoom * (x1 - x2) + x2;
+    y1 = zoom * (y1 - y2) + y2;
+    x3 = zoom * (x3 - x2) + x2;
+    y3 = zoom * (y3 - y2) + y2;
+    */
+  }
   return {x1, y1, x2, y2, x3, y3, initialCross, terminalCross};
 }
 
@@ -1333,13 +1357,13 @@ function getArrowPointsByEndpoints(desc)
       const w = visualTheme.rect.defaultWidth;
       const h = visualTheme.rect.defaultHeight;
       const initialElement = document.getElementById(desc.initialKnoxelId);
-      const initialDimension = initialElement ? knoxelRect.getElementSize(initialElement) : {w, h};
+      const initialDimension = initialElement ? knoxelRect.getElementSize(initialElement, desc.ghost) : {w, h};
       const initialTime = collideAABBVsLine(
         {position: initialPosition, dimension: initialDimension},
         {position1: terminalPosition, position2: initialPosition}
       );
       const terminalElement = document.getElementById(desc.terminalKnoxelId);
-      const terminalDimension = terminalElement ? knoxelRect.getElementSize(terminalElement) : {w, h};
+      const terminalDimension = terminalElement ? knoxelRect.getElementSize(terminalElement, desc.ghost) : {w, h};
       const terminalTime = collideAABBVsLine(
         {position: terminalPosition, dimension: terminalDimension},
         {position1: initialPosition, position2: terminalPosition}
