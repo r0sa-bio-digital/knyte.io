@@ -641,7 +641,15 @@ const knoxelRect = new function()
       const rectGroup = document.createElementNS(svgNameSpace, 'g');
       rectGroup.id = desc.knoxelId;
       rectGroup.classList.value = 'mouseOverRect';
-      rectGroup.setAttribute('transform', 'translate(' + x + ' ' + y + ')');
+      if (!desc.ghost && !desc.bubble)
+        rectGroup.setAttribute('transform', 'translate(' + x + ' ' + y + ')');
+      else
+      {
+        const steeringElement = document.getElementById('steering');
+        const scale = 1.0/steeringGear.getZoom(steeringElement);
+        const hostElement = document.getElementById(desc.ghost ? 'ghosts' : 'bubbles');
+        hostElement.setAttribute('transform', 'scale(' + scale + ')');
+      }
       if (!desc.bubble && hasEndpoints)
       {
         const {x1, y1, x2, y2, x3, y3, initialCross, terminalCross} = computeArrowShape(
@@ -824,10 +832,8 @@ const knoxelRect = new function()
     const {w, h} = this.getElementSize(desc.element, true);
     const x = desc.x - w/2;
     const y = desc.y - h/2;
-    if (desc.element.tagName === 'g')
-      desc.element.setAttribute('transform', 'translate(' + x + ' ' + y + ')');
-    else
-      console.error('failed moving for knoxelId ' + desc.element.id);
+    const positioningElement = document.getElementById('positioning');
+    positioningElement.setAttribute('transform', 'translate(' + x + ' ' + y + ')');
   };
   
   this.getRootByTarget = function(targetElement)
@@ -1816,7 +1822,7 @@ function spawnGhostRect(desc)
   activeGhost.spawnSpaceRootKnoxelId = desc.spawnSpaceRootKnoxelId;
   activeGhost.hostKnyteId = getHostKnyteIdByKnoxelId(desc.knoxelId);
   const spawnSpaceRootKnoxelSpace = informationMap[knoxels[desc.spawnSpaceRootKnoxelId]].space;
-  activeGhost.element = createActiveRect({knoxelId: desc.knoxelId, position: mouseMovePosition, ghost: true});
+  activeGhost.element = createActiveRect({knoxelId: desc.knoxelId, position: {x: 0, y: 0}, ghost: true});
   if (desc.selfcontained)
   {
     activeGhost.offset = {x: 0, y: 0};
@@ -1862,7 +1868,7 @@ function spawnBubbleRect(desc)
   // desc: {knoxelId, position, selfcontained}
   activeBubble.knoxelId = desc.knoxelId;
   const knyteId = knoxels[desc.knoxelId];
-  activeBubble.element = createActiveRect({knoxelId: desc.knoxelId, position: mouseMovePosition, bubble: true});
+  activeBubble.element = createActiveRect({knoxelId: desc.knoxelId, position: {x: 0, y: 0}, bubble: true});
   if (desc.selfcontained)
   {
     activeBubble.offset = {x: 0, y: 0};
