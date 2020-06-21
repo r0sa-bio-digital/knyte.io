@@ -1034,6 +1034,7 @@ function setSpaceRootKnoxel(desc)
   {
     arrowsElement.style.display = 'none';
   }
+  handleSteeringChanged();
 }
 
 function collideAABBVsLine(aabb, line)
@@ -1906,9 +1907,11 @@ function createActiveArrow(desc)
     cross = true;
   }
   else
+  {
     originPosition = spacePosition;
-  const steeringElement = document.getElementById('steering');
-  originPosition = steeringGear.spaceToScreenPosition(steeringElement, originPosition);
+    const steeringElement = document.getElementById('steering');
+    originPosition = steeringGear.spaceToScreenPosition(steeringElement, originPosition);
+  }
   arrow.style.pointerEvents = 'none';
   arrow.setAttribute('x1', originPosition.x);
   arrow.setAttribute('y1', originPosition.y);
@@ -2218,7 +2221,7 @@ function getMultilinerRecordByData(data)
   if (!data)
     return {data, viewertype};
   const size = getSizeOfRecord(data, viewertype);
-  return {data: data, viewertype, size};
+  return {data, viewertype, size};
 }
 
 function getInteractiveRecordByData(data)
@@ -2227,7 +2230,7 @@ function getInteractiveRecordByData(data)
   if (!data)
     return {data, viewertype};
   const size = getSizeOfRecord(data, viewertype);
-  return {data: data, viewertype, size};
+  return {data, viewertype, size};
 }
 
 function setKnyteRecordData(knyteId, recordtype, newData)
