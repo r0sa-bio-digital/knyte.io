@@ -757,17 +757,14 @@ const knoxelRect = new function()
     const hostKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
     knyteTrace[hostKnyteId] = true;
     const {w, h} = getFigureDimensions(knoxelId, knyteTrace);
-    let {dx, dy} = ghost ? {dx: activeGhost.offset.x, dy: activeGhost.offset.y} : {dx: 0, dy: 0};
-    dx = 0;
-    dy = 0;
     const {x1, y1, x2, y2, x3, y3} = computeArrowShape(
-      w, h, position.x + dx, position.y + dy, knoxelId, hostKnyteId, visualTheme.arrow.strokeWidth, ghost);
-    arrowShape.points.getItem(0).x = x1 - dx;
-    arrowShape.points.getItem(0).y = y1 - dy;
-    arrowShape.points.getItem(1).x = x2 - dx;
-    arrowShape.points.getItem(1).y = y2 - dy;
-    arrowShape.points.getItem(2).x = x3 - dx;
-    arrowShape.points.getItem(2).y = y3 - dy;
+      w, h, position.x, position.y, knoxelId, hostKnyteId, visualTheme.arrow.strokeWidth, ghost);
+    arrowShape.points.getItem(0).x = x1;
+    arrowShape.points.getItem(0).y = y1;
+    arrowShape.points.getItem(1).x = x2;
+    arrowShape.points.getItem(1).y = y2;
+    arrowShape.points.getItem(2).x = x3;
+    arrowShape.points.getItem(2).y = y3;
   }
   
   this.setDotted = function(desc)
