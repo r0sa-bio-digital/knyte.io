@@ -2204,15 +2204,19 @@ function getHtmlFromText(text)
 function getOnelinerRecordByData(data)
 {
   const viewertype = 'oneliner';
+  if (!data)
+    return {data, viewertype};
   const newDataSize = getSizeOfRecord(data, viewertype);
   const padding = 2*visualTheme.rect.strokeWidth; // TODO: move padding to view function and avoid copypaste
   const size = {w: newDataSize.w + padding, h: newDataSize.h + padding};
-  return {data: data, viewertype, size};
+  return {data, viewertype, size};
 }
 
 function getMultilinerRecordByData(data)
 {
   const viewertype = 'multiliner';
+  if (!data)
+    return {data, viewertype};
   const size = getSizeOfRecord(data, viewertype);
   return {data: data, viewertype, size};
 }
@@ -2220,6 +2224,8 @@ function getMultilinerRecordByData(data)
 function getInteractiveRecordByData(data)
 {
   const viewertype = 'interactive';
+  if (!data)
+    return {data, viewertype};
   const size = getSizeOfRecord(data, viewertype);
   return {data: data, viewertype, size};
 }
