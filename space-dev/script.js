@@ -1234,6 +1234,8 @@ function getArrowPointsByKnoxels(desc)
   {
     x1 = x2 - desc.w/2 - visualTheme.arrow.defaultLength;
     y1 = y2;
+    if (desc.ghost)
+      x1 += activeGhost.offset.x;
     initialCross = true;
   }
   else
@@ -1283,6 +1285,8 @@ function getArrowPointsByKnoxels(desc)
   {
     x3 = x2 + desc.w/2 + visualTheme.arrow.defaultLength;
     y3 = y2;
+    if (desc.ghost)
+      x3 += activeGhost.offset.x;
     terminalCross = true;
   }
   else
