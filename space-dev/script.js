@@ -3143,11 +3143,7 @@ function spacemapChangedHandler()
 function steeringChangedHandler()
 {
   if (activeGhost.knoxelId)
-  {
-    const x = mouseMovePosition.x + activeGhost.offset.x;
-    const y = mouseMovePosition.y + activeGhost.offset.y;
-    knoxelRect.updateArrowShape(activeGhost.knoxelId, {x, y}, true);
-  }
+    knoxelRect.updateArrowShape(activeGhost.knoxelId, mouseMovePosition, true);
   if (activeInitialGhost.knoxelId)
     var {knoxelId, element} = activeInitialGhost;
   if (activeTerminalGhost.knoxelId)
