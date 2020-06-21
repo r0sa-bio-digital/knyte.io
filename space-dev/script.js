@@ -598,7 +598,7 @@ const knoxelRect = new function()
       return result;
     }
     
-    function updateArrowShapes(arrows)
+    function updateArrowShapes(arrows, ghost)
     {
       for (let id in arrows)
       {
@@ -612,7 +612,7 @@ const knoxelRect = new function()
         const {space, knoxelId, initialKnoxelId, terminalKnoxelId} = arrows[id];
         const arrowStrokeWidth = visualTheme.recursive.strokeWidth;
         const {x1, y1, x2, y2, x3, y3, initialCross, terminalCross} = getArrowPointsByRects({arrowSpace: space,
-          jointKnoxelId: knoxelId, initialKnoxelId, terminalKnoxelId, rectId, initialRectId, terminalRectId, arrowStrokeWidth});
+          jointKnoxelId: knoxelId, initialKnoxelId, terminalKnoxelId, rectId, initialRectId, terminalRectId, arrowStrokeWidth, ghost});
         arrowShape.points.getItem(0).x = x1;
         arrowShape.points.getItem(0).y = y1;
         arrowShape.points.getItem(1).x = x2;
@@ -702,7 +702,7 @@ const knoxelRect = new function()
       const shapes = createShapes(rects, arrows, type);
       for (let i = 0; i < shapes.length; ++i)
         rectGroup.appendChild(shapes[i]);
-      setTimeout(updateArrowShapes, 0, arrows);
+      setTimeout(updateArrowShapes, 0, arrows, desc.ghost);
       if (desc.ghost)
       {
         rectGroup.id += '.ghost';
@@ -1052,11 +1052,16 @@ function collideAABBVsLine(aabb, line)
 
 function getArrowPointsByRects(desc)
 {
-  // desc: {arrowSpace, jointKnoxelId, initialKnoxelId, terminalKnoxelId, rectId, initialRectId, terminalRectId, arrowStrokeWidth}
+  // desc: {arrowSpace, jointKnoxelId, initialKnoxelId, terminalKnoxelId, rectId, initialRectId, terminalRectId, arrowStrokeWidth, ghost}
+
+  const steeringElement = document.getElementById('steering');
+  const zoom = desc.ghost ? 1.0 : steeringGear.getZoom(steeringElement);
 
   function getBoundingClientDimension(element)
   {
-    const {width, height} = element.getBoundingClientRect();
+    let {width, height} = element.getBoundingClientRect();
+    width *= zoom;
+    height *= zoom;
     return {w: width, h: height};
   }
   
@@ -1109,16 +1114,17 @@ function getArrowPointsByRects(desc)
       const h = visualTheme.rect.defaultHeight;
       const initialElement = document.getElementById(desc.initialRectId);
       const initialDimension = initialElement ? getBoundingClientDimension(initialElement) : {w, h};
+      const rectStrokeOffset = visualTheme.recursive.strokeWidth;
+      const arrowIntervalStrokeOffset = desc.arrowStrokeWidth;
+      initialDimension.w += rectStrokeOffset + arrowIntervalStrokeOffset;
+      initialDimension.h += rectStrokeOffset + arrowIntervalStrokeOffset;
       const initialTime = collideAABBVsLine(
         {position: initialPosition, dimension: initialDimension},
         {position1: jointPosition, position2: initialPosition}
       );
-      const rectStrokeOffset = 0.5*visualTheme.rect.strokeWidth;
       const initialArrowStrokeOffset = 0.5*desc.arrowStrokeWidth;
-      const arrowIntervalStrokeOffset = 0.5*desc.arrowStrokeWidth;
-      const initialStrokeOffset = rectStrokeOffset + initialArrowStrokeOffset + arrowIntervalStrokeOffset;
-      x1 -= ((1 - initialTime) * directionLength + initialStrokeOffset) * directionNormalised.x;
-      y1 -= ((1 - initialTime) * directionLength + initialStrokeOffset) * directionNormalised.y;
+      x1 -= ((1 - initialTime) * directionLength + initialArrowStrokeOffset) * directionNormalised.x;
+      y1 -= ((1 - initialTime) * directionLength + initialArrowStrokeOffset) * directionNormalised.y;
     }
   }
   if (desc.terminalKnoxelId === desc.jointKnoxelId)
@@ -1157,16 +1163,17 @@ function getArrowPointsByRects(desc)
       const h = visualTheme.rect.defaultHeight;
       const terminalElement = document.getElementById(desc.terminalRectId);
       const terminalDimension = terminalElement ? getBoundingClientDimension(terminalElement) : {w, h};
+      const rectStrokeOffset = visualTheme.recursive.strokeWidth;
+      const arrowIntervalStrokeOffset = desc.arrowStrokeWidth;
+      terminalDimension.w += rectStrokeOffset + arrowIntervalStrokeOffset;
+      terminalDimension.h += rectStrokeOffset + arrowIntervalStrokeOffset;
       const terminalTime = collideAABBVsLine(
         {position: terminalPosition, dimension: terminalDimension},
         {position1: jointPosition, position2: terminalPosition}
       );
-      const rectStrokeOffset = 0.5*visualTheme.rect.strokeWidth;
       const terminalArrowStrokeOffset = 4.5*desc.arrowStrokeWidth;
-      const arrowIntervalStrokeOffset = 0.5*desc.arrowStrokeWidth;
-      const terminalStrokeOffset = rectStrokeOffset + terminalArrowStrokeOffset + arrowIntervalStrokeOffset;
-      x3 -= ((1 - terminalTime) * directionLength + terminalStrokeOffset) * directionNormalised.x;
-      y3 -= ((1 - terminalTime) * directionLength + terminalStrokeOffset) * directionNormalised.y;
+      x3 -= ((1 - terminalTime) * directionLength + terminalArrowStrokeOffset) * directionNormalised.x;
+      y3 -= ((1 - terminalTime) * directionLength + terminalArrowStrokeOffset) * directionNormalised.y;
     }
   }
   const {x, y} = jointPosition;
