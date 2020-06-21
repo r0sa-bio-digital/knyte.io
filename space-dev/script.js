@@ -645,6 +645,9 @@ const knoxelRect = new function()
         rectGroup.setAttribute('transform', 'translate(' + x + ' ' + y + ')');
       else
       {
+        const {x, y} = desc.position;
+        rectGroup.setAttribute('transform', 'translate(' + x + ' ' + y + ')');
+
         const steeringElement = document.getElementById('steering');
         const scale = 1.0/steeringGear.getZoom(steeringElement);
         const hostElement = document.getElementById(desc.ghost ? 'ghosts' : 'bubbles');
@@ -1768,19 +1771,19 @@ function createActiveRect(desc)
 function refreshActiveRect(desc)
 {
   // desc: {screenPosition}
-  const position = desc.screenPosition;
   if (activeGhost.knoxelId)
   {
+    const position = activeGhost.offset;
     activeGhost.element.remove();
     activeGhost.element = createActiveRect({knoxelId: activeGhost.knoxelId, position, ghost: true});
-    activeGhost.offset = {x: 0, y: 0};
   }
   if (activeBubble.knoxelId)
   {
+    const position = activeBubble.offset;
     activeBubble.element.remove();
     activeBubble.element = createActiveRect({knoxelId: activeBubble.knoxelId, position, bubble: true});
-    activeBubble.offset = {x: 0, y: 0};
   }
+  const position = desc.screenPosition;
   if (activeInitialGhost.knoxelId)
   {
     activeInitialGhost.element.remove();
@@ -1822,26 +1825,26 @@ function spawnGhostRect(desc)
   activeGhost.spawnSpaceRootKnoxelId = desc.spawnSpaceRootKnoxelId;
   activeGhost.hostKnyteId = getHostKnyteIdByKnoxelId(desc.knoxelId);
   const spawnSpaceRootKnoxelSpace = informationMap[knoxels[desc.spawnSpaceRootKnoxelId]].space;
-  activeGhost.element = createActiveRect({knoxelId: desc.knoxelId, position: {x: 0, y: 0}, ghost: true});
   if (desc.selfcontained)
-  {
     activeGhost.offset = {x: 0, y: 0};
-    if (desc.knoxelId in spawnSpaceRootKnoxelSpace)
-      setGhostedMode({knoxelId: desc.knoxelId, isGhosted: true});
-  }
   else
   {
     const knoxelPosition = spawnSpaceRootKnoxelSpace[desc.knoxelId];
     const ox = knoxelPosition.x - desc.position.x;
     const oy = knoxelPosition.y - desc.position.y;
     activeGhost.offset = {x: ox, y: oy};
-    const position = mouseMovePosition;
-    const x = position.x + activeGhost.offset.x;
-    const y = position.y + activeGhost.offset.y;
+  }
+  activeGhost.element = createActiveRect(
+    {knoxelId: desc.knoxelId, position: {x: activeGhost.offset.x, y: activeGhost.offset.y}, ghost: true}
+  );
+  if (!desc.selfcontained)
+  {
+    const {x, y} = mouseMovePosition;
     knoxelRect.moveElement({element: activeGhost.element, x, y});
     knoxelRect.updateArrowShape(activeGhost.knoxelId, {x, y}, true);
-    setGhostedMode({knoxelId: desc.knoxelId, isGhosted: true});
   }
+  if (desc.knoxelId in spawnSpaceRootKnoxelSpace)
+    setGhostedMode({knoxelId: desc.knoxelId, isGhosted: true});
 }
 
 function terminateGhostRect()
@@ -1868,11 +1871,8 @@ function spawnBubbleRect(desc)
   // desc: {knoxelId, position, selfcontained}
   activeBubble.knoxelId = desc.knoxelId;
   const knyteId = knoxels[desc.knoxelId];
-  activeBubble.element = createActiveRect({knoxelId: desc.knoxelId, position: {x: 0, y: 0}, bubble: true});
   if (desc.selfcontained)
-  {
     activeBubble.offset = {x: 0, y: 0};
-  }
   else
   {
     const hostKnyteId = getHostKnyteIdByKnoxelId(desc.knoxelId);
@@ -1881,9 +1881,12 @@ function spawnBubbleRect(desc)
     const ox = knoxelPosition.x - desc.position.x;
     const oy = knoxelPosition.y - desc.position.y;
     activeBubble.offset = {x: ox, y: oy};
+  }
+  activeBubble.element = createActiveRect({knoxelId: desc.knoxelId, position: activeBubble.offset, bubble: true});
+  if (!desc.selfcontained)
+  {
     const position = mouseMovePosition;
-    const x = position.x + activeBubble.offset.x;
-    const y = position.y + activeBubble.offset.y;
+    const {x, y} = position;
     knoxelRect.moveElement({element: activeBubble.element, x, y});
   }
   setBubbledMode({knoxelId: activeBubble.knoxelId, knyteId, isBubbled: true});
@@ -2067,15 +2070,13 @@ function onMouseMoveSpaceRoot(e)
   const position = mouseMovePosition;
   if (activeGhost.knoxelId)
   {
-    const x = position.x + activeGhost.offset.x;
-    const y = position.y + activeGhost.offset.y;
+    const {x, y} = position;
     knoxelRect.moveElement({element: activeGhost.element, x, y});
     knoxelRect.updateArrowShape(activeGhost.knoxelId, {x, y}, true);
   }
   if (activeBubble.knoxelId)
   {
-    const x = position.x + activeBubble.offset.x;
-    const y = position.y + activeBubble.offset.y;
+    const {x, y} = position;
     knoxelRect.moveElement({element: activeBubble.element, x, y});
   }
   const {x, y} = position;
