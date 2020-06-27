@@ -881,8 +881,9 @@
             * инициализация во время загрузки спейса из файла
             * rect click
               * data case
-              * `innerspace case`
+              * innerspace case
               * mixed case
+              * `selfcontained`
             * space back
               * knoxel transition case
               * state restore case

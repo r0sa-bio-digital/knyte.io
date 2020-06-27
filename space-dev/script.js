@@ -870,6 +870,11 @@ const knoxelRect = new function()
       element = element.parentElement;
     return element;
   };
+
+  this.getKnoxelDimensions = function(knoxelId)
+  {
+    return getFigureDimensions(knoxelId, {});
+  };
 };
 
 const knoxelSpaceRoot = new function()
@@ -1481,10 +1486,11 @@ function onClickRect(e)
       const steeringElement = document.getElementById('steering');
       const panOffset = steeringGear.getPan(steeringElement);
       const zoom = steeringGear.getZoom(steeringElement);
-      const knoxelTopLeft = parseTransform(document.getElementById(targetKnoxelElement.id).getAttribute('transform'));
+      const knoxelLeftTop = parseTransform(document.getElementById(targetKnoxelElement.id).getAttribute('transform'));
+      const figureLeftTop = knoxelRect.getKnoxelDimensions(targetKnoxelElement.id).leftTop;
       setSpaceRootKnoxel({knoxelId: targetKnoxelElement.id}); // +++1
-      const x = panOffset.x + knoxelTopLeft.x/zoom;
-      const y = panOffset.y + knoxelTopLeft.y/zoom;
+      const x = panOffset.x + (knoxelLeftTop.x - figureLeftTop.x)/zoom;
+      const y = panOffset.y + (knoxelLeftTop.y - figureLeftTop.y)/zoom;
       steeringGear.setPan(steeringElement, {x, y});
       refreshActiveRect({screenPosition: mouseMovePosition});
       setNavigationControlState({
@@ -1723,9 +1729,10 @@ function onClickSpaceBack(e)
     const zoom = steeringGear.getZoom(steeringElement);
     const priorKnoxelId = spaceRootElement.dataset.knoxelId;
     setSpaceRootKnoxel({knoxelId: backKnoxelId}); // +++2
-    const knoxelTopLeft = parseTransform(document.getElementById(priorKnoxelId).getAttribute('transform'));
-    const x = panOffset.x - knoxelTopLeft.x/zoom;
-    const y = panOffset.y - knoxelTopLeft.y/zoom;
+    const knoxelLeftTop = parseTransform(document.getElementById(priorKnoxelId).getAttribute('transform'));
+    const figureLeftTop = knoxelRect.getKnoxelDimensions(priorKnoxelId).leftTop;
+    const x = panOffset.x - (knoxelLeftTop.x - figureLeftTop.x)/zoom;
+    const y = panOffset.y - (knoxelLeftTop.y - figureLeftTop.y)/zoom;
     steeringGear.setPan(steeringElement, {x, y});
     refreshActiveRect({screenPosition: mouseMovePosition});
     setNavigationControlState({
@@ -1744,10 +1751,11 @@ function onClickSpaceForward(e)
     const steeringElement = document.getElementById('steering');
     const panOffset = steeringGear.getPan(steeringElement);
     const zoom = steeringGear.getZoom(steeringElement);
-    const knoxelTopLeft = parseTransform(document.getElementById(forwardKnoxelId).getAttribute('transform'));
+    const knoxelLeftTop = parseTransform(document.getElementById(forwardKnoxelId).getAttribute('transform'));
+    const figureLeftTop = knoxelRect.getKnoxelDimensions(forwardKnoxelId).leftTop;
     setSpaceRootKnoxel({knoxelId: forwardKnoxelId}); // +++2
-    const x = panOffset.x + knoxelTopLeft.x/zoom;
-    const y = panOffset.y + knoxelTopLeft.y/zoom;
+    const x = panOffset.x + (knoxelLeftTop.x - figureLeftTop.x)/zoom;
+    const y = panOffset.y + (knoxelLeftTop.y - figureLeftTop.y)/zoom;
     steeringGear.setPan(steeringElement, {x, y});
     refreshActiveRect({screenPosition: mouseMovePosition});
     setNavigationControlState({
