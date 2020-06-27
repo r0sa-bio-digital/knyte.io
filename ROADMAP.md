@@ -883,12 +883,14 @@
               * data case
               * innerspace case
               * mixed case
-              * `selfcontained`
-            * space back
+              * selfcontained
+            * `space back`
               * knoxel transition case
+              * selfcontained transition case
               * state restore case
             * space forward
               * knoxel transition case
+              * selfcontained transition case
               * state restore case
             * host space
               * center ghosting knoxel in the host space
@@ -897,7 +899,7 @@
             * отладка всех возможных кейсов
               * особое внимание уделить перемещению knoxel'ей между пространствами
                 * ситуациям когда опорные knoxel'и в пространствах не найдены
-              * оттестировать поведение selfviewed knoxel'ей при переходах
+              * оттестировать поведение selfcontained knoxel'ей при переходах
         * отрелизить готовый steering на новом хостинге
           * подцепить к рутовому домену knyte.io
           * подправить ссылки на артефакты проекта в readme
