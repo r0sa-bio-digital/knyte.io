@@ -884,18 +884,22 @@
               * innerspace case
               * mixed case
               * selfcontained
-            * `space back`
+            * space back
               * knoxel transition case
               * selfcontained transition case
-              * state restore case
+              * knoxel replaced case
             * space forward
               * knoxel transition case
               * selfcontained transition case
-              * state restore case
+              * knoxel replaced case
+            * `spacemap`
+              * assign (0,0) offset in the spacemap
             * host space
               * center ghosting knoxel in the host space
-            * spacemap
-              * assign (0,0) offset in the spacemap
+            * придумать что делать, если размер target-пространства knoxel'я меняется при переходе
+              * rect click
+              * space back
+              * space forward
             * отладка всех возможных кейсов
               * особое внимание уделить перемещению knoxel'ей между пространствами
                 * ситуациям когда опорные knoxel'и в пространствах не найдены
