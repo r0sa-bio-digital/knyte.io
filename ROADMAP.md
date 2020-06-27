@@ -880,10 +880,19 @@
           * реализация
             * инициализация во время загрузки спейса из файла
             * rect click
+              * data case
+              * `innerspace case`
+              * mixed case
             * space back
+              * knoxel transition case
+              * state restore case
             * space forward
-            * `host space`
+              * knoxel transition case
+              * state restore case
+            * host space
+              * center ghosting knoxel in the host space
             * spacemap
+              * assign (0,0) offset in the spacemap
             * отладка всех возможных кейсов
               * особое внимание уделить перемещению knoxel'ей между пространствами
                 * ситуациям когда опорные knoxel'и в пространствах не найдены
