@@ -18,7 +18,7 @@ const knoxelVectors = {}; // knoxel id --> {initialKnoxelId, terminalKnoxelId}
 const knyteConnects = {}; // knyte id --> {knyte id: true}
 const knyteInitialConnects = {}; // knyte id --> {knyte id: true}
 const knyteTerminalConnects = {}; // knyte id --> {knyte id: true}
-const informationMap = {}; // knyte id --> {color, space: {knoxel id --> position}, record: {data, viewertype}, size}
+const informationMap = {}; // knyte id --> {color, space: {knoxel id --> position}, record: {data, viewertype, size}}
 const knoxels = {}; // knoxel id --> knyte id
 const knoxelViews = {}; // knoxel id --> {collapse, color}
 
@@ -2556,7 +2556,12 @@ function onKeyDownWindow(e)
       {
         const newSize = JSON.parse(newSizeText);
         if (newSize.w || newSize.h)
-          record.size = newSize;
+        {
+          if (record)
+            record.size = newSize;
+          else
+            informationMap[knyteId].record = {data: '', viewertype: 'oneliner', size: newSize};
+        }
         else
           delete record.size;
         setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
