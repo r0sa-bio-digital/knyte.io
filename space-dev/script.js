@@ -2551,10 +2551,14 @@ function onKeyDownWindow(e)
       const knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
       const knyteId = knoxels[knoxelId];
       const {record} = informationMap[knyteId];
-      const newSize = prompt('Edit knyte size', JSON.stringify(record && record.size ? record.size : {w: 0, h: 0}, ['w', 'h']));
-      if (newSize)
+      const newSizeText = prompt('Edit knyte record size', JSON.stringify(record && record.size ? record.size : {w: 0, h: 0}, ['w', 'h']));
+      if (newSizeText)
       {
-        record.size = JSON.parse(newSize);
+        const newSize = JSON.parse(newSizeText);
+        if (newSize.w || newSize.h)
+          record.size = newSize;
+        else
+          delete record.size;
         setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
         handleSpacemapChanged();
       }
