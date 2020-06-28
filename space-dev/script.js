@@ -1732,7 +1732,7 @@ function onClickSpaceMap(e)
   });
 }
 
-function onClickSpaceBack(e)
+function onClickSpaceBack()
 {
   const steeringElement = document.getElementById('steering');
   spaceForwardStack.push(spaceRootElement.dataset.knoxelId);
@@ -1780,7 +1780,7 @@ function onClickSpaceBack(e)
   }
 }
 
-function onClickSpaceForward(e)
+function onClickSpaceForward()
 {
   const steeringElement = document.getElementById('steering');
   spaceBackStack.push(spaceRootElement.dataset.knoxelId);
@@ -2768,6 +2768,18 @@ function onKeyDownWindow(e)
         forwardKnoxelId: spaceForwardStack[spaceForwardStack.length - 1]
       });
     }
+  }
+  else if (e.code === 'ArrowUp')
+  {
+    if (!e.shiftKey && !e.altKey && !e.cmdKey())
+      if (spaceBackElement.style.display !== 'none')
+        onClickSpaceBack();
+  }
+  else if (e.code === 'ArrowDown')
+  {
+    if (!e.shiftKey && !e.altKey && !e.cmdKey())
+      if (spaceForwardElement.style.display !== 'none')
+        onClickSpaceForward();
   }
 }
 
