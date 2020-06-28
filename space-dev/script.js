@@ -1779,7 +1779,7 @@ function onClickSpaceForward(e)
   spaceBackStack.push(spaceRootElement.dataset.knoxelId);
   steeringBackStack.push(steeringElement.getCTM());
   const forwardKnoxelId = spaceForwardStack.pop();
-  const forwardKnoxelSteering = spaceForwardStack.pop();
+  const forwardKnoxelSteering = steeringForwardStack.pop();
   // TODO: use forwardKnoxelSteering when needed
   if (forwardKnoxelId)
   {
