@@ -7,14 +7,14 @@
 
 Хостинг проекта
 ---------------
-* Официальная страница: <https://www.knyte.io>
-* Статика и IDE: <https://knyte-io.glitch.me>
+* Официальная страница: <https://knyte.io>
+* Статика и IDE: <https://repl.it/@xrodionov/knyteio>
 * Репозиторий с исходниками: <https://github.com/r0sa-bio-digital/knyte.io/>
 
 Прототип пространства
 ---------------------
 * Ссылки на модули
-  * Интерактивный прототип: <https://www.knyte.io/space>
+  * Интерактивный прототип: <https://knyte.io/space>
   * Спецификация Knoxel Space: <https://github.com/r0sa-bio-digital/knyte.io/blob/master/space/knoxelSpace.json>
     * документ в собственном формате Knoxel Space
     * для использования его нужно сохранить локально в json-файл
