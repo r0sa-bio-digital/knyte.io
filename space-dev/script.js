@@ -7,7 +7,6 @@ let spaceRootElement;
 let spaceBackElement;
 let spaceForwardElement;
 let spaceMapElement;
-let spaceHostElement;
 let handleSpacemapChanged = function() {};
 let handleSteeringChanged = function() {};
 
@@ -1733,22 +1732,6 @@ function onClickSpaceMap(e)
   });
 }
 
-function onClickSpaceHost(e)
-{
-  if (!activeGhost.spawnSpaceRootKnoxelId)
-    return;
-  const steeringElement = document.getElementById('steering');
-  spaceBackStack.push(spaceRootElement.dataset.knoxelId);
-  steeringBackStack.push(steeringElement.getCTM());
-  spaceForwardStack.length = 0;
-  steeringForwardStack.length = 0;
-  setSpaceRootKnoxel({knoxelId: activeGhost.spawnSpaceRootKnoxelId}); // ???3
-  refreshActiveRect({screenPosition: mouseMovePosition});
-  setNavigationControlState({
-    backKnoxelId: spaceBackStack[spaceBackStack.length - 1]
-  });
-}
-
 function onClickSpaceBack(e)
 {
   const steeringElement = document.getElementById('steering');
@@ -1851,9 +1834,7 @@ function setNavigationControlState(desc)
   // desc: {backKnoxelId, forwardKnoxelId}
   const backKnyteId = knoxels[desc.backKnoxelId];
   if (!backKnyteId)
-  {
     spaceBackElement.style.display = 'none';
-  }
   else
   {
     const color = informationMap[backKnyteId].color;
@@ -1864,9 +1845,7 @@ function setNavigationControlState(desc)
   }
   const forwardKnyteId = knoxels[desc.forwardKnoxelId];
   if (!forwardKnyteId)
-  {
     spaceForwardElement.style.display = 'none';
-  }
   else
   {
     const color = informationMap[forwardKnyteId].color;
@@ -1883,23 +1862,7 @@ function setNavigationControlState(desc)
     spaceMapElement.style.display = 'block';
   }
   else
-  {
     spaceMapElement.style.display = 'none';
-  }
-  if (
-    activeGhost.knoxelId &&
-    activeGhost.spawnSpaceRootKnoxelId !== spaceRootElement.dataset.knoxelId
-  )
-  {
-    const hostShape = document.getElementById('hostShape');
-    hostShape.setAttribute('stroke', visualTheme.navigation.strokeColor);
-    hostShape.setAttribute('fill', visualTheme.navigation.fillColor);
-    spaceHostElement.style.display = 'block';
-  }
-  else
-  {
-    spaceHostElement.style.display = 'none';
-  }
 }
 
 function createActiveRect(desc)
@@ -3304,7 +3267,6 @@ function onLoadBody(e)
   spaceBackElement = document.getElementsByClassName('spaceBack')[0];
   spaceForwardElement = document.getElementsByClassName('spaceForward')[0];
   spaceMapElement = document.getElementsByClassName('spaceMap')[0];
-  spaceHostElement = document.getElementsByClassName('spaceHost')[0];
   svgNameSpace = spaceRootElement.getAttribute('xmlns');
   // create master knyte
   const masterKnyteId = knit.new();
@@ -3331,7 +3293,6 @@ function onLoadBody(e)
   document.getElementById('backArrowShape').addEventListener('click', onClickSpaceBack, false);
   document.getElementById('forwardArrowShape').addEventListener('click', onClickSpaceForward, false);
   document.getElementById('spaceMapButton').addEventListener('click', onClickSpaceMap, false);
-  document.getElementById('spaceHostButton').addEventListener('click', onClickSpaceHost, false);
   // setup space root view
   setSpaceRootKnoxel({knoxelId: masterKnoxelId});
   setNavigationControlState({});
