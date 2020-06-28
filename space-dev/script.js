@@ -7,6 +7,7 @@ let spaceRootElement;
 let spaceBackElement;
 let spaceForwardElement;
 let spaceMapElement;
+let steeringElement;
 let handleSpacemapChanged = function() {};
 let handleSteeringChanged = function() {};
 
@@ -249,7 +250,6 @@ function loadAppState(files)
     const state = JSON.parse(e.target.result);
     assignAppState(state);
     setSpaceRootKnoxel({knoxelId: masterKnoxelId}); // +++0
-    const steeringElement = document.getElementById('steering');
     steeringGear.setPan(steeringElement, {x: 0, y: 0});
     handleSpacemapChanged();
     setNavigationControlState({});
@@ -669,7 +669,6 @@ const knoxelRect = new function()
       {
         const {x, y} = desc.position;
         rectGroup.setAttribute('transform', 'translate(' + x + ' ' + y + ')');
-        const steeringElement = document.getElementById('steering');
         const scale = 1.0/steeringGear.getZoom(steeringElement);
         const hostElement = document.getElementById(desc.ghost ? 'ghosts' : 'bubbles');
         hostElement.setAttribute('transform', 'scale(' + scale + ')');
@@ -846,7 +845,6 @@ const knoxelRect = new function()
     let {width, height} = rectShape.getBoundingClientRect();
     if (!ghost)
     {
-      const steeringElement = document.getElementById('steering');
       const zoom = steeringGear.getZoom(steeringElement);
       width *= zoom;
       height *= zoom;
@@ -924,7 +922,6 @@ const knoxelArrow = new function()
     const spacePosition = informationMap[spaceRootKnyteId].space[desc.knoxelId];
     if (!spacePosition)
       return;
-    const steeringElement = document.getElementById('steering');
     const originPosition = steeringGear.spaceToScreenPosition(steeringElement, spacePosition);
     desc.element.setAttribute('x1', originPosition.x);
     desc.element.setAttribute('y1', originPosition.y);
@@ -1093,8 +1090,6 @@ function collideAABBVsLine(aabb, line)
 function getArrowPointsByRects(desc)
 {
   // desc: {arrowSpace, jointKnoxelId, initialKnoxelId, terminalKnoxelId, rectId, initialRectId, terminalRectId, arrowStrokeWidth, ghost}
-
-  const steeringElement = document.getElementById('steering');
   const zoom = steeringGear.getZoom(steeringElement);
 
   function getBoundingClientDimension(element)
@@ -1229,7 +1224,6 @@ function getArrowPointsByRects(desc)
 function getArrowPointsByKnoxels(desc)
 {
   // desc: {arrowSpace, jointKnoxelId, initialKnoxelId, terminalKnoxelId, x, y, w, h, arrowStrokeWidth, ghost}
-  const steeringElement = document.getElementById('steering');
   const ghostsElement = document.getElementById('ghosts');
   const zoom = desc.ghost ? (steeringGear.getZoom(steeringElement)/steeringGear.getZoom(ghostsElement)) : 1.0;
   const jointPosition = desc.ghost
@@ -1484,7 +1478,6 @@ function onClickRect(e)
   {
     if (targetKnoxelElement && targetKnoxelElement.id !== spaceRootElement.dataset.knoxelId)
     {
-      const steeringElement = document.getElementById('steering');
       spaceBackStack.push(spaceRootElement.dataset.knoxelId);
       steeringBackStack.push(steeringElement.getCTM());
       spaceForwardStack.length = 0;
@@ -1694,7 +1687,6 @@ function onClickSpaceRoot(e)
     const knyteId = knit.new();
     const color = visualTheme.rect.fillColor;
     addKnyte({knyteId, color});
-    const steeringElement = document.getElementById('steering');
     const position = steeringGear.screenToSpacePosition(steeringElement, mousePosition);
     addKnoxelRect({knyteId, hostKnoxelId: spaceRootElement.dataset.knoxelId, position});
     if (e.altKey)
@@ -1714,7 +1706,6 @@ function onClickSpaceMap(e)
 {
   if (spaceRootElement.dataset.knoxelId === spacemapKnoxelId)
     return;
-  const steeringElement = document.getElementById('steering');
   spaceBackStack.push(spaceRootElement.dataset.knoxelId);
   steeringBackStack.push(steeringElement.getCTM());
   spaceForwardStack.length = 0;
@@ -1735,7 +1726,6 @@ function onClickSpaceMap(e)
 
 function onClickSpaceBack()
 {
-  const steeringElement = document.getElementById('steering');
   spaceForwardStack.push(spaceRootElement.dataset.knoxelId);
   steeringForwardStack.push(steeringElement.getCTM());
   const backKnoxelId = spaceBackStack.pop();
@@ -1784,7 +1774,6 @@ function onClickSpaceBack()
 
 function onClickSpaceForward()
 {
-  const steeringElement = document.getElementById('steering');
   spaceBackStack.push(spaceRootElement.dataset.knoxelId);
   steeringBackStack.push(steeringElement.getCTM());
   const forwardKnoxelId = spaceForwardStack.pop();
@@ -2021,7 +2010,6 @@ function createActiveArrow(desc)
   else
   {
     originPosition = spacePosition;
-    const steeringElement = document.getElementById('steering');
     originPosition = steeringGear.spaceToScreenPosition(steeringElement, originPosition);
   }
   arrow.style.pointerEvents = 'none';
@@ -2407,7 +2395,6 @@ function onKeyDownWindow(e)
   {
     if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
-      const steeringElement = document.getElementById('steering');
       const position = steeringGear.screenToSpacePosition(steeringElement, mouseMovePosition);
       if (!activeGhost.knoxelId)
       {
@@ -2444,7 +2431,6 @@ function onKeyDownWindow(e)
   {
     if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
-      const steeringElement = document.getElementById('steering');
       const position = steeringGear.screenToSpacePosition(steeringElement, mouseMovePosition);
       if (!activeBubble.knoxelId)
       {
@@ -2808,7 +2794,6 @@ function onMouseWheelWindow(e)
     return;
   if (!e.shiftKey && !e.altKey && !e.cmdKey())
   {
-    const steeringElement = document.getElementById('steering');
     const panDelta = {x: e.wheelDeltaX, y: e.wheelDeltaY};
     steeringGear.pan(steeringElement, panDelta);
     e.stopPropagation();
@@ -2816,7 +2801,6 @@ function onMouseWheelWindow(e)
   }
   if (e.shiftKey && !e.altKey && !e.cmdKey())
   {
-    const steeringElement = document.getElementById('steering');
     steeringGear.zoom(steeringElement, mouseMovePosition, e.wheelDelta);
     e.stopPropagation();
     e.preventDefault();
@@ -3291,6 +3275,7 @@ function onLoadBody(e)
   spaceBackElement = document.getElementsByClassName('spaceBack')[0];
   spaceForwardElement = document.getElementsByClassName('spaceForward')[0];
   spaceMapElement = document.getElementsByClassName('spaceMap')[0];
+  steeringElement = document.getElementById('steering');
   svgNameSpace = spaceRootElement.getAttribute('xmlns');
   // create master knyte
   const masterKnyteId = knit.new();
