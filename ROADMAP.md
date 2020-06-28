@@ -892,9 +892,9 @@
               * knoxel transition case
               * selfcontained transition case
               * knoxel replaced case
-            * `spacemap`
+            * spacemap
               * assign (0,0) offset in the spacemap
-            * host space
+            * `host space`
               * center ghosting knoxel in the host space
             * придумать что делать, если размер target-пространства knoxel'я меняется при переходе
               * rect click

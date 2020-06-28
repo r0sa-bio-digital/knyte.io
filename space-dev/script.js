@@ -1490,8 +1490,14 @@ function onClickRect(e)
       steeringBackStack.push(steeringElement.getCTM());
       spaceForwardStack.length = 0;
       steeringForwardStack.length = 0;
+      const spacemap = knoxels[targetKnoxelElement.id] === knoxels[spacemapKnoxelId];
       const selfcontained = knoxels[targetKnoxelElement.id] === knoxels[spaceRootElement.dataset.knoxelId];
-      if (!selfcontained)
+      if (spacemap)
+      {
+        setSpaceRootKnoxel({knoxelId: targetKnoxelElement.id});
+        steeringGear.setCTM(steeringElement, spaceRootElement.createSVGMatrix());
+      }
+      else if (!selfcontained)
       {
         const panOffset = steeringGear.getPan(steeringElement);
         const zoom = steeringGear.getZoom(steeringElement);
@@ -1713,7 +1719,14 @@ function onClickSpaceMap(e)
   steeringBackStack.push(steeringElement.getCTM());
   spaceForwardStack.length = 0;
   steeringForwardStack.length = 0;
-  setSpaceRootKnoxel({knoxelId: spacemapKnoxelId}); // ???3
+  const selfcontained = knoxels[spacemapKnoxelId] === knoxels[spaceRootElement.dataset.knoxelId];
+  if (!selfcontained)
+  {
+    setSpaceRootKnoxel({knoxelId: spacemapKnoxelId}); // +++3
+    steeringGear.setCTM(steeringElement, spaceRootElement.createSVGMatrix());
+  }
+  else
+    setSpaceRootKnoxel({knoxelId: spacemapKnoxelId});
   refreshActiveRect({screenPosition: mouseMovePosition});
   setNavigationControlState({
     backKnoxelId: spaceBackStack[spaceBackStack.length - 1]
@@ -1743,11 +1756,22 @@ function onClickSpaceBack(e)
   steeringForwardStack.push(steeringElement.getCTM());
   const backKnoxelId = spaceBackStack.pop();
   const backKnoxelSteering = steeringBackStack.pop();
-  // TODO: use backKnoxelSteering when needed
   if (backKnoxelId)
   {
+    const fromSpacemap = knoxels[spacemapKnoxelId] === knoxels[spaceRootElement.dataset.knoxelId];
+    const toSpacemap = knoxels[spacemapKnoxelId] === knoxels[backKnoxelId];
     const selfcontained = knoxels[backKnoxelId] === knoxels[spaceRootElement.dataset.knoxelId];
-    if (!selfcontained)
+    if (fromSpacemap)
+    {
+      setSpaceRootKnoxel({knoxelId: backKnoxelId});
+      steeringGear.setCTM(steeringElement, backKnoxelSteering);
+    }
+    else if (toSpacemap)
+    {
+      setSpaceRootKnoxel({knoxelId: backKnoxelId});
+      steeringGear.setCTM(steeringElement, spaceRootElement.createSVGMatrix());
+    }
+    else if (!selfcontained)
     {
       const panOffset = steeringGear.getPan(steeringElement);
       const zoom = steeringGear.getZoom(steeringElement);
@@ -1780,12 +1804,23 @@ function onClickSpaceForward(e)
   steeringBackStack.push(steeringElement.getCTM());
   const forwardKnoxelId = spaceForwardStack.pop();
   const forwardKnoxelSteering = steeringForwardStack.pop();
-  // TODO: use forwardKnoxelSteering when needed
   if (forwardKnoxelId)
   {
+    const fromSpacemap = knoxels[spacemapKnoxelId] === knoxels[spaceRootElement.dataset.knoxelId];
+    const toSpacemap = knoxels[spacemapKnoxelId] === knoxels[forwardKnoxelId];
     const selfcontained = knoxels[forwardKnoxelId] === knoxels[spaceRootElement.dataset.knoxelId];
     const forwardKnoxelElement = document.getElementById(forwardKnoxelId);
-    if (!selfcontained && forwardKnoxelElement)
+    if (fromSpacemap)
+    {
+      setSpaceRootKnoxel({knoxelId: forwardKnoxelId});
+      steeringGear.setCTM(steeringElement, forwardKnoxelSteering);
+    }
+    else if (toSpacemap)
+    {
+      setSpaceRootKnoxel({knoxelId: forwardKnoxelId});
+      steeringGear.setCTM(steeringElement, spaceRootElement.createSVGMatrix());
+    }
+    else if (!selfcontained && forwardKnoxelElement)
     {
       const panOffset = steeringGear.getPan(steeringElement);
       const zoom = steeringGear.getZoom(steeringElement);
