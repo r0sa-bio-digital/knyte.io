@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script>
       // autoredirect from http to https
-      if (location.protocol !== 'https:')
+      if (location.protocol !== 'https:' && location.protocol !== 'file:')
         location.replace(`https:${location.href.substring(location.protocol.length)}`);
     </script>
     <link rel="shortcut icon"
