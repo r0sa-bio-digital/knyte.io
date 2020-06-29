@@ -7,18 +7,19 @@
 
 Хостинг проекта
 ---------------
-* Официальная страница: <https://knyte.io>
-* Статика и IDE: <https://repl.it/@xrodionov/knyteio>
+* Официальная страница: <https://knyte.netlify.app/>
+* Хостинг статики: <https://knyte.netlify.app/>
 * Репозиторий с исходниками: <https://github.com/r0sa-bio-digital/knyte.io/>
 
 Прототип пространства
 ---------------------
 * Ссылки на модули
-  * Интерактивный прототип: <https://knyte.io/space>
+  * Интерактивный прототип: <https://knyte.netlify.app/space/>
   * Спецификация Knoxel Space: <https://github.com/r0sa-bio-digital/knyte.io/blob/master/space/knoxelSpace.json>
     * документ в собственном формате Knoxel Space
     * для использования его нужно сохранить локально в json-файл
       * и затем загрузить в систему как стейт
+  * Версия в активной разработке: <https://knyte.netlify.app/space-dev/>
 * Управление
   * drop file on app screen - загрузить стейт системы из json-файла
   * console global variables
