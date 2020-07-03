@@ -2983,9 +2983,6 @@ function runBlockHandleClick(knyteId)
     const logicSemantics = {
       blocks: {
         root: '0f51a068-5ec8-4de1-b24c-f8aec06d00bb',
-        group: 'e4757ca1-0432-4732-bfa8-c54edce8b2d8',
-        value: '1692e0cf-242f-48e9-ae3d-0685563c4aec',
-        result: 'c00c886a-d5f4-43d0-99c1-210d49628ebb',
       },
       operators: {
         not: '8669eb2f-2d20-48c0-88ca-27c4e7a44ef2',
@@ -2994,6 +2991,75 @@ function runBlockHandleClick(knyteId)
         xor: 'de329bdf-eab1-4c61-a1d5-1d5e7810a3a5',
       },
     };
+
+    function isLogicOperator(knyteId)
+    {
+      for (let operator in logicSemantics.operators)
+      {
+        const operatorKnyteId = logicSemantics.operators[operator];
+        if (operatorKnyteId === knyteId)
+          return true;
+      }
+      return false;
+    }
+
+    function computeValueByOperatorId(operatorKnyteId, incomeValues)
+    {
+      // get operator by knyte id
+      let operator = null;
+      for (let op in logicSemantics.operators)
+      {
+        const knyteId = logicSemantics.operators[op];
+        if (operatorKnyteId === knyteId)
+          operator = op;
+      }
+      if (operator === 'not')
+      {
+        if (incomeValues.length === 1)
+          if (incomeValues[0] === true)
+            return false;
+          else if (incomeValues[0] === false)
+            return true;
+        return undefined;
+      }
+      else if (operator === 'and')
+      {
+        for (let i = 0; i < incomeValues.length; ++i)
+        {
+          if (incomeValues[i] === false)
+            return false;
+          if (incomeValues[i] === undefined)
+            return undefined;
+        }
+        return incomeValues.length > 0 ? true : undefined;
+      }
+      else if (operator === 'or')
+      {
+        let result = false;
+        for (let i = 0; i < incomeValues.length; ++i)
+        {
+          if (incomeValues[i] === true)
+            result = true;
+          if (incomeValues[i] === undefined)
+            return undefined;
+        }
+        return incomeValues.length > 0 ? result : undefined;
+      }
+      else if (operator === 'xor')
+      {
+        let trueCounter = 0;
+        for (let i = 0; i < incomeValues.length; ++i)
+        {
+          if (incomeValues[i] === true)
+            ++trueCounter;
+          if (incomeValues[i] === undefined)
+            return undefined;
+        }
+        return incomeValues.length > 0 ? (trueCounter === 1) : undefined;
+      }
+      return undefined;
+    }
+
     const hostedKnoxels = informationMap[logicKnyteId].space;
     const succeedKnytes = {};
     // get root
@@ -3086,9 +3152,93 @@ function runBlockHandleClick(knyteId)
           markProcessedLink(linkId, false);
       }
     }
-    console.log(valueStates);
+    // get operators and results
+    const operatorHostKnytes = {}; // {operator host knyte id --> operator knyte id}
+    const resultHostKnytes = {}; // {result host knyte id --> result knyte id}
+    for (let hostedKnoxelId in hostedKnoxels)
+    {
+      const hostKnyteId = knoxels[hostedKnoxelId];
+      const knyteId = getHostedKnyteId(hostKnyteId);
+      if (isLogicOperator(knyteId))
+        operatorHostKnytes[hostKnyteId] = knyteId;
+      else
+        resultHostKnytes[hostKnyteId] = knyteId;
+    }
     // process operators
-    ;
+    const maxComputeIterations = 128;
+    let computeIteration = 0;
+    while (computeIteration < maxComputeIterations)
+    {
+      let operatorsComputed = 0;
+      for (operatorHostKnyteId in operatorHostKnytes)
+      {
+        if (valueStates[operatorHostKnyteId] !== undefined)
+          continue;
+        const incomeValues = [];
+        const incomeValueKnytes = getConnectsByDataMatchFunction(operatorHostKnyteId, matchToken, '.', 'terminal');
+        for (let i = 0; i < incomeValueKnytes.length; ++ i)
+        {
+          const linkId = incomeValueKnytes[i];
+          const incomeValueHostId = knyteVectors[linkId].initialKnyteId;
+          incomeValues.push(valueStates[incomeValueHostId]);
+        }
+        const operatorKnyteId = getHostedKnyteId(operatorHostKnyteId);
+        const operatorValue = computeValueByOperatorId(operatorKnyteId, incomeValues);
+        if (operatorValue !== undefined)
+        {
+          ++operatorsComputed;
+          valueStates[operatorHostKnyteId] = operatorValue;
+          if (operatorValue)
+            succeedKnytes[operatorHostKnyteId] = true;
+          for (let i = 0; i < incomeValueKnytes.length; ++ i)
+          {
+            const linkId = incomeValueKnytes[i];
+            const incomeValueHostId = knyteVectors[linkId].initialKnyteId;
+            if (valueStates[incomeValueHostId] === true)
+            {
+              succeedKnytes[linkId] = true;
+              markProcessedLink(linkId, true);
+            }
+            else
+              markProcessedLink(linkId, false);
+          }
+        }
+      }
+      if (!operatorsComputed)
+        break;
+      ++computeIteration;
+    }
+    // set results
+    const maxResultIterations = 128;
+    let resultIteration = 0;
+    while (resultIteration < maxResultIterations)
+    {
+      let resultsComputed = 0;
+      for (resultHostKnyteId in resultHostKnytes)
+      {
+        if (valueStates[resultHostKnyteId] !== undefined)
+          continue;
+        const incomeValueKnytes = getConnectsByDataMatchFunction(resultHostKnyteId, matchToken, '.', 'terminal');
+        if (incomeValueKnytes.length !== 1)
+          continue;
+        const incomeValueLinkId = incomeValueKnytes[0];
+        const incomeValueHostId = knyteVectors[incomeValueLinkId].initialKnyteId;
+        const incomeValue = valueStates[incomeValueHostId];
+        if (incomeValue === undefined)
+          continue;
+        ++resultsComputed;
+        valueStates[resultHostKnyteId] = incomeValue;
+        if (incomeValue)
+        {
+          succeedKnytes[incomeValueLinkId] = true;
+          succeedKnytes[resultHostKnyteId] = true;
+        }
+        markProcessedLink(incomeValueLinkId, incomeValue);
+      }
+      if (!resultsComputed)
+        break;
+      ++resultIteration;
+    }
     // set innactive knoxels view
     for (let knoxelId in hostedKnoxels)
     {
