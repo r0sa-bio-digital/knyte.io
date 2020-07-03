@@ -2861,6 +2861,18 @@ function escapeStringToCode(s) {
   return s.replace(/\\/g, '\\\\').replace(/\"/g, '\\\"').replace(/\n/g, '\\n');
 }
 
+function doesKnyteHostsKnyte(knyteId, anotherKnyteId)
+{
+  const hostedKnoxels = informationMap[knyteId].space;
+  const hostedKnytes = {};
+  for (let hostedKnoxelId in hostedKnoxels)
+  {
+    const hostedKnyteId = knoxels[hostedKnoxelId];
+    hostedKnytes[hostedKnyteId] = true;
+  }
+  return anotherKnyteId in hostedKnytes;
+}
+
 function runBlockHandleClick(knyteId)
 {
   function onComplete(success, nextKnyteId)
@@ -2945,8 +2957,32 @@ function runBlockHandleClick(knyteId)
 
   function logicCallHandler(logicKnyteId)
   {
-    // TODO: implement
-    return true;
+    // TODO: implement semantic-code entities link via standard parameters
+    const logicSemantics = {
+      blocks: {
+        root: '0f51a068-5ec8-4de1-b24c-f8aec06d00bb',
+        group: 'e4757ca1-0432-4732-bfa8-c54edce8b2d8',
+        value: '1692e0cf-242f-48e9-ae3d-0685563c4aec',
+        result: 'c00c886a-d5f4-43d0-99c1-210d49628ebb',
+      },
+      operators: {
+        not: '8669eb2f-2d20-48c0-88ca-27c4e7a44ef2',
+        and: '50b3066e-d0fd-4efc-806f-4f363a106092',
+        or: '7dde3e82-2c0a-45e5-9bc1-04bb34034514',
+        xor: 'de329bdf-eab1-4c61-a1d5-1d5e7810a3a5',
+      },
+    };
+    const hostedKnoxels = informationMap[logicKnyteId].space;
+    const rootKnytes = {};
+    for (let knoxelId in hostedKnoxels)
+    {
+      const knyteId = knoxels[knoxelId];
+      if (doesKnyteHostsKnyte(knyteId, logicSemantics.blocks.root))
+        rootKnytes[knyteId] = true;
+    }
+    if (Object.keys(rootKnytes).length !== 1)
+      return {complete: false, error: 'logic block must have 1 root block'};
+    return {complete: true};
   }
 
   const newData = codeTemplates.runBlock.busy;
@@ -3134,9 +3170,11 @@ function runBlockHandleClick(knyteId)
       setTimeout(
         function()
         {
-          const logicComplete = logicCallHandler(logicKnyteId);
           delete runBlockBusyList[knyteId];
-          onComplete(logicComplete, nextKnyteId);
+          const logicResult = logicCallHandler(logicKnyteId);
+          onComplete(logicResult.complete, nextKnyteId);
+          if (!logicResult.complete)
+            throw Error(logicResult.error);
         },
         runBlockDelay
       );
