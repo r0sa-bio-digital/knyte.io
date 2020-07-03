@@ -2861,7 +2861,7 @@ function escapeStringToCode(s) {
   return s.replace(/\\/g, '\\\\').replace(/\"/g, '\\\"').replace(/\n/g, '\\n');
 }
 
-function doesKnyteHostsKnyte(knyteId, anotherKnyteId)
+function getHostedKnyteId(knyteId)
 {
   const hostedKnoxels = informationMap[knyteId].space;
   const hostedKnytes = {};
@@ -2870,7 +2870,9 @@ function doesKnyteHostsKnyte(knyteId, anotherKnyteId)
     const hostedKnyteId = knoxels[hostedKnoxelId];
     hostedKnytes[hostedKnyteId] = true;
   }
-  return anotherKnyteId in hostedKnytes;
+  if (Object.keys(hostedKnytes).length === 1)
+    return Object.keys(hostedKnytes)[0];
+  return null;
 }
 
 function runBlockHandleClick(knyteId)
@@ -2957,6 +2959,11 @@ function runBlockHandleClick(knyteId)
 
   function logicCallHandler(logicKnyteId)
   {
+    function markProcessedLink(knyteId, success)
+    {
+      setKnyteRecordData(knyteId, 'oneliner', success ? '+' : '-');
+    }
+
     // TODO: implement semantic-code entities link via standard parameters
     const logicSemantics = {
       blocks: {
@@ -2973,15 +2980,46 @@ function runBlockHandleClick(knyteId)
       },
     };
     const hostedKnoxels = informationMap[logicKnyteId].space;
+    const succeedKnytes = {};
+    // get root
     const rootKnytes = {};
     for (let knoxelId in hostedKnoxels)
     {
       const knyteId = knoxels[knoxelId];
-      if (doesKnyteHostsKnyte(knyteId, logicSemantics.blocks.root))
+      if (getHostedKnyteId(knyteId) === logicSemantics.blocks.root)
         rootKnytes[knyteId] = true;
     }
     if (Object.keys(rootKnytes).length !== 1)
       return {complete: false, error: 'logic block must have 1 root block'};
+    const rootKnyteId = Object.keys(rootKnytes)[0];
+    succeedKnytes[rootKnyteId] = true;
+    const rootLinks = getConnectsByDataMatchFunction(rootKnyteId, matchToken, '.', 'initial');
+    // get groups
+    const groupKnytes = {};
+    for (let i = 0; i < rootLinks.length; ++i)
+    {
+      const linkId = rootLinks[i];
+      const terminalKnyteId = knyteVectors[linkId].terminalKnyteId;
+      const groupId = getHostedKnyteId(terminalKnyteId);
+      if (groupId)
+      {
+        groupKnytes[terminalKnyteId] = groupId;
+        succeedKnytes[linkId] = true;
+        succeedKnytes[terminalKnyteId] = true;
+      }
+      markProcessedLink(linkId, groupId !== null);
+    }
+    // ...
+    // set final knoxel arrows outline color
+    for (let knoxelId in hostedKnoxels)
+    {
+      const knyteId = knoxels[knoxelId];
+      if (knyteId in succeedKnytes)
+        continue;
+      const color = knoxelViews[knoxelId].color;
+      knoxelViews[knoxelId].color = color + '40';
+    }
+    // return result
     return {complete: true};
   }
 
