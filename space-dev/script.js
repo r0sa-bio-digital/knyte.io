@@ -2875,6 +2875,38 @@ function getHostedKnyteId(knyteId)
   return null;
 }
 
+function logicBlockHandleClick(knyteId)
+{
+  logicReset(knyteId);
+  setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+  refreshActiveRect({screenPosition: mouseMovePosition});
+  handleSpacemapChanged();
+}
+
+function logicReset(logicKnyteId)
+{
+  function resetTransparentOutline(knoxelId)
+  {
+    const {color} = knoxelViews[knoxelId];
+    if (color.length > 7)
+      knoxelViews[knoxelId].color = color.slice(0, 7);
+  }
+
+  const hostedKnoxels = informationMap[logicKnyteId].space;
+  for (let hostedKnoxelId in hostedKnoxels)
+  {
+    const knyteId = knoxels[hostedKnoxelId];
+    resetTransparentOutline(hostedKnoxelId);
+    const hostedKnoxels2 = informationMap[knyteId].space;
+    for (let hostedKnoxelId2 in hostedKnoxels2)
+      resetTransparentOutline(hostedKnoxelId2);
+    const {record} = informationMap[knyteId];
+    const {initialKnyteId, terminalKnyteId} = knyteVectors[knyteId];
+    if (initialKnyteId && terminalKnyteId && record && (record.data === '-' || record.data === '+'))
+      setKnyteRecordData(knyteId, 'oneliner', '.');
+  }
+}
+
 function runBlockHandleClick(knyteId)
 {
   function onComplete(success, nextKnyteId)
@@ -2961,30 +2993,6 @@ function runBlockHandleClick(knyteId)
   {
     logicReset(logicKnyteId);
     return logicCompute(logicKnyteId);
-  }
-
-  function logicReset(logicKnyteId)
-  {
-    function resetTransparentOutline(knoxelId)
-    {
-      const {color} = knoxelViews[knoxelId];
-      if (color.length > 7)
-        knoxelViews[knoxelId].color = color.slice(0, 7);
-    }
-
-    const hostedKnoxels = informationMap[logicKnyteId].space;
-    for (let hostedKnoxelId in hostedKnoxels)
-    {
-      const knyteId = knoxels[hostedKnoxelId];
-      resetTransparentOutline(hostedKnoxelId);
-      const hostedKnoxels2 = informationMap[knyteId].space;
-      for (let hostedKnoxelId2 in hostedKnoxels2)
-        resetTransparentOutline(hostedKnoxelId2);
-      const {record} = informationMap[knyteId];
-      const {initialKnyteId, terminalKnyteId} = knyteVectors[knyteId];
-      if (initialKnyteId && terminalKnyteId && record && (record.data === '-' || record.data === '+'))
-        setKnyteRecordData(knyteId, 'oneliner', '.');
-    }
   }
 
   function logicCompute(logicKnyteId)
