@@ -151,6 +151,7 @@
             rows="15" cols="80" onkeydown="onKeyDownRecordeditor(event);"></textarea>
           <div style="text-align: left;">
             <button onclick="onClickRunBlock();">run block</button>
+            <button onclick="onClickLogicBlock();">logic block</button>
           </div>
         </div>
       </div>
@@ -194,6 +195,20 @@
         const recordeditorDialog = document.getElementById('recordeditor');
         document.getElementById('recordinput.interactive').value = codeTemplates.runBlock.ready(
           recordeditorDialog.dataset.knyteId, 'init');
+      }
+
+      function onClickLogicBlock()
+      {
+        const recordeditorDialog = document.getElementById('recordeditor');
+        document.getElementById('recordinput.interactive').value = '<div style="width: 80px; height: 24px; margin: 8px;">\n' +
+          '\t<button\n' +
+            '\t\tdata-knyte-id="' + recordeditorDialog.dataset.knyteId + '"\n' +
+            '\t\tonclick="event.stopPropagation(); logicBlockHandleClick(this.dataset.knyteId);"\n' +
+            '\t\tonfocus="this.blur();"\n' +
+          '\t>\n' +
+            '\t\treset\n' +
+          '\t</button>\n' +
+        '</div>';
       }
       
       function onKeyDownRecordeditor(e)
