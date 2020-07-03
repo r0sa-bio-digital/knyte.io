@@ -2943,6 +2943,12 @@ function runBlockHandleClick(knyteId)
     return value;
   }
 
+  function logicCallHandler(logicKnyteId)
+  {
+    // TODO: implement
+    return true;
+  }
+
   const newData = codeTemplates.runBlock.busy;
   setKnyteRecordData(knyteId, 'interactive', newData);
   setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
@@ -2954,6 +2960,10 @@ function runBlockHandleClick(knyteId)
   const codeKnyteId = codeLinkKnyteId ? knyteVectors[codeLinkKnyteId].initialKnyteId : undefined;
   const codeRecord = codeKnyteId ? informationMap[codeKnyteId].record : undefined;
   let codeText = codeRecord ? codeRecord.data : '';
+
+  const logicKnytes = getConnectsByDataMatchFunction(knyteId, matchToken, 'logic', 'terminal');
+  const logicLinkKnyteId = logicKnytes[0];
+  const logicKnyteId = logicLinkKnyteId ? knyteVectors[logicLinkKnyteId].initialKnyteId : undefined;
 
   const nextKnytes = getConnectsByDataMatchFunction(knyteId, matchToken, 'next', 'initial');
   const nextLinkKnyteId = nextKnytes[0];
@@ -3025,6 +3035,8 @@ function runBlockHandleClick(knyteId)
   {
     if (codeKnytes.length > 1)
       throw Error('run block knyte ' + knyteId + ' has more than 1 code links');
+    if (logicKnytes.length > 1)
+      throw Error('run block knyte ' + knyteId + ' has more than 1 logic links');
     if (nextKnytes.length > 1)
       throw Error('run block knyte ' + knyteId + ' has more than 1 next links');
     if (ifKnytes.length > 1)
@@ -3035,8 +3047,17 @@ function runBlockHandleClick(knyteId)
       throw Error('run block knyte ' + knyteId + ' has more than 1 else links');
     if (!ifKnytes.length && (caseKnytes.length || elseKnytes.length))
       throw Error('run block knyte ' + knyteId + ' has case/else links without if link');
-    if ((ifKnytes.length || caseKnytes.length || elseKnytes.length) && (codeKnytes.length || nextKnytes.length))
-      throw Error('run block knyte ' + knyteId + ' has mixed code-next and if-cases-else links');
+    if (ifKnytes.length || caseKnytes.length || elseKnytes.length)
+    {
+      if (codeKnytes.length)
+        throw Error('run block knyte ' + knyteId + ' has mixed code and if-cases-else links');
+      if (logicKnytes.length)
+        throw Error('run block knyte ' + knyteId + ' has mixed logic and if-cases-else links');
+      if (nextKnytes.length)
+        throw Error('run block knyte ' + knyteId + ' has mixed next and if-cases-else links');
+    }
+    if (logicKnytes.length && codeKnytes.length)
+      throw Error('run block knyte ' + knyteId + ' has mixed code and logic links');
     const namesMap = {};
     for (let i = 0; i < namesSequence.length; ++i)
     {
@@ -3107,6 +3128,19 @@ function runBlockHandleClick(knyteId)
         runBlockDelay
       );
     }
+    else if (logicKnyteId)
+    {
+      runBlockBusyList[knyteId] = true;
+      setTimeout(
+        function()
+        {
+          const logicComplete = logicCallHandler(logicKnyteId);
+          delete runBlockBusyList[knyteId];
+          onComplete(logicComplete, nextKnyteId);
+        },
+        runBlockDelay
+      );
+    }
     else
     {
       const evalKey = 'code-next' + formalParametersList + codeText;
@@ -3161,7 +3195,7 @@ function runBlockHandleClick(knyteId)
               function()
               {
                 delete runBlockBusyList[knyteId];
-                onComplete(codeComplete, nextKnyteId);                
+                onComplete(codeComplete, nextKnyteId);
               }
             );
             promiseComplete = true;
