@@ -2959,6 +2959,36 @@ function runBlockHandleClick(knyteId)
 
   function logicCallHandler(logicKnyteId)
   {
+    logicReset(logicKnyteId);
+    return logicCompute(logicKnyteId);
+  }
+
+  function logicReset(logicKnyteId)
+  {
+    function resetTransparentOutline(knoxelId)
+    {
+      const {color} = knoxelViews[knoxelId];
+      if (color.length > 7)
+        knoxelViews[knoxelId].color = color.slice(0, 7);
+    }
+
+    const hostedKnoxels = informationMap[logicKnyteId].space;
+    for (let hostedKnoxelId in hostedKnoxels)
+    {
+      const knyteId = knoxels[hostedKnoxelId];
+      resetTransparentOutline(hostedKnoxelId);
+      const hostedKnoxels2 = informationMap[knyteId].space;
+      for (let hostedKnoxelId2 in hostedKnoxels2)
+        resetTransparentOutline(hostedKnoxelId2);
+      const {record} = informationMap[knyteId];
+      const {initialKnyteId, terminalKnyteId} = knyteVectors[knyteId];
+      if (initialKnyteId && terminalKnyteId && record && (record.data === '-' || record.data === '+'))
+        setKnyteRecordData(knyteId, 'oneliner', '.');
+    }
+  }
+
+  function logicCompute(logicKnyteId)
+  {
     function markProcessedLink(knyteId, success)
     {
       setKnyteRecordData(knyteId, 'oneliner', success ? '+' : '-');
@@ -2968,7 +2998,7 @@ function runBlockHandleClick(knyteId)
     {
       function setTransparentOutline(knoxelId)
       {
-        const color = knoxelViews[knoxelId].color;
+        const {color} = knoxelViews[knoxelId];
         knoxelViews[knoxelId].color = color + '40';
       }
 
@@ -3062,6 +3092,7 @@ function runBlockHandleClick(knyteId)
 
     const hostedKnoxels = informationMap[logicKnyteId].space;
     const succeedKnytes = {};
+    const dismissedKnytes = {};
     // get root
     const rootKnytes = {};
     for (let knoxelId in hostedKnoxels)
@@ -3087,8 +3118,14 @@ function runBlockHandleClick(knyteId)
         groupHostKnytes[groupHostId] = groupId;
         succeedKnytes[linkId] = true;
         succeedKnytes[groupHostId] = true;
+        markProcessedLink(linkId, true);
       }
-      markProcessedLink(linkId, groupId !== null);
+      else
+      {
+        dismissedKnytes[linkId] = true;
+        dismissedKnytes[groupHostId] = true;
+        markProcessedLink(linkId, false);
+      }
     }
     // group to values
     const groupValues = {}; // {group knyte id: {value level 1 knyte id --> value level 2 knyte id}}
@@ -3139,6 +3176,8 @@ function runBlockHandleClick(knyteId)
           else
           {
             valueStates[valueLevel2HostId] = false;
+            dismissedKnytes[linkId] = true;
+            dismissedKnytes[valueLevel2HostId] = true;
             markProcessedLink(linkId, false);
           }
         }
@@ -3149,7 +3188,11 @@ function runBlockHandleClick(knyteId)
           markProcessedLink(linkId, true);
         }
         else
+        {
+          dismissedKnytes[linkId] = true;
+          dismissedKnytes[valueLevel1HostId] = true;
           markProcessedLink(linkId, false);
+        }
       }
     }
     // get operators and results
@@ -3190,6 +3233,8 @@ function runBlockHandleClick(knyteId)
           valueStates[operatorHostKnyteId] = operatorValue;
           if (operatorValue)
             succeedKnytes[operatorHostKnyteId] = true;
+          else
+            dismissedKnytes[operatorHostKnyteId] = true;
           for (let i = 0; i < incomeValueKnytes.length; ++ i)
           {
             const linkId = incomeValueKnytes[i];
@@ -3200,7 +3245,10 @@ function runBlockHandleClick(knyteId)
               markProcessedLink(linkId, true);
             }
             else
+            {
+              dismissedKnytes[linkId] = true;
               markProcessedLink(linkId, false);
+            }
           }
         }
       }
@@ -3232,8 +3280,14 @@ function runBlockHandleClick(knyteId)
         {
           succeedKnytes[incomeValueLinkId] = true;
           succeedKnytes[resultHostKnyteId] = true;
+          markProcessedLink(incomeValueLinkId, true);
         }
-        markProcessedLink(incomeValueLinkId, incomeValue);
+        else
+        {
+          dismissedKnytes[incomeValueLinkId] = true;
+          dismissedKnytes[resultHostKnyteId] = true;
+          markProcessedLink(incomeValueLinkId, false);
+        }
       }
       if (!resultsComputed)
         break;
@@ -3243,9 +3297,8 @@ function runBlockHandleClick(knyteId)
     for (let knoxelId in hostedKnoxels)
     {
       const knyteId = knoxels[knoxelId];
-      if (knyteId in succeedKnytes)
-        continue;
-      setInnactiveKnoxelView(knoxelId);
+      if (knyteId in dismissedKnytes)
+        setInnactiveKnoxelView(knoxelId);
     }
     // return result
     return {complete: true};
