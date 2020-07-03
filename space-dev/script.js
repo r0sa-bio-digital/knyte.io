@@ -2964,6 +2964,21 @@ function runBlockHandleClick(knyteId)
       setKnyteRecordData(knyteId, 'oneliner', success ? '+' : '-');
     }
 
+    function setInnactiveKnoxelView(knoxelId)
+    {
+      function setTransparentOutline(knoxelId)
+      {
+        const color = knoxelViews[knoxelId].color;
+        knoxelViews[knoxelId].color = color + '40';
+      }
+
+      setTransparentOutline(knoxelId);
+      const knyteId = knoxels[knoxelId];
+      const hostedKnoxels = informationMap[knyteId].space;
+      for (let hostedKnoxelId in hostedKnoxels)
+        setTransparentOutline(hostedKnoxelId);
+    }
+
     // TODO: implement semantic-code entities link via standard parameters
     const logicSemantics = {
       blocks: {
@@ -2995,29 +3010,92 @@ function runBlockHandleClick(knyteId)
     succeedKnytes[rootKnyteId] = true;
     const rootLinks = getConnectsByDataMatchFunction(rootKnyteId, matchToken, '.', 'initial');
     // get groups
-    const groupKnytes = {};
+    const groupHostKnytes = {}; // {group host knyte id --> group knyte id}
     for (let i = 0; i < rootLinks.length; ++i)
     {
       const linkId = rootLinks[i];
-      const terminalKnyteId = knyteVectors[linkId].terminalKnyteId;
-      const groupId = getHostedKnyteId(terminalKnyteId);
+      const groupHostId = knyteVectors[linkId].terminalKnyteId;
+      const groupId = getHostedKnyteId(groupHostId);
       if (groupId)
       {
-        groupKnytes[terminalKnyteId] = groupId;
+        groupHostKnytes[groupHostId] = groupId;
         succeedKnytes[linkId] = true;
-        succeedKnytes[terminalKnyteId] = true;
+        succeedKnytes[groupHostId] = true;
       }
       markProcessedLink(linkId, groupId !== null);
     }
-    // ...
-    // set final knoxel arrows outline color
+    // group to values
+    const groupValues = {}; // {group knyte id: {value level 1 knyte id --> value level 2 knyte id}}
+    for (let groupHostId in groupHostKnytes)
+    {
+      const groupId = groupHostKnytes[groupHostId];
+      const groupLinks = getConnectsByDataMatchFunction(groupId, matchToken, '=', 'initial');
+      for (let i = 0; i < groupLinks.length; ++i)
+      {
+        const linkId = groupLinks[i];
+        const valueLevel1HostId = knyteVectors[linkId].terminalKnyteId;
+        const valueLevel1Id = getHostedKnyteId(valueLevel1HostId);
+        const valueLinks = getConnectsByDataMatchFunction(valueLevel1HostId, matchToken, '=', 'initial');
+        for (let j = 0; j < valueLinks.length; ++j)
+        {
+          const linkId = valueLinks[j];
+          const valueLevel2HostId = knyteVectors[linkId].terminalKnyteId;
+          const valueLevel2Id = getHostedKnyteId(valueLevel2HostId);
+          if (!(groupId in groupValues))
+            groupValues[groupId] = {};
+          groupValues[groupId][valueLevel1Id] = valueLevel2Id;
+        }
+      }
+    }
+    const valueStates = {};
+    for (let groupHostId in groupHostKnytes)
+    {
+      const groupId = groupHostKnytes[groupHostId];
+      const groupHostLinks = getConnectsByDataMatchFunction(groupHostId, matchToken, '.', 'initial');
+      for (let i = 0; i < groupHostLinks.length; ++i)
+      {
+        const linkId = groupHostLinks[i];
+        const valueLevel1HostId = knyteVectors[linkId].terminalKnyteId;
+        const valueLevel1Id = getHostedKnyteId(valueLevel1HostId);
+        const valueHostLinks = getConnectsByDataMatchFunction(valueLevel1HostId, matchToken, '.', 'initial');
+        for (let j = 0; j < valueHostLinks.length; ++j)
+        {
+          const linkId = valueHostLinks[j];
+          const valueLevel2HostId = knyteVectors[linkId].terminalKnyteId;
+          const valueLevel2Id = getHostedKnyteId(valueLevel2HostId);
+          if (groupValues[groupId] && groupValues[groupId][valueLevel1Id] && groupValues[groupId][valueLevel1Id] === valueLevel2Id)
+          {
+            valueStates[valueLevel2HostId] = true;
+            succeedKnytes[linkId] = true;
+            succeedKnytes[valueLevel2HostId] = true;
+            markProcessedLink(linkId, true);
+          }
+          else
+          {
+            valueStates[valueLevel2HostId] = false;
+            markProcessedLink(linkId, false);
+          }
+        }
+        if (groupValues[groupId] && groupValues[groupId][valueLevel1Id])
+        {
+          succeedKnytes[linkId] = true;
+          succeedKnytes[valueLevel1HostId] = true;
+          markProcessedLink(linkId, true);
+        }
+        else
+          markProcessedLink(linkId, false);
+      }
+    }
+    console.log(valueStates);
+    // process operators
+    ;
+    // set innactive knoxels view
     for (let knoxelId in hostedKnoxels)
     {
       const knyteId = knoxels[knoxelId];
       if (knyteId in succeedKnytes)
         continue;
-      const color = knoxelViews[knoxelId].color;
-      knoxelViews[knoxelId].color = color + '40';
+      setInnactiveKnoxelView(knoxelId);
     }
     // return result
     return {complete: true};
