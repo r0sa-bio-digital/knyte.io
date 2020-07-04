@@ -1,3 +1,5 @@
+const fs = require('fs');
+
 // state variables to save/load
 let masterKnoxelId;
 let spacemapKnoxelId;
@@ -18,7 +20,7 @@ const steeringBackStack = []; // [previous space root steering]
 const spaceForwardStack = []; // [next space root knoxel id]
 const steeringForwardStack = []; // [next space root steering]
 
-async function loadAppState(filename)
+function loadAppState(filename)
 {
   console.log('load started: ' + Object.keys(knoxels).length);
 
@@ -53,10 +55,8 @@ async function loadAppState(filename)
   }
 
   // TODO: implement format check
-  const decoder = new TextDecoder("utf-8");
-  const data = await Deno.readFile(filename);
-  const dataText = decoder.decode(data);
-  const state = JSON.parse(dataText);
+  const rawdata = fs.readFileSync(filename);
+  const state = JSON.parse(rawdata);
   assignAppState(state);
 
   console.log('load complete: ' + Object.keys(knoxels).length);
