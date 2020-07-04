@@ -478,9 +478,6 @@ function runBlockHandleClick(knyteId)
     return {complete: true};
   }
 
-  const newData = codeTemplates.runBlock.busy;
-  setKnyteRecordData(knyteId, 'interactive', newData);
-  
   const codeKnytes = getConnectsByDataMatchFunction(knyteId, matchToken, 'code', 'terminal');
   const codeLinkKnyteId = codeKnytes[0];
   const codeKnyteId = codeLinkKnyteId ? knyteVectors[codeLinkKnyteId].initialKnyteId : undefined;
@@ -739,12 +736,6 @@ function runBlockHandleClick(knyteId)
   }
   finally
   {
-    if (!runComplete)
-    {
-      const newData = codeTemplates.runBlock.ready(knyteId, 'failed');
-      setKnyteRecordData(knyteId, 'interactive', newData);
-    }
-    
     console.log('runBlockHandleClick - done!');
   }
 }
