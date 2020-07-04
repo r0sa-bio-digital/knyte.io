@@ -18,7 +18,7 @@ const steeringBackStack = []; // [previous space root steering]
 const spaceForwardStack = []; // [next space root knoxel id]
 const steeringForwardStack = []; // [next space root steering]
 
-export async function loadAppState(filename)
+async function loadAppState(filename)
 {
   function assignAppState(state)
   {
@@ -106,7 +106,7 @@ function logicReset(logicKnyteId)
   }
 }
 
-export function runBlockHandleClick(knyteId)
+function runBlockHandleClick(knyteId)
 {
   function onComplete(success, nextKnyteId)
   {
