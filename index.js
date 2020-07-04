@@ -19,6 +19,6 @@ app.get('*', (request, response) => {
   response.send('Uknown command.');
 });
 
-app.listen(3000, () => {
-  console.log('server started');
+app.listen(process.env.PORT, () => {
+  console.log('server started at' + process.env.PORT);
 });
