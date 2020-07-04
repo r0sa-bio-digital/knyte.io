@@ -1,5 +1,5 @@
 const express = require('express');
-const {loadAppState, runBlockHandleClick} = require('./server.js');
+const {loadAppState, runBlockHandleClick} = require('./server');
 
 const app = express();
 
