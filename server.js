@@ -56,11 +56,13 @@ function loadAppState(filename)
 
   // TODO: implement format check
   const rawdata = fs.readFileSync(filename);
+  /*
   console.log('-------');
   console.log(rawdata);
   console.log('-------');
   console.log(rawdata.toString());
   console.log('-------');
+  */
   const state = JSON.parse(rawdata.toString());
   assignAppState(state);
 
