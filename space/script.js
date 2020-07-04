@@ -206,7 +206,7 @@ function saveAppState()
   JSON.stringify(state, (key, value) => {if (!(key in keyMap)) {keyMap[key] = true; keys.push(key);} return value;});
   const stateText = JSON.stringify(state, keys.sort(), '\t');
   const blob = new Blob([stateText], {type: 'text/plain;charset=utf-8'});
-  saveAs(blob, 'knoxelSpace.json');
+  saveAs(blob, 'knoxelSpace.json', true);
 }
 
 function loadAppState(files)
