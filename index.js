@@ -10,9 +10,10 @@ app.get('/:a/:b', (request, response) => {
 });
 
 app.get('/', (request, response) => {
+  loadAppState('./space/knoxelSpace.json');
   response.send(
-  	'Welcome to knyte.io project.<br>' +
-  	'Use /a/b numeric parameters to get sum of given numbers.'
+    'Welcome to knyte.io project.<br>' +
+    'Use /a/b numeric parameters to get sum of given numbers.'
   );
 });
 

@@ -20,6 +20,8 @@ const steeringForwardStack = []; // [next space root steering]
 
 async function loadAppState(filename)
 {
+  console.log('load started: ' + Object.keys(knoxels).length);
+
   function assignAppState(state)
   {
     function assignObject(source, destination)
@@ -56,6 +58,8 @@ async function loadAppState(filename)
   const dataText = decoder.decode(data);
   const state = JSON.parse(dataText);
   assignAppState(state);
+
+  console.log('load complete: ' + Object.keys(knoxels).length);
 }
 
 function getConnectsByDataMatchFunction(knyteId, match, token, type)
