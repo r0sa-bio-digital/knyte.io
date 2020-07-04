@@ -10,7 +10,7 @@ app.get('/:a/:b', (request, response) => {
 
 app.get('/', (request, response) => {
   response.send(
-  	'Welcome to knyte.io project.\n' +
+  	'Welcome to knyte.io project.<br>' +
   	'Use /a/b numeric parameters to get sum of given numbers.'
   );
 });
