@@ -1,4 +1,5 @@
 const express = require('express');
+const {loadAppState, runBlockHandleClick} = require('./server.js');
 
 const app = express();
 
