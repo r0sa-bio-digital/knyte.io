@@ -59,7 +59,9 @@ function loadAppState(filename)
   console.log('-------');
   console.log(rawdata);
   console.log('-------');
-  const state = JSON.parse(rawdata);
+  console.log(rawdata.toString());
+  console.log('-------');
+  const state = JSON.parse(rawdata.toString());
   assignAppState(state);
 
   console.log('load complete: ' + Object.keys(knoxels).length);
