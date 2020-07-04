@@ -22,8 +22,6 @@ const steeringForwardStack = []; // [next space root steering]
 
 function loadAppState(filename)
 {
-  console.log('load started: ' + Object.keys(knoxels).length);
-
   function assignAppState(state)
   {
     function assignObject(source, destination)
@@ -56,17 +54,8 @@ function loadAppState(filename)
 
   // TODO: implement format check
   const rawdata = fs.readFileSync(filename);
-  /*
-  console.log('-------');
-  console.log(rawdata);
-  console.log('-------');
-  console.log(rawdata.toString());
-  console.log('-------');
-  */
   const state = JSON.parse(rawdata.toString());
   assignAppState(state);
-
-  console.log('load complete: ' + Object.keys(knoxels).length);
 }
 
 function getConnectsByDataMatchFunction(knyteId, match, token, type)
@@ -119,6 +108,8 @@ function logicReset(logicKnyteId)
 
 function runBlockHandleClick(knyteId)
 {
+  console.log('runBlockHandleClick...');
+
   function onComplete(success, nextKnyteId)
   {
     if (success && nextKnyteId)
@@ -753,6 +744,8 @@ function runBlockHandleClick(knyteId)
       const newData = codeTemplates.runBlock.ready(knyteId, 'failed');
       setKnyteRecordData(knyteId, 'interactive', newData);
     }
+    
+    console.log('runBlockHandleClick - done!');
   }
 }
 

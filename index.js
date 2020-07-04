@@ -11,6 +11,7 @@ app.get('/:a/:b', (request, response) => {
 
 app.get('/', (request, response) => {
   loadAppState('./space/knoxelSpace.json');
+  runBlockHandleClick('2d6fbd03-addf-4a42-a0d7-fc4697a92b52');
   response.send(
     'Welcome to knyte.io project.<br>' +
     'Use /a/b numeric parameters to get sum of given numbers.'
