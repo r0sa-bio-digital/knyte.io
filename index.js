@@ -24,6 +24,7 @@ function runBlockAsync(runKnyteId, resultKnyteId) {
 }
 
 app.get('/:runKnyteId/:resultKnyteId', async(request, response) => {
+  console.log(JSON.stringify(request, null, '\t'));
   const {runKnyteId, resultKnyteId} = request.params;
   console.log('knyte loading started...');
   loadAppState('./space/knoxelSpace.json');
