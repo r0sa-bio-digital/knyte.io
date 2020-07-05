@@ -9,11 +9,31 @@ app.get('/sum/:a/:b', (request, response) => {
   response.send('a + b = ' + a + ' + ' + b + ' = ' + sum);
 });
 
+function delay(t, val) {
+   return new Promise(function(resolve) {
+       setTimeout(function() {
+           resolve(val);
+       }, t);
+   });
+}
+
+function getAsyncRandom()
+{
+  function PromiseTimeout(delayms) {
+    return new Promise(function (resolve, reject) {
+      setTimeout(resolve, delayms);
+    });
+  }
+  await PromiseTimeout(5000);
+  return Math.random();
+}
+
 app.get('/:runKnyteId/:resultKnyteId', (request, response) => {
   const {runKnyteId, resultKnyteId} = request.params;
   loadAppState('./space/knoxelSpace.json');
   runBlockHandleClick(runKnyteId, resultKnyteId);
-  response.send('run block ' + runKnyteId + ' started');
+  const result = await getAsyncRandom();
+  response.send('run block ' + runKnyteId + ' result = ' + result);
 });
 
 app.get('/', (request, response) => {
