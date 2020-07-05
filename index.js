@@ -3,7 +3,7 @@ const {loadAppState, runBlockHandleClick} = require('./server');
 
 const app = express();
 
-app.get('/+/:a/:b', (request, response) => {
+app.get('/sum/:a/:b', (request, response) => {
   const {a, b} = request.params;
   const sum = parseFloat(a) + parseFloat(b);
   response.send('a + b = ' + a + ' + ' + b + ' = ' + sum);
