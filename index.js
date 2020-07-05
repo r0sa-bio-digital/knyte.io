@@ -17,14 +17,6 @@ function delay(t, val) {
    });
 }
 
-function getAsyncRandom() {
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve(Math.random());
-    }, 5000);
-  });
-}
-
 function runBlockAsync(runKnyteId, resultKnyteId) {
   return new Promise(resolve => {
   	runBlockHandleClick(runKnyteId, resultKnyteId, resolve);
@@ -33,11 +25,11 @@ function runBlockAsync(runKnyteId, resultKnyteId) {
 
 app.get('/:runKnyteId/:resultKnyteId', async(request, response) => {
   const {runKnyteId, resultKnyteId} = request.params;
+  console.log('knyte loading started...');
   loadAppState('./space/knoxelSpace.json');
-  //runBlockHandleClick(runKnyteId, resultKnyteId);
-  //const result = await getAsyncRandom();
+  console.log('run block ' + runKnyteId + ' started...');
   const result = await runBlockAsync(runKnyteId, resultKnyteId);
-  response.send('run block ' + runKnyteId + ' result = ' + result);
+  response.send(result);
 });
 
 app.get('/', (request, response) => {
