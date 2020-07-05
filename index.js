@@ -9,11 +9,11 @@ app.get('/sum/:a/:b', (request, response) => {
   response.send('a + b = ' + a + ' + ' + b + ' = ' + sum);
 });
 
-app.get('/:knyteId', (request, response) => {
-  const {knyteId} = request.params;
+app.get('/:runKnyteId/:resultKnyteId', (request, response) => {
+  const {runKnyteId, resultKnyteId} = request.params;
   loadAppState('./space/knoxelSpace.json');
-  runBlockHandleClick(knyteId);
-  response.send('run block ' + knyteId + ' started');
+  runBlockHandleClick(runKnyteId, resultKnyteId);
+  response.send('run block ' + runKnyteId + ' started');
 });
 
 app.get('/', (request, response) => {

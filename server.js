@@ -110,7 +110,7 @@ function logicReset(logicKnyteId)
   }
 }
 
-function runBlockHandleClick(knyteId)
+function runBlockHandleClick(knyteId, finalKnyteId)
 {
   function onComplete(success, nextKnyteId)
   {
@@ -739,6 +739,8 @@ function runBlockHandleClick(knyteId)
   finally
   {
     // TODO: return response here
+    const {record} = informationMap[finalKnyteId];
+    console.log('run block result: "' + (record ? record.data : '') + '"');
   }
 }
 
