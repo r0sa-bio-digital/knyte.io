@@ -6690,10 +6690,10 @@
 		"a3a2d1b0-0b8b-47e6-ab5e-d1017eb066fe": {
 			"color": "#bb99ff",
 			"record": {
-				"data": "struct = {};\nconsole.log('struct = ' +\n\tJSON.stringify(struct));",
+				"data": "console.log('headers = ' +\n\tJSON.stringify(headers));\n// you can use headers for\n// auth and input parameters\nstruct = {};\nconsole.log('struct = ' +\n\tJSON.stringify(struct));",
 				"size": {
-					"h": 73,
-					"w": 285.71875
+					"h": 149,
+					"w": 295.359375
 				},
 				"viewertype": "multiliner"
 			},
@@ -9936,8 +9936,8 @@
 					"y": -87.59991455078125
 				},
 				"4b460b6f-d550-4378-8f03-30e993493cdb": {
-					"x": 18.000274658203125,
-					"y": 189.0001220703125
+					"x": 20.485183715820312,
+					"y": 227.303955078125
 				},
 				"587dd0a5-1e53-4c01-b99d-d9ea866decb0": {
 					"x": 753.000244140625,
@@ -9977,7 +9977,7 @@
 				},
 				"af0eb864-4912-4e4d-8e7c-57b37432663b": {
 					"x": 384.0002746582031,
-					"y": 198.0001220703125
+					"y": 199.0001220703125
 				},
 				"bf35eb83-e33d-4d39-97b6-0527c7a5e98c": {
 					"x": 564.7997741699219,

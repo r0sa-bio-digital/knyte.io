@@ -115,12 +115,12 @@ function logicReset(logicKnyteId)
   }
 }
 
-function runBlockHandleClick(knyteId, finalKnyteId, resolve)
+function runBlockHandleClick(headers, knyteId, finalKnyteId, resolve)
 {
   function onComplete(success, nextKnyteId)
   {
     if (success && nextKnyteId)
-      runBlockHandleClick(nextKnyteId, finalKnyteId, resolve);
+      runBlockHandleClick(null, nextKnyteId, finalKnyteId, resolve);
     else
     {
       let reuslt = '{"failed": true}';
@@ -536,6 +536,13 @@ function runBlockHandleClick(knyteId, finalKnyteId, resolve)
   const namesSequence = [];
   const inputNamesSequence = [];
   const inputs = {};
+  if (headers)
+  {
+    const inputName = 'headers:json';
+    inputs[inputName] = JSON.stringify(headers);
+    namesSequence.push(inputName);
+    inputNamesSequence.push(inputName);
+  }
   for (let i = 0; i < inputKnytes.length; ++i)
   {
     const inputLinkKnyteId = inputKnytes[i];

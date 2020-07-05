@@ -17,9 +17,9 @@ function delay(t, val) {
    });
 }
 
-function runBlockAsync(runKnyteId, resultKnyteId) {
+function runBlockAsync(headers, runKnyteId, resultKnyteId) {
   return new Promise(resolve => {
-  	runBlockHandleClick(runKnyteId, resultKnyteId, resolve);
+  	runBlockHandleClick(headers, runKnyteId, resultKnyteId, resolve);
   });
 }
 
@@ -30,7 +30,7 @@ app.get('/:runKnyteId/:resultKnyteId', async(request, response) => {
   console.log('knyte loading started...');
   loadAppState('./space/knoxelSpace.json');
   console.log('run block ' + runKnyteId + ' started...');
-  const result = await runBlockAsync(runKnyteId, resultKnyteId);
+  const result = await runBlockAsync(request.headers, runKnyteId, resultKnyteId);
   response.send(result);
 });
 
