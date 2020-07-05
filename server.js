@@ -115,24 +115,22 @@ function logicReset(logicKnyteId)
   }
 }
 
-function runBlockHandleClick(knyteId, finalKnyteId)
+function runBlockHandleClick(knyteId, finalKnyteId, resolve)
 {
   function onComplete(success, nextKnyteId)
   {
     if (success && nextKnyteId)
-      runBlockHandleClick(nextKnyteId, finalKnyteId);
+      runBlockHandleClick(nextKnyteId, finalKnyteId, resolve);
     else
     {
+      let reuslt = '{"failed": true}';
       if (success)
       {
-        // TODO: return response here
         const {record} = informationMap[finalKnyteId];
-        console.log('run block result: "' + (record ? record.data : '') + '"');
+        result = (record ? record.data : '');
       }
-      else
-      {
-        console.log('run block result: failed.');
-      }
+      console.log('run block result: ' + result);
+      resolve(result);
     }
   }
   
