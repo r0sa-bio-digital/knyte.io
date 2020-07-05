@@ -112,8 +112,6 @@ function logicReset(logicKnyteId)
 
 function runBlockHandleClick(knyteId)
 {
-  console.log('runBlockHandleClick...');
-
   function onComplete(success, nextKnyteId)
   {
     if (success && nextKnyteId)
@@ -740,7 +738,7 @@ function runBlockHandleClick(knyteId)
   }
   finally
   {
-    console.log('runBlockHandleClick - done!');
+    // TODO: return response here
   }
 }
 
