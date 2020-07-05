@@ -17,6 +17,7 @@ function delay(t, val) {
    });
 }
 
+/*
 function getAsyncRandom()
 {
   function PromiseTimeout(delayms) {
@@ -27,8 +28,17 @@ function getAsyncRandom()
   await PromiseTimeout(5000);
   return Math.random();
 }
+*/
 
-app.get('/:runKnyteId/:resultKnyteId', (request, response) => {
+function getAsyncRandom() {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve(Math.random());
+    }, 5000);
+  });
+}
+
+app.get('/:runKnyteId/:resultKnyteId', async(request, response) => {
   const {runKnyteId, resultKnyteId} = request.params;
   loadAppState('./space/knoxelSpace.json');
   runBlockHandleClick(runKnyteId, resultKnyteId);
