@@ -121,6 +121,22 @@ function runBlockHandleClick(knyteId, finalKnyteId)
   {
     if (success && nextKnyteId)
       runBlockHandleClick(nextKnyteId, finalKnyteId);
+    else
+    {
+      if (success)
+      {
+        // TODO: return response here
+        console.log('finalKnyteId: ' + finalKnyteId);
+        console.log('informationMap[finalKnyteId]: ' + informationMap[finalKnyteId]);
+        console.log('informationMap[finalKnyteId].record: ' + informationMap[finalKnyteId].record);
+        const {record} = informationMap[finalKnyteId];
+        console.log('run block result: "' + (record ? record.data : '') + '"');
+      }
+      else
+      {
+        console.log('run block result: failed.');
+      }
+    }
   }
   
   function matchToken(data, token)
@@ -743,12 +759,6 @@ function runBlockHandleClick(knyteId, finalKnyteId)
   }
   finally
   {
-    // TODO: return response here
-    console.log('finalKnyteId: ' + finalKnyteId);
-    console.log('informationMap[finalKnyteId]: ' + informationMap[finalKnyteId]);
-    console.log('informationMap[finalKnyteId].record: ' + informationMap[finalKnyteId].record);
-    const {record} = informationMap[finalKnyteId];
-    console.log('run block result: "' + (record ? record.data : '') + '"');
   }
 }
 
