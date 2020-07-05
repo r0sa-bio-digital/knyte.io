@@ -120,7 +120,7 @@ function runBlockHandleClick(knyteId, finalKnyteId)
   function onComplete(success, nextKnyteId)
   {
     if (success && nextKnyteId)
-      runBlockHandleClick(nextKnyteId);
+      runBlockHandleClick(nextKnyteId, finalKnyteId);
   }
   
   function matchToken(data, token)
