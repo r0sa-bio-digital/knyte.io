@@ -3302,7 +3302,7 @@
 		"59805efc-5c54-4938-87ea-fb56ab43e641": {
 			"color": "#bb99ff",
 			"record": {
-				"data": "r = 3;\nconsole.log('r = ' + r);",
+				"data": "r = 3**3;\nconsole.log('r = ' + r);",
 				"size": {
 					"h": 54,
 					"w": 247.1875
