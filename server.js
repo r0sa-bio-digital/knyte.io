@@ -95,6 +95,11 @@ function setKnyteRecordData(knyteId, recordtype, newData)
   informationMap[knyteId].record = r;
 }
 
+function getRecordtype(record)
+{
+  return record ? record.viewertype : 'oneliner';
+}
+
 function logicReset(logicKnyteId)
 {
   const hostedKnoxels = informationMap[logicKnyteId].space;
