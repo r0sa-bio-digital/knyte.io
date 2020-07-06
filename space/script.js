@@ -127,13 +127,18 @@ const steeringGear = new function()
     ')';
     steeringElement.setAttribute('transform', s);
   };
+
+  this.getCTM = function()
+  {
+    return steeringElement.getCTM();
+  }
   
   this.screenToSpacePosition = function(screenPosition)
   {
     const p = spaceRootElement.createSVGPoint();
     p.x = screenPosition.x;
     p.y = screenPosition.y;
-    return p.matrixTransform(steeringElement.getCTM().inverse());
+    return p.matrixTransform(this.getCTM().inverse());
   };
 
   this.spaceToScreenPosition = function(position)
@@ -141,12 +146,12 @@ const steeringGear = new function()
     const p = spaceRootElement.createSVGPoint();
     p.x = position.x;
     p.y = position.y;
-    return p.matrixTransform(steeringElement.getCTM());
+    return p.matrixTransform(this.getCTM());
   };
 
   this.pan = function(delta)
   {
-    const ctm = steeringElement.getCTM().inverse();
+    const ctm = this.getCTM().inverse();
     delta.x *= panSpeed * ctm.a;
     delta.y *= panSpeed * ctm.a;
     this.setCTM(ctm.inverse().translate(delta.x, delta.y));
@@ -160,13 +165,13 @@ const steeringGear = new function()
     // Compute new scale matrix in current mouse position
     var k = spaceRootElement.createSVGMatrix().translate(p.x, p.y).
       scale(z).translate(-p.x, -p.y);
-    this.setCTM(steeringElement.getCTM().multiply(k));
+    this.setCTM(this.getCTM().multiply(k));
     handleSteeringChanged();
   };
 
   this.setPan = function(offset)
   {
-    const ctm = steeringElement.getCTM();
+    const ctm = this.getCTM();
     ctm.e = offset.x;
     ctm.f = offset.y;
     this.setCTM(ctm);
@@ -175,12 +180,12 @@ const steeringGear = new function()
 
   this.getZoom = function(element)
   {
-    return 1.0 / (element ? element : steeringElement).getCTM().a;
+    return 1.0 / (element ? element : this).getCTM().a;
   }
 
   this.getPan = function(element)
   {
-    const ctm = (element ? element : steeringElement).getCTM();
+    const ctm = (element ? element : this).getCTM();
     return {x: ctm.e, y: ctm.f};
   }
 }
@@ -1479,7 +1484,7 @@ function onClickRect(e)
     if (targetKnoxelElement && targetKnoxelElement.id !== spaceRootElement.dataset.knoxelId)
     {
       spaceBackStack.push(spaceRootElement.dataset.knoxelId);
-      steeringBackStack.push(steeringElement.getCTM());
+      steeringBackStack.push(steeringGear.getCTM());
       spaceForwardStack.length = 0;
       steeringForwardStack.length = 0;
       const spacemap = knoxels[targetKnoxelElement.id] === knoxels[spacemapKnoxelId];
@@ -1707,7 +1712,7 @@ function onClickSpaceMap(e)
   if (spaceRootElement.dataset.knoxelId === spacemapKnoxelId)
     return;
   spaceBackStack.push(spaceRootElement.dataset.knoxelId);
-  steeringBackStack.push(steeringElement.getCTM());
+  steeringBackStack.push(steeringGear.getCTM());
   spaceForwardStack.length = 0;
   steeringForwardStack.length = 0;
   const selfcontained = knoxels[spacemapKnoxelId] === knoxels[spaceRootElement.dataset.knoxelId];
@@ -1727,7 +1732,7 @@ function onClickSpaceMap(e)
 function onClickSpaceBack()
 {
   spaceForwardStack.push(spaceRootElement.dataset.knoxelId);
-  steeringForwardStack.push(steeringElement.getCTM());
+  steeringForwardStack.push(steeringGear.getCTM());
   const backKnoxelId = spaceBackStack.pop();
   const backKnoxelSteering = steeringBackStack.pop();
   if (backKnoxelId)
@@ -1775,7 +1780,7 @@ function onClickSpaceBack()
 function onClickSpaceForward()
 {
   spaceBackStack.push(spaceRootElement.dataset.knoxelId);
-  steeringBackStack.push(steeringElement.getCTM());
+  steeringBackStack.push(steeringGear.getCTM());
   const forwardKnoxelId = spaceForwardStack.pop();
   const forwardKnoxelSteering = steeringForwardStack.pop();
   if (forwardKnoxelId)
