@@ -119,7 +119,7 @@ function runBlockHandleClick(knyteId, body, finalKnyteId, resolve)
 {
   if (!knyteId || !knyteVectors[knyteId])
   {
-    const reuslt = JSON.stringify({success: false, result: 'run block not found.'});
+    const result = JSON.stringify({success: false, result: 'run block not found.'});
     resolve(result);
   }
 
@@ -129,7 +129,7 @@ function runBlockHandleClick(knyteId, body, finalKnyteId, resolve)
       runBlockHandleClick(nextKnyteId, null, finalKnyteId, resolve);
     else
     {
-      let reuslt = JSON.stringify({success: false, result: 'run block execution failed.'});
+      let result = JSON.stringify({success: false, result: 'run block execution failed.'});
       if (success)
       {
         const record = finalKnyteId && informationMap[finalKnyteId] && informationMap[finalKnyteId].record ? informationMap[finalKnyteId].record : {};
