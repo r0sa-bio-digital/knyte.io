@@ -584,7 +584,11 @@ function runBlockHandleClick(knyteId, body, finalKnyteId, resolve)
   if (body)
   {
     if (inputs['body:json'])
-      setKnyteRecordData(inputNameToKnyteMap.body, 'multiliner', JSON.stringify(body, null, '\t'));
+    {
+      const value = JSON.stringify(body, null, '\t');
+      inputs['body:json'] = value;
+      setKnyteRecordData(inputNameToKnyteMap.body, 'multiliner', value);
+    }
     if (outputs['result:json'])
       finalKnyteId = outputNameToKnyteMap.result;
   }
