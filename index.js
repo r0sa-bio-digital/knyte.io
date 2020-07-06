@@ -34,11 +34,16 @@ app.get('/:runKnyteId/:resultKnyteId', async(request, response) => {
   response.send(result);
 });
 
+app.post('/', (request, response) => {
+  console.log(JSON.stringify(Object.keys(request), null, '\t'));
+  console.log(JSON.stringify(request.body, null, '\t'));
+  console.log('knyte loading started...');
+
+  response.send('root post response.');
+});
+
 app.get('/', (request, response) => {
-  response.send(
-    'Welcome to knyte.io project.<br>' +
-    'Use /a/b numeric parameters to get sum of given numbers.'
-  );
+  response.send('Welcome to knyte cloud server.');
 });
 
 app.get('*', (request, response) => {
