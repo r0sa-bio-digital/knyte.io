@@ -18,7 +18,7 @@ function runBlockAsync(body) {
   });
 }
 
-app.post('/', (request, response) => {
+app.post('/', async(request, response) => {
   //console.log(JSON.stringify(Object.keys(request), null, '\t'));
   //console.log(JSON.stringify(request.body, null, '\t'));
   console.log('knyte loading started...');
