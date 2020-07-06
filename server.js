@@ -115,19 +115,25 @@ function logicReset(logicKnyteId)
   }
 }
 
-function runBlockHandleClick(headers, knyteId, finalKnyteId, resolve)
+function runBlockHandleClick(knyteId, body, finalKnyteId, resolve)
 {
+  if (!knyteId || !knyteVectors[knyteId])
+  {
+    const reuslt = JSON.stringify({success: false, result: 'run block not found.'});
+    resolve(result);
+  }
+
   function onComplete(success, nextKnyteId)
   {
     if (success && nextKnyteId)
-      runBlockHandleClick(null, nextKnyteId, finalKnyteId, resolve);
+      runBlockHandleClick(nextKnyteId, null, finalKnyteId, resolve);
     else
     {
-      let reuslt = '{"failed": true}';
+      let reuslt = JSON.stringify({success: false, result: 'run block execution failed.'});
       if (success)
       {
-        const {record} = informationMap[finalKnyteId];
-        result = (record ? record.data : '');
+        const record = finalKnyteId && informationMap[finalKnyteId] && informationMap[finalKnyteId].record ? informationMap[finalKnyteId].record : {};
+        result = JSON.stringify({success: true, result: (record.data ? JSON.parse(record.data) : {})});
       }
       console.log('run block result: ' + result);
       resolve(result);
@@ -536,13 +542,7 @@ function runBlockHandleClick(headers, knyteId, finalKnyteId, resolve)
   const namesSequence = [];
   const inputNamesSequence = [];
   const inputs = {};
-  if (headers)
-  {
-    const inputName = 'headers:json';
-    inputs[inputName] = JSON.stringify(headers);
-    namesSequence.push(inputName);
-    inputNamesSequence.push(inputName);
-  }
+  const inputNameToKnyteMap = {};
   for (let i = 0; i < inputKnytes.length; ++i)
   {
     const inputLinkKnyteId = inputKnytes[i];
@@ -556,6 +556,8 @@ function runBlockHandleClick(headers, knyteId, finalKnyteId, resolve)
       inputs[inputName] = inputValue;
       namesSequence.push(inputName);
       inputNamesSequence.push(inputName);
+      const name = ouinputNametputName.split(':')[0];
+      inputNameToKnyteMap[name] = inputKnyteId;
     }
   }
   const outputNamesSequence = [];
@@ -577,6 +579,14 @@ function runBlockHandleClick(headers, knyteId, finalKnyteId, resolve)
       const name = outputName.split(':')[0];
       outputNameToKnyteMap[name] = outputKnyteId;
     }
+  }
+
+  if (body)
+  {
+    if (inputs['body:json'])
+      setKnyteRecordData(inputNameToKnyteMap.body, 'multiliner', JSON.stringify(body, null, '\t'));
+    if (outputs['result:json'])
+      finalKnyteId = outputNameToKnyteMap.result;
   }
   let runComplete = false;
   try

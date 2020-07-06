@@ -11,27 +11,21 @@ app.get('/sum/:a/:b', (request, response) => {
   response.send('a + b = ' + a + ' + ' + b + ' = ' + sum);
 });
 
-function runBlockAsync(headers, runKnyteId, resultKnyteId) {
+function runBlockAsync(body) {
+  body = body ? body : {};
   return new Promise(resolve => {
-  	runBlockHandleClick(headers, runKnyteId, resultKnyteId, resolve);
+    runBlockHandleClick(body.rootRunBlockKnyteId, body, null, resolve);
   });
 }
 
-app.get('/:runKnyteId/:resultKnyteId', async(request, response) => {
-  const {runKnyteId, resultKnyteId} = request.params;
+app.post('/', (request, response) => {
+  //console.log(JSON.stringify(Object.keys(request), null, '\t'));
+  //console.log(JSON.stringify(request.body, null, '\t'));
   console.log('knyte loading started...');
   loadAppState('./space/knoxelSpace.json');
-  console.log('run block ' + runKnyteId + ' started...');
-  const result = await runBlockAsync(request.headers, runKnyteId, resultKnyteId);
+  console.log('run block starting...');
+  const result = await runBlockAsync(request.body);
   response.send(result);
-});
-
-app.post('/', (request, response) => {
-  console.log(JSON.stringify(Object.keys(request), null, '\t'));
-  console.log(JSON.stringify(request.body, null, '\t'));
-  console.log('knyte loading started...');
-
-  response.send('root post response.');
 });
 
 app.get('/', (request, response) => {
