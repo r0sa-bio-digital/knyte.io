@@ -1,8 +1,9 @@
 const express = require('express');
+const bodyParser = require('body-parser');
 const {loadAppState, runBlockHandleClick} = require('./server');
 
 const app = express();
-app.use(express.bodyParser());
+app.use(bodyParser.json())
 
 app.get('/sum/:a/:b', (request, response) => {
   const {a, b} = request.params;
