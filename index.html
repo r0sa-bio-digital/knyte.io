@@ -5,8 +5,19 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="/style.css">
-    <script src="/script.js" defer></script>
+    <script>
+      // autoredirect from http to https
+      /*
+      if (location.protocol !== 'https:' && location.protocol !== 'file:')
+        location.replace(`https:${location.href.substring(location.protocol.length)}`);
+      */
+    </script>
+    <link rel="shortcut icon"
+      href="favicon.ico" type="image/x-icon">
+    <link rel="icon"
+      href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
   </head>  
   <body>
     <h1>Базовые понятия цифровой инженерии знаний</h1>
@@ -201,12 +212,6 @@
       Позволяет обмениваться данными, информацией и знаниями между людьми и цифровыми устройствами
       вне зависимости от их натурального языка и системной архитектуры.
     </p>
-    
-    <!-- include the Glitch button to show what the webpage is about and
-          to make it easier for folks to view source and remix -->
-    <div class="glitchButton" style="position:fixed;top:20px;right:20px;"></div>
-    <script src="https://button.glitch.me/button.js"></script>
-    
     <footer>Copyright (c) 2020 Stanislav Rodionov, r0sa bio-digital</footer>
   </body>
 </html>

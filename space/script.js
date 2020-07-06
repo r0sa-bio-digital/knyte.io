@@ -7,8 +7,9 @@ let spaceRootElement;
 let spaceBackElement;
 let spaceForwardElement;
 let spaceMapElement;
-let spaceHostElement;
+let steeringElement;
 let handleSpacemapChanged = function() {};
+let handleSteeringChanged = function() {};
 
 // state variables to save/load
 let masterKnoxelId;
@@ -18,7 +19,7 @@ const knoxelVectors = {}; // knoxel id --> {initialKnoxelId, terminalKnoxelId}
 const knyteConnects = {}; // knyte id --> {knyte id: true}
 const knyteInitialConnects = {}; // knyte id --> {knyte id: true}
 const knyteTerminalConnects = {}; // knyte id --> {knyte id: true}
-const informationMap = {}; // knyte id --> {color, space: {knoxel id --> position}, record: {data, viewertype}, size}
+const informationMap = {}; // knyte id --> {color, space: {knoxel id --> position}, record: {data, viewertype, size}}
 const knoxels = {}; // knoxel id --> knyte id
 const knoxelViews = {}; // knoxel id --> {collapse, color}
 
@@ -26,7 +27,9 @@ const knoxelViews = {}; // knoxel id --> {collapse, color}
 const knyteEvalCode = {}; // knyte id --> eval key --> function made from parameters and code
 const arrows = {}; // arrow id --> {initialKnoxelId, terminalKnoxelId}
 const spaceBackStack = []; // [previous space root knoxel id]
+const steeringBackStack = []; // [previous space root steering]
 const spaceForwardStack = []; // [next space root knoxel id]
+const steeringForwardStack = []; // [next space root steering]
 
 // global settings
 let runBlockDelay = 0;
@@ -110,6 +113,78 @@ const knit = new function()
   this.new = function() {return textUuidV4();};
 }
 
+const steeringGear = new function()
+{
+  const panSpeed = 0.4;
+  const zoomScale = 0.4;
+  const zoomNormalization = 1.0 / 360.0;
+  
+  this.setCTM = function(matrix) // CTM - current transform matrix
+  {
+    const s = 'matrix(' +
+      matrix.a + ',' + matrix.b + ',' + matrix.c + ',' + 
+      matrix.d + ',' + matrix.e + ',' + matrix.f +
+    ')';
+    steeringElement.setAttribute('transform', s);
+  };
+  
+  this.screenToSpacePosition = function(screenPosition)
+  {
+    const p = spaceRootElement.createSVGPoint();
+    p.x = screenPosition.x;
+    p.y = screenPosition.y;
+    return p.matrixTransform(steeringElement.getCTM().inverse());
+  };
+
+  this.spaceToScreenPosition = function(position)
+  {
+    const p = spaceRootElement.createSVGPoint();
+    p.x = position.x;
+    p.y = position.y;
+    return p.matrixTransform(steeringElement.getCTM());
+  };
+
+  this.pan = function(delta)
+  {
+    const ctm = steeringElement.getCTM().inverse();
+    delta.x *= panSpeed * ctm.a;
+    delta.y *= panSpeed * ctm.a;
+    this.setCTM(ctm.inverse().translate(delta.x, delta.y));
+    handleSteeringChanged();
+  };
+
+  this.zoom = function(position, delta)
+  {
+    const z = Math.pow(1 + zoomScale, zoomNormalization * delta);
+    var p = this.screenToSpacePosition(position);
+    // Compute new scale matrix in current mouse position
+    var k = spaceRootElement.createSVGMatrix().translate(p.x, p.y).
+      scale(z).translate(-p.x, -p.y);
+    this.setCTM(steeringElement.getCTM().multiply(k));
+    handleSteeringChanged();
+  };
+
+  this.setPan = function(offset)
+  {
+    const ctm = steeringElement.getCTM();
+    ctm.e = offset.x;
+    ctm.f = offset.y;
+    this.setCTM(ctm);
+    handleSteeringChanged();
+  };
+
+  this.getZoom = function(element)
+  {
+    return 1.0 / (element ? element : steeringElement).getCTM().a;
+  }
+
+  this.getPan = function(element)
+  {
+    const ctm = (element ? element : steeringElement).getCTM();
+    return {x: ctm.e, y: ctm.f};
+  }
+}
+
 function checkAppBusy()
 {
   if (Object.keys(runBlockBusyList).length > 0)
@@ -131,7 +206,7 @@ function saveAppState()
   JSON.stringify(state, (key, value) => {if (!(key in keyMap)) {keyMap[key] = true; keys.push(key);} return value;});
   const stateText = JSON.stringify(state, keys.sort(), '\t');
   const blob = new Blob([stateText], {type: 'text/plain;charset=utf-8'});
-  saveAs(blob, 'knoxelSpace.json');
+  saveAs(blob, 'knoxelSpace.json', true);
 }
 
 function loadAppState(files)
@@ -161,7 +236,9 @@ function loadAppState(files)
     for (let key in arrows)
       delete arrows[key];
     spaceBackStack.length = 0;
+    steeringBackStack.length = 0;
     spaceForwardStack.length = 0;
+    steeringForwardStack.length = 0;
   }
 
   if (!checkAppBusy())
@@ -172,7 +249,8 @@ function loadAppState(files)
   reader.onload = function(e) {
     const state = JSON.parse(e.target.result);
     assignAppState(state);
-    setSpaceRootKnoxel({knoxelId: masterKnoxelId});
+    setSpaceRootKnoxel({knoxelId: masterKnoxelId}); // +++0
+    steeringGear.setPan({x: 0, y: 0});
     handleSpacemapChanged();
     setNavigationControlState({});
   };
@@ -237,14 +315,15 @@ function addKnoxel(desc)
 
 const knoxelRect = new function()
 {
-  function computeArrowShape(w, h, x, y, knoxelId, hostKnyteId, arrowStrokeWidth)
+  function computeArrowShape(w, h, x, y, knoxelId, hostKnyteId, arrowStrokeWidth, ghost)
   {
     const hostSpace = informationMap[hostKnyteId].space;
     const endpoints = knoxelVectors[knoxelId];
     const l = visualTheme.arrow.defaultLength;
     const {x1, y1, x2, y2, x3, y3, initialCross, terminalCross} = endpoints
       ? getArrowPointsByKnoxels({arrowSpace: hostSpace, jointKnoxelId: knoxelId,
-        initialKnoxelId: endpoints.initialKnoxelId, terminalKnoxelId: endpoints.terminalKnoxelId, x, y, w, h, arrowStrokeWidth})
+        initialKnoxelId: endpoints.initialKnoxelId, terminalKnoxelId: endpoints.terminalKnoxelId,
+        x, y, w, h, arrowStrokeWidth, ghost})
       : {x1: (w - l)/2, y1: h/2, x2: w/2, y2: h/2, x3: (w + l)/2, y3: h/2, initialCross: false, terminalCross: false};
     return {x1, y1, x2, y2, x3, y3, initialCross, terminalCross};
   }
@@ -317,7 +396,7 @@ const knoxelRect = new function()
         const nestedX = x - nestedW/2;
         const nestedY = y - nestedH/2;
         const {x1, y1, x2, y2, x3, y3, initialCross, terminalCross} = computeArrowShape(nestedW, nestedH, nestedX, nestedY,
-          nestedKnoxelId, knyteId, visualTheme.recursive.strokeWidth);
+          nestedKnoxelId, knyteId, visualTheme.recursive.strokeWidth, false);
         const r = {rectId, x: nestedX, y: nestedY, leftTop: d.leftTop, w: nestedW, h: nestedH, color, strokeColor, record, 
           x1, y1, x2, y2, x3, y3, initialCross, terminalCross, type: nestedType};
         rects.push(r);
@@ -539,7 +618,7 @@ const knoxelRect = new function()
       return result;
     }
     
-    function updateArrowShapes(arrows)
+    function updateArrowShapes(arrows, ghost)
     {
       for (let id in arrows)
       {
@@ -553,7 +632,7 @@ const knoxelRect = new function()
         const {space, knoxelId, initialKnoxelId, terminalKnoxelId} = arrows[id];
         const arrowStrokeWidth = visualTheme.recursive.strokeWidth;
         const {x1, y1, x2, y2, x3, y3, initialCross, terminalCross} = getArrowPointsByRects({arrowSpace: space,
-          jointKnoxelId: knoxelId, initialKnoxelId, terminalKnoxelId, rectId, initialRectId, terminalRectId, arrowStrokeWidth});
+          jointKnoxelId: knoxelId, initialKnoxelId, terminalKnoxelId, rectId, initialRectId, terminalRectId, arrowStrokeWidth, ghost});
         arrowShape.points.getItem(0).x = x1;
         arrowShape.points.getItem(0).y = y1;
         arrowShape.points.getItem(1).x = x2;
@@ -575,23 +654,38 @@ const knoxelRect = new function()
       const hostKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
       knyteTrace[hostKnyteId] = true;
       const {w, h, leftTop, rects, arrows, type} = getFigureDimensions(desc.knoxelId, knyteTrace, desc.bubble);
-      const x = desc.position.x - w/2;
-      const y = desc.position.y - h/2;
       const knoxelVector = knoxelVectors[desc.knoxelId];
       const hasEndpoints = knoxelVector && (knoxelVector.initialKnoxelId || knoxelVector.terminalKnoxelId); 
       const rectGroup = document.createElementNS(svgNameSpace, 'g');
       rectGroup.id = desc.knoxelId;
       rectGroup.classList.value = 'mouseOverRect';
-      rectGroup.setAttribute('transform', 'translate(' + x + ' ' + y + ')');
+      const x = desc.position.x - w/2;
+      const y = desc.position.y - h/2;
+      if (!desc.ghost && !desc.bubble)
+      {
+        rectGroup.setAttribute('transform', 'translate(' + x + ' ' + y + ')');
+      }
+      else
+      {
+        const {x, y} = desc.position;
+        rectGroup.setAttribute('transform', 'translate(' + x + ' ' + y + ')');
+        const scale = 1.0/steeringGear.getZoom();
+        const hostElement = document.getElementById(desc.ghost ? 'ghosts' : 'bubbles');
+        hostElement.setAttribute('transform', 'scale(' + scale + ')');
+      }
       if (!desc.bubble && hasEndpoints)
       {
         const {x1, y1, x2, y2, x3, y3, initialCross, terminalCross} = computeArrowShape(
-          w, h, x, y, desc.knoxelId, hostKnyteId, visualTheme.arrow.strokeWidth);
+          w, h, x, y, desc.knoxelId, hostKnyteId, visualTheme.arrow.strokeWidth, false);
         const arrowRoot = createArrowShape({x1, y1, x2, y2, x3, y3, initialCross, terminalCross, 
           strokeWidth: visualTheme.arrow.strokeWidth, strokeColor});
         arrowRoot.id = desc.knoxelId + '.arrow';
         if (desc.ghost)
+        {
           arrowRoot.id += '.ghost';
+          const {x, y} = desc.position;
+          arrowRoot.setAttribute('transform', 'translate(' + (-x) + ' ' + (-y) + ')');
+        }
         rectGroup.appendChild(arrowRoot); // TODO: hide arrow if useless for visualisation
       }
       const rectRoot = createRectShape({w, h, color, strokeWidth: visualTheme.rect.strokeWidth, strokeColor});
@@ -643,7 +737,7 @@ const knoxelRect = new function()
       const shapes = createShapes(rects, arrows, type);
       for (let i = 0; i < shapes.length; ++i)
         rectGroup.appendChild(shapes[i]);
-      setTimeout(updateArrowShapes, 0, arrows);
+      setTimeout(updateArrowShapes, 0, arrows, desc.ghost);
       if (desc.ghost)
       {
         rectGroup.id += '.ghost';
@@ -683,7 +777,7 @@ const knoxelRect = new function()
     knyteTrace[hostKnyteId] = true;
     const {w, h} = getFigureDimensions(knoxelId, knyteTrace);
     const {x1, y1, x2, y2, x3, y3} = computeArrowShape(
-      w, h, position.x, position.y, knoxelId, hostKnyteId, visualTheme.arrow.strokeWidth);
+      w, h, position.x, position.y, knoxelId, hostKnyteId, visualTheme.arrow.strokeWidth, ghost);
     arrowShape.points.getItem(0).x = x1;
     arrowShape.points.getItem(0).y = y1;
     arrowShape.points.getItem(1).x = x2;
@@ -733,7 +827,7 @@ const knoxelRect = new function()
     }
   };
   
-  this.getElementSize = function(element)
+  this.getElementSize = function(element, ghost)
   {
     let rectShape;
     if (element.tagName === 'g')
@@ -748,20 +842,24 @@ const knoxelRect = new function()
     }
     if (!rectShape)
       console.error('failed get size for element ' + element.id);
-    const {width, height} = rectShape.getBoundingClientRect();
+    let {width, height} = rectShape.getBoundingClientRect();
+    if (!ghost)
+    {
+      const zoom = steeringGear.getZoom();
+      width *= zoom;
+      height *= zoom;
+    }
     return {w: width, h: height};
   };
   
   this.moveElement = function(desc)
   {
     // desc: {element, x, y}
-    const {w, h} = this.getElementSize(desc.element);
+    const {w, h} = this.getElementSize(desc.element, true);
     const x = desc.x - w/2;
     const y = desc.y - h/2;
-    if (desc.element.tagName === 'g')
-      desc.element.setAttribute('transform', 'translate(' + x + ' ' + y + ')');
-    else
-      console.error('failed moving for knoxelId ' + desc.element.id);
+    const positioningElement = document.getElementById('positioning');
+    positioningElement.setAttribute('transform', 'translate(' + x + ' ' + y + ')');
   };
   
   this.getRootByTarget = function(targetElement)
@@ -772,6 +870,11 @@ const knoxelRect = new function()
     while (element.classList.value !== 'mouseOverRect' && element !== spaceRootElement)
       element = element.parentElement;
     return element;
+  };
+
+  this.getKnoxelDimensions = function(knoxelId)
+  {
+    return getFigureDimensions(knoxelId, {});
   };
 };
 
@@ -811,6 +914,17 @@ const knoxelArrow = new function()
     }
     else
       console.error('failed moving for knoxelId ' + desc.element.id);
+  };
+  this.updateElement = function(desc)
+  {
+    // desc: {knoxelId, element}
+    const spaceRootKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
+    const spacePosition = informationMap[spaceRootKnyteId].space[desc.knoxelId];
+    if (!spacePosition)
+      return;
+    const originPosition = steeringGear.spaceToScreenPosition(spacePosition);
+    desc.element.setAttribute('x1', originPosition.x);
+    desc.element.setAttribute('y1', originPosition.y);
   };
   this.setDotted = function(desc)
   {
@@ -956,6 +1070,7 @@ function setSpaceRootKnoxel(desc)
   {
     arrowsElement.style.display = 'none';
   }
+  handleSteeringChanged();
 }
 
 function collideAABBVsLine(aabb, line)
@@ -974,11 +1089,14 @@ function collideAABBVsLine(aabb, line)
 
 function getArrowPointsByRects(desc)
 {
-  // desc: {arrowSpace, jointKnoxelId, initialKnoxelId, terminalKnoxelId, rectId, initialRectId, terminalRectId, arrowStrokeWidth}
+  // desc: {arrowSpace, jointKnoxelId, initialKnoxelId, terminalKnoxelId, rectId, initialRectId, terminalRectId, arrowStrokeWidth, ghost}
+  const zoom = steeringGear.getZoom();
 
   function getBoundingClientDimension(element)
   {
-    const {width, height} = element.getBoundingClientRect();
+    let {width, height} = element.getBoundingClientRect();
+    width *= zoom;
+    height *= zoom;
     return {w: width, h: height};
   }
   
@@ -1031,16 +1149,17 @@ function getArrowPointsByRects(desc)
       const h = visualTheme.rect.defaultHeight;
       const initialElement = document.getElementById(desc.initialRectId);
       const initialDimension = initialElement ? getBoundingClientDimension(initialElement) : {w, h};
+      const rectStrokeOffset = visualTheme.recursive.strokeWidth;
+      const arrowIntervalStrokeOffset = desc.arrowStrokeWidth;
+      initialDimension.w += rectStrokeOffset + arrowIntervalStrokeOffset;
+      initialDimension.h += rectStrokeOffset + arrowIntervalStrokeOffset;
       const initialTime = collideAABBVsLine(
         {position: initialPosition, dimension: initialDimension},
         {position1: jointPosition, position2: initialPosition}
       );
-      const rectStrokeOffset = 0.5*visualTheme.rect.strokeWidth;
       const initialArrowStrokeOffset = 0.5*desc.arrowStrokeWidth;
-      const arrowIntervalStrokeOffset = 0.5*desc.arrowStrokeWidth;
-      const initialStrokeOffset = rectStrokeOffset + initialArrowStrokeOffset + arrowIntervalStrokeOffset;
-      x1 -= ((1 - initialTime) * directionLength + initialStrokeOffset) * directionNormalised.x;
-      y1 -= ((1 - initialTime) * directionLength + initialStrokeOffset) * directionNormalised.y;
+      x1 -= ((1 - initialTime) * directionLength + initialArrowStrokeOffset) * directionNormalised.x;
+      y1 -= ((1 - initialTime) * directionLength + initialArrowStrokeOffset) * directionNormalised.y;
     }
   }
   if (desc.terminalKnoxelId === desc.jointKnoxelId)
@@ -1079,16 +1198,17 @@ function getArrowPointsByRects(desc)
       const h = visualTheme.rect.defaultHeight;
       const terminalElement = document.getElementById(desc.terminalRectId);
       const terminalDimension = terminalElement ? getBoundingClientDimension(terminalElement) : {w, h};
+      const rectStrokeOffset = visualTheme.recursive.strokeWidth;
+      const arrowIntervalStrokeOffset = desc.arrowStrokeWidth;
+      terminalDimension.w += rectStrokeOffset + arrowIntervalStrokeOffset;
+      terminalDimension.h += rectStrokeOffset + arrowIntervalStrokeOffset;
       const terminalTime = collideAABBVsLine(
         {position: terminalPosition, dimension: terminalDimension},
         {position1: jointPosition, position2: terminalPosition}
       );
-      const rectStrokeOffset = 0.5*visualTheme.rect.strokeWidth;
       const terminalArrowStrokeOffset = 4.5*desc.arrowStrokeWidth;
-      const arrowIntervalStrokeOffset = 0.5*desc.arrowStrokeWidth;
-      const terminalStrokeOffset = rectStrokeOffset + terminalArrowStrokeOffset + arrowIntervalStrokeOffset;
-      x3 -= ((1 - terminalTime) * directionLength + terminalStrokeOffset) * directionNormalised.x;
-      y3 -= ((1 - terminalTime) * directionLength + terminalStrokeOffset) * directionNormalised.y;
+      x3 -= ((1 - terminalTime) * directionLength + terminalArrowStrokeOffset) * directionNormalised.x;
+      y3 -= ((1 - terminalTime) * directionLength + terminalArrowStrokeOffset) * directionNormalised.y;
     }
   }
   const {x, y} = jointPosition;
@@ -1103,8 +1223,12 @@ function getArrowPointsByRects(desc)
 
 function getArrowPointsByKnoxels(desc)
 {
-  // desc: {arrowSpace, jointKnoxelId, initialKnoxelId, terminalKnoxelId, w, h, arrowStrokeWidth}
-  const jointPosition = {x: desc.x, y: desc.y};
+  // desc: {arrowSpace, jointKnoxelId, initialKnoxelId, terminalKnoxelId, x, y, w, h, arrowStrokeWidth, ghost}
+  const ghostsElement = document.getElementById('ghosts');
+  const zoom = desc.ghost ? (steeringGear.getZoom()/steeringGear.getZoom(ghostsElement)) : 1.0;
+  const jointPosition = desc.ghost
+    ? steeringGear.screenToSpacePosition({x: desc.x, y: desc.y})
+    : {x: desc.x, y: desc.y};
   const initialPosition = desc.initialKnoxelId ? desc.arrowSpace[desc.initialKnoxelId] : undefined;
   const terminalPosition = desc.terminalKnoxelId ? desc.arrowSpace[desc.terminalKnoxelId] : undefined;
   let x1;
@@ -1129,6 +1253,8 @@ function getArrowPointsByKnoxels(desc)
   {
     x1 = x2 - desc.w/2 - visualTheme.arrow.defaultLength;
     y1 = y2;
+    if (desc.ghost)
+      x1 += activeGhost.offset.x;
     initialCross = true;
   }
   else
@@ -1150,17 +1276,18 @@ function getArrowPointsByKnoxels(desc)
       const w = visualTheme.rect.defaultWidth;
       const h = visualTheme.rect.defaultHeight;
       const initialElement = document.getElementById(desc.initialKnoxelId);
-      const initialDimension = initialElement ? knoxelRect.getElementSize(initialElement) : {w, h};
+      const initialDimension = initialElement ? knoxelRect.getElementSize(initialElement, false) : {w, h};
+      const rectStrokeOffset = visualTheme.rect.strokeWidth;
+      const arrowIntervalStrokeOffset = desc.arrowStrokeWidth * zoom;
+      initialDimension.w += rectStrokeOffset + arrowIntervalStrokeOffset;
+      initialDimension.h += rectStrokeOffset + arrowIntervalStrokeOffset;
       const initialTime = collideAABBVsLine(
         {position: initialPosition, dimension: initialDimension},
         {position1: jointPosition, position2: initialPosition}
       );
-      const rectStrokeOffset = 0.5*visualTheme.rect.strokeWidth;
-      const initialArrowStrokeOffset = 0.5*desc.arrowStrokeWidth;
-      const arrowIntervalStrokeOffset = 0.5*desc.arrowStrokeWidth;
-      const initialStrokeOffset = rectStrokeOffset + initialArrowStrokeOffset + arrowIntervalStrokeOffset;
-      x1 -= ((1 - initialTime) * directionLength + initialStrokeOffset) * directionNormalised.x;
-      y1 -= ((1 - initialTime) * directionLength + initialStrokeOffset) * directionNormalised.y;
+      const initialArrowStrokeOffset = 0.5*desc.arrowStrokeWidth * zoom;
+      x1 -= ((1 - initialTime) * directionLength + initialArrowStrokeOffset) * directionNormalised.x;
+      y1 -= ((1 - initialTime) * directionLength + initialArrowStrokeOffset) * directionNormalised.y;
     }
   }
   if (desc.terminalKnoxelId === desc.jointKnoxelId)
@@ -1177,6 +1304,8 @@ function getArrowPointsByKnoxels(desc)
   {
     x3 = x2 + desc.w/2 + visualTheme.arrow.defaultLength;
     y3 = y2;
+    if (desc.ghost)
+      x3 += activeGhost.offset.x;
     terminalCross = true;
   }
   else
@@ -1198,17 +1327,18 @@ function getArrowPointsByKnoxels(desc)
       const w = visualTheme.rect.defaultWidth;
       const h = visualTheme.rect.defaultHeight;
       const terminalElement = document.getElementById(desc.terminalKnoxelId);
-      const terminalDimension = terminalElement ? knoxelRect.getElementSize(terminalElement) : {w, h};
+      const terminalDimension = terminalElement ? knoxelRect.getElementSize(terminalElement, false) : {w, h};
+      const rectStrokeOffset = visualTheme.rect.strokeWidth;
+      const arrowIntervalStrokeOffset = desc.arrowStrokeWidth * zoom;
+      terminalDimension.w += rectStrokeOffset + arrowIntervalStrokeOffset;
+      terminalDimension.h += rectStrokeOffset + arrowIntervalStrokeOffset;
       const terminalTime = collideAABBVsLine(
         {position: terminalPosition, dimension: terminalDimension},
         {position1: jointPosition, position2: terminalPosition}
       );
-      const rectStrokeOffset = 0.5*visualTheme.rect.strokeWidth;
-      const terminalArrowStrokeOffset = 4.5*desc.arrowStrokeWidth;
-      const arrowIntervalStrokeOffset = 0.5*desc.arrowStrokeWidth;
-      const terminalStrokeOffset = rectStrokeOffset + terminalArrowStrokeOffset + arrowIntervalStrokeOffset;
-      x3 -= ((1 - terminalTime) * directionLength + terminalStrokeOffset) * directionNormalised.x;
-      y3 -= ((1 - terminalTime) * directionLength + terminalStrokeOffset) * directionNormalised.y;
+      const terminalArrowStrokeOffset = 4.5*desc.arrowStrokeWidth * zoom;
+      x3 -= ((1 - terminalTime) * directionLength + terminalArrowStrokeOffset) * directionNormalised.x;
+      y3 -= ((1 - terminalTime) * directionLength + terminalArrowStrokeOffset) * directionNormalised.y;
     }
   }
   const x = jointPosition.x - desc.w/2;
@@ -1219,6 +1349,10 @@ function getArrowPointsByKnoxels(desc)
   y2 -= y;
   x3 -= x;
   y3 -= y;
+  x1 = (x1 - x2)/zoom + x2;
+  y1 = (y1 - y2)/zoom + y2;
+  x3 = (x3 - x2)/zoom + x2;
+  y3 = (y3 - y2)/zoom + y2;
   return {x1, y1, x2, y2, x3, y3, initialCross, terminalCross};
 }
 
@@ -1253,13 +1387,13 @@ function getArrowPointsByEndpoints(desc)
       const w = visualTheme.rect.defaultWidth;
       const h = visualTheme.rect.defaultHeight;
       const initialElement = document.getElementById(desc.initialKnoxelId);
-      const initialDimension = initialElement ? knoxelRect.getElementSize(initialElement) : {w, h};
+      const initialDimension = initialElement ? knoxelRect.getElementSize(initialElement, false) : {w, h};
       const initialTime = collideAABBVsLine(
         {position: initialPosition, dimension: initialDimension},
         {position1: terminalPosition, position2: initialPosition}
       );
       const terminalElement = document.getElementById(desc.terminalKnoxelId);
-      const terminalDimension = terminalElement ? knoxelRect.getElementSize(terminalElement) : {w, h};
+      const terminalDimension = terminalElement ? knoxelRect.getElementSize(terminalElement, false) : {w, h};
       const terminalTime = collideAABBVsLine(
         {position: terminalPosition, dimension: terminalDimension},
         {position1: initialPosition, position2: terminalPosition}
@@ -1329,6 +1463,14 @@ function addKnoxelRect(desc)
   knoxelRect.updateArrowShape(knoxelId, position);
 }
 
+function parseTransform(s)
+{
+  const pair = s.split('(')[1].split(' ');
+  const x = parseFloat(pair[0]);
+  const y = parseFloat(pair[1]);
+  return {x, y};
+}
+
 function onClickRect(e)
 {
   const targetKnoxelElement = knoxelRect.getRootByTarget(e.target);
@@ -1337,9 +1479,31 @@ function onClickRect(e)
     if (targetKnoxelElement && targetKnoxelElement.id !== spaceRootElement.dataset.knoxelId)
     {
       spaceBackStack.push(spaceRootElement.dataset.knoxelId);
+      steeringBackStack.push(steeringElement.getCTM());
       spaceForwardStack.length = 0;
-      setSpaceRootKnoxel({knoxelId: targetKnoxelElement.id});
-      refreshActiveRect({position: mouseMovePosition});
+      steeringForwardStack.length = 0;
+      const spacemap = knoxels[targetKnoxelElement.id] === knoxels[spacemapKnoxelId];
+      const selfcontained = knoxels[targetKnoxelElement.id] === knoxels[spaceRootElement.dataset.knoxelId];
+      if (spacemap)
+      {
+        setSpaceRootKnoxel({knoxelId: targetKnoxelElement.id});
+        steeringGear.setCTM(spaceRootElement.createSVGMatrix());
+      }
+      else if (!selfcontained)
+      {
+        const panOffset = steeringGear.getPan();
+        const zoom = steeringGear.getZoom();
+        const knoxelLeftTop = parseTransform(targetKnoxelElement.getAttribute('transform'));
+        const knoxelSize = knoxelRect.getElementSize(targetKnoxelElement, false);
+        const {leftTop, w, h} = knoxelRect.getKnoxelDimensions(targetKnoxelElement.id);
+        setSpaceRootKnoxel({knoxelId: targetKnoxelElement.id}); // +++1
+        const x = panOffset.x + (knoxelLeftTop.x + knoxelSize.w/2 - leftTop.x - w/2)/zoom;
+        const y = panOffset.y + (knoxelLeftTop.y + knoxelSize.h/2 - leftTop.y - h/2)/zoom;
+        steeringGear.setPan({x, y});
+      }
+      else
+        setSpaceRootKnoxel({knoxelId: targetKnoxelElement.id});
+      refreshActiveRect({screenPosition: mouseMovePosition});
       setNavigationControlState({
         backKnoxelId: spaceBackStack[spaceBackStack.length - 1]
       });
@@ -1518,13 +1682,13 @@ function replaceKnoxelInStacks(desc)
 function onClickSpaceRoot(e)
 {
   const mousePosition = {x: e.clientX, y: e.clientY};
-  const mousePagePosition = {x: e.pageX, y: e.pageY};
   if (!e.shiftKey && e.cmdKey())
   {
     const knyteId = knit.new();
     const color = visualTheme.rect.fillColor;
     addKnyte({knyteId, color});
-    addKnoxelRect({knyteId, hostKnoxelId: spaceRootElement.dataset.knoxelId, position: mousePosition});
+    const position = steeringGear.screenToSpacePosition(mousePosition);
+    addKnoxelRect({knyteId, hostKnoxelId: spaceRootElement.dataset.knoxelId, position});
     if (e.altKey)
     {
       const recordtype = 'interactive';
@@ -1543,35 +1707,64 @@ function onClickSpaceMap(e)
   if (spaceRootElement.dataset.knoxelId === spacemapKnoxelId)
     return;
   spaceBackStack.push(spaceRootElement.dataset.knoxelId);
+  steeringBackStack.push(steeringElement.getCTM());
   spaceForwardStack.length = 0;
-  setSpaceRootKnoxel({knoxelId: spacemapKnoxelId});
-  refreshActiveRect({position: mouseMovePosition});
+  steeringForwardStack.length = 0;
+  const selfcontained = knoxels[spacemapKnoxelId] === knoxels[spaceRootElement.dataset.knoxelId];
+  if (!selfcontained)
+  {
+    setSpaceRootKnoxel({knoxelId: spacemapKnoxelId}); // +++3
+    steeringGear.setCTM(spaceRootElement.createSVGMatrix());
+  }
+  else
+    setSpaceRootKnoxel({knoxelId: spacemapKnoxelId});
+  refreshActiveRect({screenPosition: mouseMovePosition});
   setNavigationControlState({
     backKnoxelId: spaceBackStack[spaceBackStack.length - 1]
   });
 }
 
-function onClickSpaceHost(e)
-{
-  if (!activeGhost.spawnSpaceRootKnoxelId)
-    return;
-  spaceBackStack.push(spaceRootElement.dataset.knoxelId);
-  spaceForwardStack.length = 0;
-  setSpaceRootKnoxel({knoxelId: activeGhost.spawnSpaceRootKnoxelId});
-  refreshActiveRect({position: mouseMovePosition});
-  setNavigationControlState({
-    backKnoxelId: spaceBackStack[spaceBackStack.length - 1]
-  });
-}
-
-function onClickSpaceBack(e)
+function onClickSpaceBack()
 {
   spaceForwardStack.push(spaceRootElement.dataset.knoxelId);
+  steeringForwardStack.push(steeringElement.getCTM());
   const backKnoxelId = spaceBackStack.pop();
+  const backKnoxelSteering = steeringBackStack.pop();
   if (backKnoxelId)
   {
-    setSpaceRootKnoxel({knoxelId: backKnoxelId});
-    refreshActiveRect({position: mouseMovePosition});
+    const fromSpacemap = knoxels[spacemapKnoxelId] === knoxels[spaceRootElement.dataset.knoxelId];
+    const toSpacemap = knoxels[spacemapKnoxelId] === knoxels[backKnoxelId];
+    const selfcontained = knoxels[backKnoxelId] === knoxels[spaceRootElement.dataset.knoxelId];
+    if (fromSpacemap)
+    {
+      setSpaceRootKnoxel({knoxelId: backKnoxelId});
+      steeringGear.setCTM(backKnoxelSteering);
+    }
+    else if (toSpacemap)
+    {
+      setSpaceRootKnoxel({knoxelId: backKnoxelId});
+      steeringGear.setCTM(spaceRootElement.createSVGMatrix());
+    }
+    else if (!selfcontained)
+    {
+      const panOffset = steeringGear.getPan();
+      const zoom = steeringGear.getZoom();
+      const priorKnoxelId = spaceRootElement.dataset.knoxelId;
+      setSpaceRootKnoxel({knoxelId: backKnoxelId}); // +++2
+      const priorKnoxelElement = document.getElementById(priorKnoxelId);
+      if (priorKnoxelElement)
+      {
+        const knoxelLeftTop = parseTransform(priorKnoxelElement.getAttribute('transform'));
+        const knoxelSize = knoxelRect.getElementSize(priorKnoxelElement, false);
+        const {leftTop, w, h} = knoxelRect.getKnoxelDimensions(priorKnoxelId);
+        const x = panOffset.x - (knoxelLeftTop.x + knoxelSize.w/2 - leftTop.x - w/2)/zoom;
+        const y = panOffset.y - (knoxelLeftTop.y + knoxelSize.h/2 - leftTop.y - h/2)/zoom;
+        steeringGear.setPan({x, y});
+      }
+    }
+    else
+      setSpaceRootKnoxel({knoxelId: backKnoxelId});
+    refreshActiveRect({screenPosition: mouseMovePosition});
     setNavigationControlState({
       backKnoxelId: spaceBackStack[spaceBackStack.length - 1],
       forwardKnoxelId: spaceForwardStack[spaceForwardStack.length - 1]
@@ -1579,14 +1772,43 @@ function onClickSpaceBack(e)
   }
 }
 
-function onClickSpaceForward(e)
+function onClickSpaceForward()
 {
   spaceBackStack.push(spaceRootElement.dataset.knoxelId);
+  steeringBackStack.push(steeringElement.getCTM());
   const forwardKnoxelId = spaceForwardStack.pop();
+  const forwardKnoxelSteering = steeringForwardStack.pop();
   if (forwardKnoxelId)
   {
-    setSpaceRootKnoxel({knoxelId: forwardKnoxelId});
-    refreshActiveRect({position: mouseMovePosition});
+    const fromSpacemap = knoxels[spacemapKnoxelId] === knoxels[spaceRootElement.dataset.knoxelId];
+    const toSpacemap = knoxels[spacemapKnoxelId] === knoxels[forwardKnoxelId];
+    const selfcontained = knoxels[forwardKnoxelId] === knoxels[spaceRootElement.dataset.knoxelId];
+    const forwardKnoxelElement = document.getElementById(forwardKnoxelId);
+    if (fromSpacemap)
+    {
+      setSpaceRootKnoxel({knoxelId: forwardKnoxelId});
+      steeringGear.setCTM(forwardKnoxelSteering);
+    }
+    else if (toSpacemap)
+    {
+      setSpaceRootKnoxel({knoxelId: forwardKnoxelId});
+      steeringGear.setCTM(spaceRootElement.createSVGMatrix());
+    }
+    else if (!selfcontained && forwardKnoxelElement)
+    {
+      const panOffset = steeringGear.getPan();
+      const zoom = steeringGear.getZoom();
+      const knoxelLeftTop = parseTransform(forwardKnoxelElement.getAttribute('transform'));
+      const knoxelSize = knoxelRect.getElementSize(forwardKnoxelElement, false);
+      const {leftTop, w, h} = knoxelRect.getKnoxelDimensions(forwardKnoxelId);
+      setSpaceRootKnoxel({knoxelId: forwardKnoxelId}); // +++2
+      const x = panOffset.x + (knoxelLeftTop.x + knoxelSize.w/2 - leftTop.x - w/2)/zoom;
+      const y = panOffset.y + (knoxelLeftTop.y + knoxelSize.h/2 - leftTop.y - h/2)/zoom;
+      steeringGear.setPan({x, y});
+    }
+    else
+      setSpaceRootKnoxel({knoxelId: forwardKnoxelId});
+    refreshActiveRect({screenPosition: mouseMovePosition});
     setNavigationControlState({
       backKnoxelId: spaceBackStack[spaceBackStack.length - 1],
       forwardKnoxelId: spaceForwardStack[spaceForwardStack.length - 1]
@@ -1604,9 +1826,7 @@ function setNavigationControlState(desc)
   // desc: {backKnoxelId, forwardKnoxelId}
   const backKnyteId = knoxels[desc.backKnoxelId];
   if (!backKnyteId)
-  {
     spaceBackElement.style.display = 'none';
-  }
   else
   {
     const color = informationMap[backKnyteId].color;
@@ -1617,9 +1837,7 @@ function setNavigationControlState(desc)
   }
   const forwardKnyteId = knoxels[desc.forwardKnoxelId];
   if (!forwardKnyteId)
-  {
     spaceForwardElement.style.display = 'none';
-  }
   else
   {
     const color = informationMap[forwardKnyteId].color;
@@ -1636,23 +1854,7 @@ function setNavigationControlState(desc)
     spaceMapElement.style.display = 'block';
   }
   else
-  {
     spaceMapElement.style.display = 'none';
-  }
-  if (
-    activeGhost.knoxelId &&
-    activeGhost.spawnSpaceRootKnoxelId !== spaceRootElement.dataset.knoxelId
-  )
-  {
-    const hostShape = document.getElementById('hostShape');
-    hostShape.setAttribute('stroke', visualTheme.navigation.strokeColor);
-    hostShape.setAttribute('fill', visualTheme.navigation.fillColor);
-    spaceHostElement.style.display = 'block';
-  }
-  else
-  {
-    spaceHostElement.style.display = 'none';
-  }
 }
 
 function createActiveRect(desc)
@@ -1664,42 +1866,47 @@ function createActiveRect(desc)
 
 function refreshActiveRect(desc)
 {
-  // desc: {position}
+  // desc: {screenPosition}
   if (activeGhost.knoxelId)
   {
+    const position = activeGhost.offset;
     activeGhost.element.remove();
-    activeGhost.element = createActiveRect({knoxelId: activeGhost.knoxelId, position: desc.position, ghost: true});
-    activeGhost.offset = {x: 0, y: 0};
+    activeGhost.element = createActiveRect({knoxelId: activeGhost.knoxelId, position, ghost: true});
+    const {x, y} = mouseMovePosition;
+    knoxelRect.moveElement({element: activeGhost.element, x, y});
   }
   if (activeBubble.knoxelId)
   {
+    const position = activeBubble.offset;
     activeBubble.element.remove();
-    activeBubble.element = createActiveRect({knoxelId: activeBubble.knoxelId, position: desc.position, bubble: true});
-    activeBubble.offset = {x: 0, y: 0};
+    activeBubble.element = createActiveRect({knoxelId: activeBubble.knoxelId, position, bubble: true});
+    const {x, y} = mouseMovePosition;
+    knoxelRect.moveElement({element: activeBubble.element, x, y});
   }
+  const position = desc.screenPosition;
   if (activeInitialGhost.knoxelId)
   {
     activeInitialGhost.element.remove();
     activeInitialGhost.element = createActiveArrow(
-      {knoxelId: activeInitialGhost.knoxelId, position: desc.position, initial: true, ghost: true});
+      {knoxelId: activeInitialGhost.knoxelId, position, initial: true, ghost: true});
   }
   if (activeTerminalGhost.knoxelId)
   {
     activeTerminalGhost.element.remove();
     activeTerminalGhost.element = createActiveArrow(
-      {knoxelId: activeTerminalGhost.knoxelId, position: desc.position, terminal: true, ghost: true});
+      {knoxelId: activeTerminalGhost.knoxelId, position, terminal: true, ghost: true});
   }
   if (activeInitialBubble.knoxelId)
   {
     activeInitialBubble.element.remove();
     activeInitialBubble.element = createActiveArrow(
-      {knoxelId: activeInitialBubble.knoxelId, position: desc.position, initial: true, bubble: true});
+      {knoxelId: activeInitialBubble.knoxelId, position, initial: true, bubble: true});
   }
   if (activeTerminalBubble.knoxelId)
   {
     activeTerminalBubble.element.remove();
     activeTerminalBubble.element = createActiveArrow(
-      {knoxelId: activeTerminalBubble.knoxelId, position: desc.position, terminal: true, bubble: true});
+      {knoxelId: activeTerminalBubble.knoxelId, position, terminal: true, bubble: true});
   }
 }
 
@@ -1718,25 +1925,22 @@ function spawnGhostRect(desc)
   activeGhost.spawnSpaceRootKnoxelId = desc.spawnSpaceRootKnoxelId;
   activeGhost.hostKnyteId = getHostKnyteIdByKnoxelId(desc.knoxelId);
   const spawnSpaceRootKnoxelSpace = informationMap[knoxels[desc.spawnSpaceRootKnoxelId]].space;
-  activeGhost.element = createActiveRect({knoxelId: desc.knoxelId, position: desc.position, ghost: true});
   if (desc.selfcontained)
-  {
     activeGhost.offset = {x: 0, y: 0};
-    if (desc.knoxelId in spawnSpaceRootKnoxelSpace)
-      setGhostedMode({knoxelId: desc.knoxelId, isGhosted: true});
-  }
   else
   {
     const knoxelPosition = spawnSpaceRootKnoxelSpace[desc.knoxelId];
     const ox = knoxelPosition.x - desc.position.x;
     const oy = knoxelPosition.y - desc.position.y;
     activeGhost.offset = {x: ox, y: oy};
-    const x = mouseMovePosition.x + activeGhost.offset.x;
-    const y = mouseMovePosition.y + activeGhost.offset.y;
-    knoxelRect.moveElement({element: activeGhost.element, x, y});
-    knoxelRect.updateArrowShape(activeGhost.knoxelId, {x, y}, true);
-    setGhostedMode({knoxelId: desc.knoxelId, isGhosted: true});
   }
+  activeGhost.element = createActiveRect({knoxelId: desc.knoxelId, position: activeGhost.offset, ghost: true});
+  const {x, y} = mouseMovePosition;
+  knoxelRect.moveElement({element: activeGhost.element, x, y});
+  if (!desc.selfcontained)
+    knoxelRect.updateArrowShape(activeGhost.knoxelId, {x, y}, true);
+  if (desc.knoxelId in spawnSpaceRootKnoxelSpace)
+    setGhostedMode({knoxelId: desc.knoxelId, isGhosted: true});
 }
 
 function terminateGhostRect()
@@ -1763,11 +1967,8 @@ function spawnBubbleRect(desc)
   // desc: {knoxelId, position, selfcontained}
   activeBubble.knoxelId = desc.knoxelId;
   const knyteId = knoxels[desc.knoxelId];
-  activeBubble.element = createActiveRect({knoxelId: desc.knoxelId, position: desc.position, bubble: true});
   if (desc.selfcontained)
-  {
     activeBubble.offset = {x: 0, y: 0};
-  }
   else
   {
     const hostKnyteId = getHostKnyteIdByKnoxelId(desc.knoxelId);
@@ -1776,10 +1977,10 @@ function spawnBubbleRect(desc)
     const ox = knoxelPosition.x - desc.position.x;
     const oy = knoxelPosition.y - desc.position.y;
     activeBubble.offset = {x: ox, y: oy};
-    const x = mouseMovePosition.x + activeBubble.offset.x;
-    const y = mouseMovePosition.y + activeBubble.offset.y;
-    knoxelRect.moveElement({element: activeBubble.element, x, y});
   }
+  activeBubble.element = createActiveRect({knoxelId: desc.knoxelId, position: activeBubble.offset, bubble: true});
+  const {x, y} = mouseMovePosition;
+  knoxelRect.moveElement({element: activeBubble.element, x, y});
   setBubbledMode({knoxelId: activeBubble.knoxelId, knyteId, isBubbled: true});
 }
 
@@ -1807,7 +2008,10 @@ function createActiveArrow(desc)
     cross = true;
   }
   else
+  {
     originPosition = spacePosition;
+    originPosition = steeringGear.spaceToScreenPosition(originPosition);
+  }
   arrow.style.pointerEvents = 'none';
   arrow.setAttribute('x1', originPosition.x);
   arrow.setAttribute('y1', originPosition.y);
@@ -1954,39 +2158,29 @@ function onMouseMoveSpaceRoot(e)
 {
   mouseMovePosition = {x: e.clientX, y: e.clientY};
   mouseMovePagePosition = {x: e.pageX, y: e.pageY};
+  const position = mouseMovePosition;
   if (activeGhost.knoxelId)
   {
-    const x = mouseMovePosition.x + activeGhost.offset.x;
-    const y = mouseMovePosition.y + activeGhost.offset.y;
+    const {x, y} = position;
     knoxelRect.moveElement({element: activeGhost.element, x, y});
     knoxelRect.updateArrowShape(activeGhost.knoxelId, {x, y}, true);
   }
   if (activeBubble.knoxelId)
   {
-    const x = mouseMovePosition.x + activeBubble.offset.x;
-    const y = mouseMovePosition.y + activeBubble.offset.y;
+    const {x, y} = position;
     knoxelRect.moveElement({element: activeBubble.element, x, y});
   }
+  const {x, y} = position;
   if (activeInitialGhost.knoxelId)
-  {
-    const {x, y} = mouseMovePosition;
-    knoxelArrow.moveElement({knoxelId: activeInitialGhost.knoxelId, element: activeInitialGhost.element, x, y});
-  }
+    var {knoxelId, element} = activeInitialGhost;
   if (activeTerminalGhost.knoxelId)
-  {
-    const {x, y} = mouseMovePosition;
-    knoxelArrow.moveElement({knoxelId: activeTerminalGhost.knoxelId, element: activeTerminalGhost.element, x, y});
-  }
+    var {knoxelId, element} = activeTerminalGhost;
   if (activeInitialBubble.knoxelId)
-  {
-    const {x, y} = mouseMovePosition;
-    knoxelArrow.moveElement({knoxelId: activeInitialBubble.knoxelId, element: activeInitialBubble.element, x, y});
-  }
+    var {knoxelId, element} = activeInitialBubble;
   if (activeTerminalBubble.knoxelId)
-  {
-    const {x, y} = mouseMovePosition;
-    knoxelArrow.moveElement({knoxelId: activeTerminalBubble.knoxelId, element: activeTerminalBubble.element, x, y});
-  }
+    var {knoxelId, element} = activeTerminalBubble;
+  if (knoxelId)
+    knoxelArrow.moveElement({knoxelId, element, x, y});
 }
 
 function onMouseUpSpaceRoot(e)
@@ -2111,24 +2305,30 @@ function getHtmlFromText(text)
 function getOnelinerRecordByData(data)
 {
   const viewertype = 'oneliner';
+  if (!data)
+    return {data, viewertype};
   const newDataSize = getSizeOfRecord(data, viewertype);
   const padding = 2*visualTheme.rect.strokeWidth; // TODO: move padding to view function and avoid copypaste
   const size = {w: newDataSize.w + padding, h: newDataSize.h + padding};
-  return {data: data, viewertype, size};
+  return {data, viewertype, size};
 }
 
 function getMultilinerRecordByData(data)
 {
   const viewertype = 'multiliner';
+  if (!data)
+    return {data, viewertype};
   const size = getSizeOfRecord(data, viewertype);
-  return {data: data, viewertype, size};
+  return {data, viewertype, size};
 }
 
 function getInteractiveRecordByData(data)
 {
   const viewertype = 'interactive';
+  if (!data)
+    return {data, viewertype};
   const size = getSizeOfRecord(data, viewertype);
-  return {data: data, viewertype, size};
+  return {data, viewertype, size};
 }
 
 function setKnyteRecordData(knyteId, recordtype, newData)
@@ -2195,7 +2395,7 @@ function onKeyDownWindow(e)
   {
     if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
-      const position = mouseMovePosition;
+      const position = steeringGear.screenToSpacePosition(mouseMovePosition);
       if (!activeGhost.knoxelId)
       {
         let knoxelId = mouseoverKnoxelId;
@@ -2231,7 +2431,7 @@ function onKeyDownWindow(e)
   {
     if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
-      const position = mouseMovePosition;
+      const position = steeringGear.screenToSpacePosition(mouseMovePosition);
       if (!activeBubble.knoxelId)
       {
         let knoxelId = mouseoverKnoxelId;
@@ -2337,10 +2537,19 @@ function onKeyDownWindow(e)
       const knoxelId = mouseoverKnoxelId || spaceRootElement.dataset.knoxelId;
       const knyteId = knoxels[knoxelId];
       const {record} = informationMap[knyteId];
-      const newSize = prompt('Edit knyte size', JSON.stringify(record && record.size ? record.size : {w: 0, h: 0}, ['w', 'h']));
-      if (newSize)
+      const newSizeText = prompt('Edit knyte record size', JSON.stringify(record && record.size ? record.size : {w: 0, h: 0}, ['w', 'h']));
+      if (newSizeText)
       {
-        record.size = JSON.parse(newSize);
+        const newSize = JSON.parse(newSizeText);
+        if (newSize.w || newSize.h)
+        {
+          if (record)
+            record.size = newSize;
+          else
+            informationMap[knyteId].record = {data: '', viewertype: 'oneliner', size: newSize};
+        }
+        else
+          delete record.size;
         setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
         handleSpacemapChanged();
       }
@@ -2443,14 +2652,13 @@ function onKeyDownWindow(e)
   {
     if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
-      const position = mouseMovePosition;
       if (!activeInitialGhost.knoxelId)
       {
         if (mouseoverKnoxelId)
         {
           let knoxelId = mouseoverKnoxelId;
           const spawnSpaceRootKnoxelId = spaceRootElement.dataset.knoxelId;
-          spawnInitialGhostArrow({knoxelId, spawnSpaceRootKnoxelId, position});
+          spawnInitialGhostArrow({knoxelId, spawnSpaceRootKnoxelId, position: mouseMovePosition});
         }
       }
       else
@@ -2474,14 +2682,13 @@ function onKeyDownWindow(e)
   {
     if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
-      const position = mouseMovePosition;
       if (!activeTerminalGhost.knoxelId)
       {
         if (mouseoverKnoxelId)
         {
           let knoxelId = mouseoverKnoxelId;
           const spawnSpaceRootKnoxelId = spaceRootElement.dataset.knoxelId;
-          spawnTerminalGhostArrow({knoxelId, spawnSpaceRootKnoxelId, position});
+          spawnTerminalGhostArrow({knoxelId, spawnSpaceRootKnoxelId, position: mouseMovePosition});
         }
       }
       else
@@ -2505,14 +2712,13 @@ function onKeyDownWindow(e)
   {
     if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
-      const position = mouseMovePosition;
       if (!activeInitialBubble.knoxelId)
       {
         if (mouseoverKnoxelId)
         {
           let knoxelId = mouseoverKnoxelId;
           const spawnSpaceRootKnoxelId = spaceRootElement.dataset.knoxelId;
-          spawnInitialBubbleArrow({knoxelId, spawnSpaceRootKnoxelId, position});
+          spawnInitialBubbleArrow({knoxelId, spawnSpaceRootKnoxelId, position: mouseMovePosition});
         }
       }
       else
@@ -2536,14 +2742,13 @@ function onKeyDownWindow(e)
   {
     if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
-      const position = mouseMovePosition;
       if (!activeTerminalBubble.knoxelId)
       {
         if (mouseoverKnoxelId)
         {
           let knoxelId = mouseoverKnoxelId;
           const spawnSpaceRootKnoxelId = spaceRootElement.dataset.knoxelId;
-          spawnTerminalBubbleArrow({knoxelId, spawnSpaceRootKnoxelId, position});
+          spawnTerminalBubbleArrow({knoxelId, spawnSpaceRootKnoxelId, position: mouseMovePosition});
         }
       }
       else
@@ -2561,6 +2766,44 @@ function onKeyDownWindow(e)
         forwardKnoxelId: spaceForwardStack[spaceForwardStack.length - 1]
       });
     }
+  }
+  else if (e.code === 'ArrowUp')
+  {
+    if (!e.shiftKey && !e.altKey && !e.cmdKey())
+      if (spaceBackElement.style.display !== 'none')
+        onClickSpaceBack();
+  }
+  else if (e.code === 'ArrowDown')
+  {
+    if (!e.shiftKey && !e.altKey && !e.cmdKey())
+      if (spaceForwardElement.style.display !== 'none')
+        onClickSpaceForward();
+  }
+}
+
+function onMouseWheelWindow(e)
+{
+  if (e.ctrlKey)
+  {
+    // disable pinch zoom by touchpad
+    e.stopPropagation();
+    e.preventDefault();
+    return;
+  }
+  if (document.getElementById('colorpicker').open || document.getElementById('recordeditor').open)
+    return;
+  if (!e.shiftKey && !e.altKey && !e.cmdKey())
+  {
+    const panDelta = {x: e.wheelDeltaX, y: e.wheelDeltaY};
+    steeringGear.pan(panDelta);
+    e.stopPropagation();
+    e.preventDefault();
+  }
+  if (e.shiftKey && !e.altKey && !e.cmdKey())
+  {
+    steeringGear.zoom(mouseMovePosition, e.wheelDelta);
+    e.stopPropagation();
+    e.preventDefault();
   }
 }
 
@@ -2618,6 +2861,52 @@ function escapeStringToCode(s) {
   return s.replace(/\\/g, '\\\\').replace(/\"/g, '\\\"').replace(/\n/g, '\\n');
 }
 
+function getHostedKnyteId(knyteId)
+{
+  const hostedKnoxels = informationMap[knyteId].space;
+  const hostedKnytes = {};
+  for (let hostedKnoxelId in hostedKnoxels)
+  {
+    const hostedKnyteId = knoxels[hostedKnoxelId];
+    hostedKnytes[hostedKnyteId] = true;
+  }
+  if (Object.keys(hostedKnytes).length === 1)
+    return Object.keys(hostedKnytes)[0];
+  return null;
+}
+
+function logicBlockHandleClick(knyteId)
+{
+  logicReset(knyteId);
+  setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+  refreshActiveRect({screenPosition: mouseMovePosition});
+  handleSpacemapChanged();
+}
+
+function logicReset(logicKnyteId)
+{
+  function resetTransparentOutline(knoxelId)
+  {
+    const {color} = knoxelViews[knoxelId];
+    if (color.length > 7)
+      knoxelViews[knoxelId].color = color.slice(0, 7);
+  }
+
+  const hostedKnoxels = informationMap[logicKnyteId].space;
+  for (let hostedKnoxelId in hostedKnoxels)
+  {
+    const knyteId = knoxels[hostedKnoxelId];
+    resetTransparentOutline(hostedKnoxelId);
+    const hostedKnoxels2 = informationMap[knyteId].space;
+    for (let hostedKnoxelId2 in hostedKnoxels2)
+      resetTransparentOutline(hostedKnoxelId2);
+    const {record} = informationMap[knyteId];
+    const {initialKnyteId, terminalKnyteId} = knyteVectors[knyteId];
+    if (initialKnyteId && terminalKnyteId && record && (record.data === '-' || record.data === '+'))
+      setKnyteRecordData(knyteId, 'oneliner', '.');
+  }
+}
+
 function runBlockHandleClick(knyteId)
 {
   function onComplete(success, nextKnyteId)
@@ -2625,7 +2914,7 @@ function runBlockHandleClick(knyteId)
     const newData = codeTemplates.runBlock.ready(knyteId, success ? 'init' : 'failed');
     setKnyteRecordData(knyteId, 'interactive', newData);
     setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
-    refreshActiveRect({position: mouseMovePosition});
+    refreshActiveRect({screenPosition: mouseMovePosition});
     handleSpacemapChanged();
     
     if (success && nextKnyteId)
@@ -2700,10 +2989,333 @@ function runBlockHandleClick(knyteId)
     return value;
   }
 
+  function logicCallHandler(logicKnyteId)
+  {
+    logicReset(logicKnyteId);
+    return logicCompute(logicKnyteId);
+  }
+
+  function logicCompute(logicKnyteId)
+  {
+    function markProcessedLink(knyteId, success)
+    {
+      setKnyteRecordData(knyteId, 'oneliner', success ? '+' : '-');
+    }
+
+    function setInnactiveKnoxelView(knoxelId)
+    {
+      function setTransparentOutline(knoxelId)
+      {
+        const {color} = knoxelViews[knoxelId];
+        knoxelViews[knoxelId].color = color + '40';
+      }
+
+      setTransparentOutline(knoxelId);
+      const knyteId = knoxels[knoxelId];
+      const hostedKnoxels = informationMap[knyteId].space;
+      for (let hostedKnoxelId in hostedKnoxels)
+        setTransparentOutline(hostedKnoxelId);
+    }
+
+    // TODO: implement semantic-code entities link via standard parameters
+    const logicSemantics = {
+      blocks: {
+        root: '0f51a068-5ec8-4de1-b24c-f8aec06d00bb',
+      },
+      operators: {
+        not: '8669eb2f-2d20-48c0-88ca-27c4e7a44ef2',
+        and: '50b3066e-d0fd-4efc-806f-4f363a106092',
+        or: '7dde3e82-2c0a-45e5-9bc1-04bb34034514',
+        xor: 'de329bdf-eab1-4c61-a1d5-1d5e7810a3a5',
+      },
+    };
+
+    function isLogicOperator(knyteId)
+    {
+      for (let operator in logicSemantics.operators)
+      {
+        const operatorKnyteId = logicSemantics.operators[operator];
+        if (operatorKnyteId === knyteId)
+          return true;
+      }
+      return false;
+    }
+
+    function computeValueByOperatorId(operatorKnyteId, incomeValues)
+    {
+      // get operator by knyte id
+      let operator = null;
+      for (let op in logicSemantics.operators)
+      {
+        const knyteId = logicSemantics.operators[op];
+        if (operatorKnyteId === knyteId)
+          operator = op;
+      }
+      if (operator === 'not')
+      {
+        if (incomeValues.length === 1)
+          if (incomeValues[0] === true)
+            return false;
+          else if (incomeValues[0] === false)
+            return true;
+        return undefined;
+      }
+      else if (operator === 'and')
+      {
+        for (let i = 0; i < incomeValues.length; ++i)
+        {
+          if (incomeValues[i] === false)
+            return false;
+          if (incomeValues[i] === undefined)
+            return undefined;
+        }
+        return incomeValues.length > 0 ? true : undefined;
+      }
+      else if (operator === 'or')
+      {
+        let result = false;
+        for (let i = 0; i < incomeValues.length; ++i)
+        {
+          if (incomeValues[i] === true)
+            result = true;
+          if (incomeValues[i] === undefined)
+            return undefined;
+        }
+        return incomeValues.length > 0 ? result : undefined;
+      }
+      else if (operator === 'xor')
+      {
+        let trueCounter = 0;
+        for (let i = 0; i < incomeValues.length; ++i)
+        {
+          if (incomeValues[i] === true)
+            ++trueCounter;
+          if (incomeValues[i] === undefined)
+            return undefined;
+        }
+        return incomeValues.length > 0 ? (trueCounter === 1) : undefined;
+      }
+      return undefined;
+    }
+
+    const hostedKnoxels = informationMap[logicKnyteId].space;
+    const succeedKnytes = {};
+    const dismissedKnytes = {};
+    // get root
+    const rootKnytes = {};
+    for (let knoxelId in hostedKnoxels)
+    {
+      const knyteId = knoxels[knoxelId];
+      if (getHostedKnyteId(knyteId) === logicSemantics.blocks.root)
+        rootKnytes[knyteId] = true;
+    }
+    if (Object.keys(rootKnytes).length !== 1)
+      return {complete: false, error: 'logic block must have 1 root block'};
+    const rootKnyteId = Object.keys(rootKnytes)[0];
+    succeedKnytes[rootKnyteId] = true;
+    const rootLinks = getConnectsByDataMatchFunction(rootKnyteId, matchToken, '.', 'initial');
+    // get groups
+    const groupHostKnytes = {}; // {group host knyte id --> group knyte id}
+    for (let i = 0; i < rootLinks.length; ++i)
+    {
+      const linkId = rootLinks[i];
+      const groupHostId = knyteVectors[linkId].terminalKnyteId;
+      const groupId = getHostedKnyteId(groupHostId);
+      if (groupId)
+      {
+        groupHostKnytes[groupHostId] = groupId;
+        succeedKnytes[linkId] = true;
+        succeedKnytes[groupHostId] = true;
+        markProcessedLink(linkId, true);
+      }
+      else
+      {
+        dismissedKnytes[linkId] = true;
+        dismissedKnytes[groupHostId] = true;
+        markProcessedLink(linkId, false);
+      }
+    }
+    // group to values
+    const groupValues = {}; // {group knyte id: {value level 1 knyte id --> value level 2 knyte id}}
+    for (let groupHostId in groupHostKnytes)
+    {
+      const groupId = groupHostKnytes[groupHostId];
+      const groupLinks = getConnectsByDataMatchFunction(groupId, matchToken, '=', 'initial');
+      for (let i = 0; i < groupLinks.length; ++i)
+      {
+        const linkId = groupLinks[i];
+        const valueLevel1HostId = knyteVectors[linkId].terminalKnyteId;
+        const valueLevel1Id = getHostedKnyteId(valueLevel1HostId);
+        const valueLinks = getConnectsByDataMatchFunction(valueLevel1HostId, matchToken, '=', 'initial');
+        for (let j = 0; j < valueLinks.length; ++j)
+        {
+          const linkId = valueLinks[j];
+          const valueLevel2HostId = knyteVectors[linkId].terminalKnyteId;
+          const valueLevel2Id = getHostedKnyteId(valueLevel2HostId);
+          if (!(groupId in groupValues))
+            groupValues[groupId] = {};
+          groupValues[groupId][valueLevel1Id] = valueLevel2Id;
+        }
+      }
+    }
+    const valueStates = {};
+    for (let groupHostId in groupHostKnytes)
+    {
+      const groupId = groupHostKnytes[groupHostId];
+      const groupHostLinks = getConnectsByDataMatchFunction(groupHostId, matchToken, '.', 'initial');
+      for (let i = 0; i < groupHostLinks.length; ++i)
+      {
+        const linkId = groupHostLinks[i];
+        const valueLevel1HostId = knyteVectors[linkId].terminalKnyteId;
+        const valueLevel1Id = getHostedKnyteId(valueLevel1HostId);
+        const valueHostLinks = getConnectsByDataMatchFunction(valueLevel1HostId, matchToken, '.', 'initial');
+        for (let j = 0; j < valueHostLinks.length; ++j)
+        {
+          const linkId = valueHostLinks[j];
+          const valueLevel2HostId = knyteVectors[linkId].terminalKnyteId;
+          const valueLevel2Id = getHostedKnyteId(valueLevel2HostId);
+          if (groupValues[groupId] && groupValues[groupId][valueLevel1Id] && groupValues[groupId][valueLevel1Id] === valueLevel2Id)
+          {
+            valueStates[valueLevel2HostId] = true;
+            succeedKnytes[linkId] = true;
+            succeedKnytes[valueLevel2HostId] = true;
+            markProcessedLink(linkId, true);
+          }
+          else
+          {
+            valueStates[valueLevel2HostId] = false;
+            dismissedKnytes[linkId] = true;
+            dismissedKnytes[valueLevel2HostId] = true;
+            markProcessedLink(linkId, false);
+          }
+        }
+        if (groupValues[groupId] && groupValues[groupId][valueLevel1Id])
+        {
+          succeedKnytes[linkId] = true;
+          succeedKnytes[valueLevel1HostId] = true;
+          markProcessedLink(linkId, true);
+        }
+        else
+        {
+          dismissedKnytes[linkId] = true;
+          dismissedKnytes[valueLevel1HostId] = true;
+          markProcessedLink(linkId, false);
+        }
+      }
+    }
+    // get operators and results
+    const operatorHostKnytes = {}; // {operator host knyte id --> operator knyte id}
+    const resultHostKnytes = {}; // {result host knyte id --> result knyte id}
+    for (let hostedKnoxelId in hostedKnoxels)
+    {
+      const hostKnyteId = knoxels[hostedKnoxelId];
+      const knyteId = getHostedKnyteId(hostKnyteId);
+      if (isLogicOperator(knyteId))
+        operatorHostKnytes[hostKnyteId] = knyteId;
+      else
+        resultHostKnytes[hostKnyteId] = knyteId;
+    }
+    // process operators
+    const maxComputeIterations = 128;
+    let computeIteration = 0;
+    while (computeIteration < maxComputeIterations)
+    {
+      let operatorsComputed = 0;
+      for (operatorHostKnyteId in operatorHostKnytes)
+      {
+        if (valueStates[operatorHostKnyteId] !== undefined)
+          continue;
+        const incomeValues = [];
+        const incomeValueKnytes = getConnectsByDataMatchFunction(operatorHostKnyteId, matchToken, '.', 'terminal');
+        for (let i = 0; i < incomeValueKnytes.length; ++ i)
+        {
+          const linkId = incomeValueKnytes[i];
+          const incomeValueHostId = knyteVectors[linkId].initialKnyteId;
+          incomeValues.push(valueStates[incomeValueHostId]);
+        }
+        const operatorKnyteId = getHostedKnyteId(operatorHostKnyteId);
+        const operatorValue = computeValueByOperatorId(operatorKnyteId, incomeValues);
+        if (operatorValue !== undefined)
+        {
+          ++operatorsComputed;
+          valueStates[operatorHostKnyteId] = operatorValue;
+          if (operatorValue)
+            succeedKnytes[operatorHostKnyteId] = true;
+          else
+            dismissedKnytes[operatorHostKnyteId] = true;
+          for (let i = 0; i < incomeValueKnytes.length; ++ i)
+          {
+            const linkId = incomeValueKnytes[i];
+            const incomeValueHostId = knyteVectors[linkId].initialKnyteId;
+            if (valueStates[incomeValueHostId] === true)
+            {
+              succeedKnytes[linkId] = true;
+              markProcessedLink(linkId, true);
+            }
+            else
+            {
+              dismissedKnytes[linkId] = true;
+              markProcessedLink(linkId, false);
+            }
+          }
+        }
+      }
+      if (!operatorsComputed)
+        break;
+      ++computeIteration;
+    }
+    // set results
+    const maxResultIterations = 128;
+    let resultIteration = 0;
+    while (resultIteration < maxResultIterations)
+    {
+      let resultsComputed = 0;
+      for (resultHostKnyteId in resultHostKnytes)
+      {
+        if (valueStates[resultHostKnyteId] !== undefined)
+          continue;
+        const incomeValueKnytes = getConnectsByDataMatchFunction(resultHostKnyteId, matchToken, '.', 'terminal');
+        if (incomeValueKnytes.length !== 1)
+          continue;
+        const incomeValueLinkId = incomeValueKnytes[0];
+        const incomeValueHostId = knyteVectors[incomeValueLinkId].initialKnyteId;
+        const incomeValue = valueStates[incomeValueHostId];
+        if (incomeValue === undefined)
+          continue;
+        ++resultsComputed;
+        valueStates[resultHostKnyteId] = incomeValue;
+        if (incomeValue)
+        {
+          succeedKnytes[incomeValueLinkId] = true;
+          succeedKnytes[resultHostKnyteId] = true;
+          markProcessedLink(incomeValueLinkId, true);
+        }
+        else
+        {
+          dismissedKnytes[incomeValueLinkId] = true;
+          dismissedKnytes[resultHostKnyteId] = true;
+          markProcessedLink(incomeValueLinkId, false);
+        }
+      }
+      if (!resultsComputed)
+        break;
+      ++resultIteration;
+    }
+    // set innactive knoxels view
+    for (let knoxelId in hostedKnoxels)
+    {
+      const knyteId = knoxels[knoxelId];
+      if (knyteId in dismissedKnytes)
+        setInnactiveKnoxelView(knoxelId);
+    }
+    // return result
+    return {complete: true};
+  }
+
   const newData = codeTemplates.runBlock.busy;
   setKnyteRecordData(knyteId, 'interactive', newData);
   setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
-  refreshActiveRect({position: mouseMovePosition});
+  refreshActiveRect({screenPosition: mouseMovePosition});
   handleSpacemapChanged();
   
   const codeKnytes = getConnectsByDataMatchFunction(knyteId, matchToken, 'code', 'terminal');
@@ -2711,6 +3323,10 @@ function runBlockHandleClick(knyteId)
   const codeKnyteId = codeLinkKnyteId ? knyteVectors[codeLinkKnyteId].initialKnyteId : undefined;
   const codeRecord = codeKnyteId ? informationMap[codeKnyteId].record : undefined;
   let codeText = codeRecord ? codeRecord.data : '';
+
+  const logicKnytes = getConnectsByDataMatchFunction(knyteId, matchToken, 'logic', 'terminal');
+  const logicLinkKnyteId = logicKnytes[0];
+  const logicKnyteId = logicLinkKnyteId ? knyteVectors[logicLinkKnyteId].initialKnyteId : undefined;
 
   const nextKnytes = getConnectsByDataMatchFunction(knyteId, matchToken, 'next', 'initial');
   const nextLinkKnyteId = nextKnytes[0];
@@ -2782,6 +3398,8 @@ function runBlockHandleClick(knyteId)
   {
     if (codeKnytes.length > 1)
       throw Error('run block knyte ' + knyteId + ' has more than 1 code links');
+    if (logicKnytes.length > 1)
+      throw Error('run block knyte ' + knyteId + ' has more than 1 logic links');
     if (nextKnytes.length > 1)
       throw Error('run block knyte ' + knyteId + ' has more than 1 next links');
     if (ifKnytes.length > 1)
@@ -2792,8 +3410,17 @@ function runBlockHandleClick(knyteId)
       throw Error('run block knyte ' + knyteId + ' has more than 1 else links');
     if (!ifKnytes.length && (caseKnytes.length || elseKnytes.length))
       throw Error('run block knyte ' + knyteId + ' has case/else links without if link');
-    if ((ifKnytes.length || caseKnytes.length || elseKnytes.length) && (codeKnytes.length || nextKnytes.length))
-      throw Error('run block knyte ' + knyteId + ' has mixed code-next and if-cases-else links');
+    if (ifKnytes.length || caseKnytes.length || elseKnytes.length)
+    {
+      if (codeKnytes.length)
+        throw Error('run block knyte ' + knyteId + ' has mixed code and if-cases-else links');
+      if (logicKnytes.length)
+        throw Error('run block knyte ' + knyteId + ' has mixed logic and if-cases-else links');
+      if (nextKnytes.length)
+        throw Error('run block knyte ' + knyteId + ' has mixed next and if-cases-else links');
+    }
+    if (logicKnytes.length && codeKnytes.length)
+      throw Error('run block knyte ' + knyteId + ' has mixed code and logic links');
     const namesMap = {};
     for (let i = 0; i < namesSequence.length; ++i)
     {
@@ -2864,6 +3491,21 @@ function runBlockHandleClick(knyteId)
         runBlockDelay
       );
     }
+    else if (logicKnyteId)
+    {
+      runBlockBusyList[knyteId] = true;
+      setTimeout(
+        function()
+        {
+          delete runBlockBusyList[knyteId];
+          const logicResult = logicCallHandler(logicKnyteId);
+          onComplete(logicResult.complete, nextKnyteId);
+          if (!logicResult.complete)
+            throw Error(logicResult.error);
+        },
+        runBlockDelay
+      );
+    }
     else
     {
       const evalKey = 'code-next' + formalParametersList + codeText;
@@ -2918,7 +3560,7 @@ function runBlockHandleClick(knyteId)
               function()
               {
                 delete runBlockBusyList[knyteId];
-                onComplete(codeComplete, nextKnyteId);                
+                onComplete(codeComplete, nextKnyteId);
               }
             );
             promiseComplete = true;
@@ -2944,7 +3586,7 @@ function runBlockHandleClick(knyteId)
       const newData = codeTemplates.runBlock.ready(knyteId, 'failed');
       setKnyteRecordData(knyteId, 'interactive', newData);
       setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
-      refreshActiveRect({position: mouseMovePosition});
+      refreshActiveRect({screenPosition: mouseMovePosition});
       handleSpacemapChanged();
     }
   }
@@ -3009,6 +3651,22 @@ function spacemapChangedHandler()
   }
 }
 
+function steeringChangedHandler()
+{
+  if (activeGhost.knoxelId)
+    knoxelRect.updateArrowShape(activeGhost.knoxelId, mouseMovePosition, true);
+  if (activeInitialGhost.knoxelId)
+    var {knoxelId, element} = activeInitialGhost;
+  if (activeTerminalGhost.knoxelId)
+    var {knoxelId, element} = activeTerminalGhost;
+  if (activeInitialBubble.knoxelId)
+    var {knoxelId, element} = activeInitialBubble;
+  if (activeTerminalBubble.knoxelId)
+    var {knoxelId, element} = activeTerminalBubble;
+  if (knoxelId)
+    knoxelArrow.updateElement({knoxelId, element});
+}
+
 function onLoadBody(e)
 {
   // init space root element
@@ -3016,7 +3674,7 @@ function onLoadBody(e)
   spaceBackElement = document.getElementsByClassName('spaceBack')[0];
   spaceForwardElement = document.getElementsByClassName('spaceForward')[0];
   spaceMapElement = document.getElementsByClassName('spaceMap')[0];
-  spaceHostElement = document.getElementsByClassName('spaceHost')[0];
+  steeringElement = document.getElementById('steering');
   svgNameSpace = spaceRootElement.getAttribute('xmlns');
   // create master knyte
   const masterKnyteId = knit.new();
@@ -3039,10 +3697,10 @@ function onLoadBody(e)
   spaceRootElement.addEventListener('mouseup', onMouseUpSpaceRoot, false);
   window.addEventListener('resize', onResizeWindow, false);
   window.addEventListener('keydown', onKeyDownWindow, false);
+  window.addEventListener('mousewheel', onMouseWheelWindow, {passive: false});
   document.getElementById('backArrowShape').addEventListener('click', onClickSpaceBack, false);
   document.getElementById('forwardArrowShape').addEventListener('click', onClickSpaceForward, false);
   document.getElementById('spaceMapButton').addEventListener('click', onClickSpaceMap, false);
-  document.getElementById('spaceHostButton').addEventListener('click', onClickSpaceHost, false);
   // setup space root view
   setSpaceRootKnoxel({knoxelId: masterKnoxelId});
   setNavigationControlState({});
@@ -3050,6 +3708,8 @@ function onLoadBody(e)
   // initialise spacemap
   handleSpacemapChanged = spacemapChangedHandler;
   handleSpacemapChanged();
-  
+  // initialise steering
+  handleSteeringChanged = steeringChangedHandler;
+
   console.log('ready');
 }

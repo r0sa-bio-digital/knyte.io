@@ -7,24 +7,27 @@
 
 Хостинг проекта
 ---------------
-* Официальная страница: <https://www.knyte.io>
-* Статика и IDE: <https://knyte-io.glitch.me>
+* Официальная страница: <https://knyte.io/>
+* Хостинг статики: <https://knyte.netlify.app/>
 * Репозиторий с исходниками: <https://github.com/r0sa-bio-digital/knyte.io/>
 
 Прототип пространства
 ---------------------
 * Ссылки на модули
-  * Интерактивный прототип: <https://www.knyte.io/space>
+  * Интерактивный прототип: <https://knyte.io/space/>
   * Спецификация Knoxel Space: <https://github.com/r0sa-bio-digital/knyte.io/blob/master/space/knoxelSpace.json>
     * документ в собственном формате Knoxel Space
     * для использования его нужно сохранить локально в json-файл
       * и затем загрузить в систему как стейт
+  * Версия в активной разработке: <https://knyte.io/space-dev/>
 * Управление
   * drop file on app screen - загрузить стейт системы из json-файла
   * console global variables
     * runBlockDelay - задержка (в миллисекундах) при запуске кода каждого выплняемого run block'а
       * служит для отладочных целей - чтобы наблюдать за динамикой потока выполнения инструкций
       * по умолчанию равно 0
+  * vertical/horizontal scroll - перемещение в пространстве root knoxel'я
+  * shift + vertical scroll - изменение масштаба пространства root knoxel'я
   * shortcuts
     * cmd + s - сохранить стейт системы в json-файл
     * cmd + click - создать новый knyte и knoxel для него в указанной точке пространства

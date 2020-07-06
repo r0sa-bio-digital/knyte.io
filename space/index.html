@@ -5,15 +5,23 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script>
+      // autoredirect from http to https
+      /*
+      if (location.protocol !== 'https:' && location.protocol !== 'file:')
+        location.replace(`https:${location.href.substring(location.protocol.length)}`);
+      */
+    </script>
     <link rel="shortcut icon"
-      href="https://cdn.glitch.com/c7fe0d0e-dc84-453f-accd-fc6b231021b6%2Ffavicon.ico?v=1590532497321" type="image/x-icon">
+      href="favicon.ico" type="image/x-icon">
     <link rel="icon"
-      href="https://cdn.glitch.com/c7fe0d0e-dc84-453f-accd-fc6b231021b6%2Ffavicon.ico?v=1590532497321" type="image/x-icon">
-    <link rel="stylesheet" href="space/style.css">
-    <script src="space/colors.js"></script>
-    <script src="space/intersect.js"></script>
-    <script src="space/filesaver.js"></script>
-    <script src="space/script.js"></script>
+      href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="style.css">
+    <script src="colors.js"></script>
+    <script src="stage.js"></script>
+    <script src="intersect.js"></script>
+    <script src="filesaver.js"></script>
+    <script src="script.js"></script>
   </head>  
   <body onload="onLoadBody(event);">
     <svg class="spaceRoot" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -34,13 +42,17 @@
           <polyline points="1 1 5 3 1 5" stroke="#160f19" fill="none" />
         </marker>
       </defs>
-      <g id="record">
-        <foreignObject x="0" y="0" width="0" height="0"></foreignObject>
+      <g id="steering">
+        <g id="record">
+          <foreignObject x="0" y="0" width="0" height="0"></foreignObject>
+        </g>
+        <g id="knoxels"></g>
+        <g id="arrows"></g>
       </g>
-      <g id="knoxels"></g>
-      <g id="arrows"></g>
-      <g id="bubbles"></g>
-      <g id="ghosts"></g>
+      <g id="positioning">
+        <g id="bubbles"></g>
+        <g id="ghosts"></g>
+      </g>
       <g id="arrowGhosts"></g>
     </svg>
     <div class="spaceBack">
@@ -60,13 +72,6 @@
         <circle cx="28" cy="12" r="6" stroke="#160f19" stroke-width="2" fill="#dc286f"></circle>
         <circle cx="12" cy="28" r="6" stroke="#160f19" stroke-width="2" fill="#36945b"></circle>
         <circle cx="28" cy="28" r="6" stroke="#160f19" stroke-width="2" fill="#5571f1"></circle>
-      </svg>
-    </div>
-    <div id="spaceHostButton" class="spaceHost">
-      <svg class="hostIcon" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-        <polygon id="hostShape" points="2,2 38,2 38,38 2,38" stroke-width="4" stroke="#ffff00" fill="#ffff00" />
-        <circle cx="18" cy="18" r="8" fill="#d8b621" stroke="#160f19" stroke-width="2" stroke-dasharray="0 4" stroke-linecap="square"></circle>
-        <circle cx="26" cy="26" r="8" fill="#d8b621" stroke="#160f19" stroke-width="2" opacity="0.5"></circle>
       </svg>
     </div>
     <div id="autosizer"></div>
@@ -146,6 +151,7 @@
             rows="15" cols="80" onkeydown="onKeyDownRecordeditor(event);"></textarea>
           <div style="text-align: left;">
             <button onclick="onClickRunBlock();">run block</button>
+            <button onclick="onClickLogicBlock();">logic block</button>
           </div>
         </div>
       </div>
@@ -189,6 +195,20 @@
         const recordeditorDialog = document.getElementById('recordeditor');
         document.getElementById('recordinput.interactive').value = codeTemplates.runBlock.ready(
           recordeditorDialog.dataset.knyteId, 'init');
+      }
+
+      function onClickLogicBlock()
+      {
+        const recordeditorDialog = document.getElementById('recordeditor');
+        document.getElementById('recordinput.interactive').value = '<div style="width: 80px; height: 24px; margin: 8px;">\n' +
+          '\t<button\n' +
+            '\t\tdata-knyte-id="' + recordeditorDialog.dataset.knyteId + '"\n' +
+            '\t\tonclick="event.stopPropagation(); logicBlockHandleClick(this.dataset.knyteId);"\n' +
+            '\t\tonfocus="this.blur();"\n' +
+          '\t>\n' +
+            '\t\treset\n' +
+          '\t</button>\n' +
+        '</div>';
       }
       
       function onKeyDownRecordeditor(e)
