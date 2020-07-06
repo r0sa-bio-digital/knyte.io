@@ -556,7 +556,7 @@ function runBlockHandleClick(knyteId, body, finalKnyteId, resolve)
       inputs[inputName] = inputValue;
       namesSequence.push(inputName);
       inputNamesSequence.push(inputName);
-      const name = ouinputNametputName.split(':')[0];
+      const name = inputName.split(':')[0];
       inputNameToKnyteMap[name] = inputKnyteId;
     }
   }
