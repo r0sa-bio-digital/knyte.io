@@ -6,13 +6,6 @@ const {loadAppState, runBlockHandleClick} = require('./server');
 const app = express();
 app.use(bodyParser.json());
 app.use(cors({allowedHeaders: ['Content-Type']}));
-//app.options('*', cors());
-
-app.get('/sum/:a/:b', (request, response) => {
-  const {a, b} = request.params;
-  const sum = parseFloat(a) + parseFloat(b);
-  response.send('a + b = ' + a + ' + ' + b + ' = ' + sum);
-});
 
 function runBlockAsync(body) {
   body = body ? body : {};
