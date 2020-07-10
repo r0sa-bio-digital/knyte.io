@@ -5,10 +5,10 @@ const {loadAppState, runBlockHandleClick} = require('./server');
 
 const app = express();
 app.use(bodyParser.json());
-//app.use(cors());
+app.use(cors({allowedHeaders: ['Content-Type']}));
 //app.options('*', cors());
 
-app.get('/sum/:a/:b', cors(), (request, response) => {
+app.get('/sum/:a/:b', (request, response) => {
   const {a, b} = request.params;
   const sum = parseFloat(a) + parseFloat(b);
   response.send('a + b = ' + a + ' + ' + b + ' = ' + sum);
@@ -21,7 +21,7 @@ function runBlockAsync(body) {
   });
 }
 
-app.post('/', cors(), async(request, response) => {
+app.post('/', async(request, response) => {
   console.log('knyte loading started...');
   loadAppState('./space/knoxelSpace.json');
   console.log('run block starting...');
@@ -29,11 +29,11 @@ app.post('/', cors(), async(request, response) => {
   response.send(result);
 });
 
-app.get('/', cors(), (request, response) => {
+app.get('/', (request, response) => {
   response.send('Welcome to knyte cloud server.');
 });
 
-app.get('*', cors(), (request, response) => {
+app.get('*', (request, response) => {
   response.send('Uknown command.');
 });
 
