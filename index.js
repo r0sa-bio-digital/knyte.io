@@ -1,9 +1,11 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const cors = require('cors');
 const {loadAppState, runBlockHandleClick} = require('./server');
 
 const app = express();
-app.use(bodyParser.json())
+app.use(bodyParser.json());
+app.use(cors());
 
 app.get('/sum/:a/:b', (request, response) => {
   const {a, b} = request.params;
