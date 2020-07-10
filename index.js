@@ -6,6 +6,7 @@ const {loadAppState, runBlockHandleClick} = require('./server');
 const app = express();
 app.use(bodyParser.json());
 app.use(cors());
+app.options('*', cors());
 
 app.get('/sum/:a/:b', (request, response) => {
   const {a, b} = request.params;
