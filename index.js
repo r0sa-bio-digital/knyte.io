@@ -5,10 +5,10 @@ const {loadAppState, runBlockHandleClick} = require('./server');
 
 const app = express();
 app.use(bodyParser.json());
-app.use(cors());
-app.options('*', cors());
+//app.use(cors());
+//app.options('*', cors());
 
-app.get('/sum/:a/:b', (request, response) => {
+app.get('/sum/:a/:b', cors(), (request, response) => {
   const {a, b} = request.params;
   const sum = parseFloat(a) + parseFloat(b);
   response.send('a + b = ' + a + ' + ' + b + ' = ' + sum);
@@ -29,11 +29,11 @@ app.post('/', cors(), async(request, response) => {
   response.send(result);
 });
 
-app.get('/', (request, response) => {
+app.get('/', cors(), (request, response) => {
   response.send('Welcome to knyte cloud server.');
 });
 
-app.get('*', (request, response) => {
+app.get('*', cors(), (request, response) => {
   response.send('Uknown command.');
 });
 
