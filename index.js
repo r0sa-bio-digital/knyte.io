@@ -5,7 +5,7 @@ const {loadAppState, runBlockHandleClick} = require('./server');
 
 const app = express();
 app.use(bodyParser.json());
-//app.use(cors());
+app.use(cors());
 app.options('*', cors());
 
 app.get('/sum/:a/:b', (request, response) => {
@@ -21,7 +21,7 @@ function runBlockAsync(body) {
   });
 }
 
-app.post('/', async(request, response) => {
+app.post('/', cors(), async(request, response) => {
   console.log('knyte loading started...');
   loadAppState('./space/knoxelSpace.json');
   console.log('run block starting...');
