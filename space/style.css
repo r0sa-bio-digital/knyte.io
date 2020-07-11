@@ -30,6 +30,19 @@ select {
   user-select: none;
 }
 
+.bootLoading {
+  position: absolute;
+  left: 35%;
+  bottom: 35%;
+  width: 30%;
+  height: 30%;
+}
+
+.bootIcon {
+  width: 100%;
+  height: 100%;
+}
+
 .spaceMap {
   position: absolute;
   left: 12px;

@@ -3738,6 +3738,7 @@ async function onLoadBody(e)
   const {readRawUrl, authDone, writeAccess} = await fetchGistStatus();
   if (readRawUrl)
     await loadAppState({rawUrl: readRawUrl});
+  document.getElementById('bootLoadingSpinner').remove();
 
   console.log('ready');
 }
