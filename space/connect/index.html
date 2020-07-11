@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>knoxel space connect gist</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <script src="../connection.js"></script>
+  </head>  
+  <script type="text/javascript">
+    let gistIdElement, githubPATElement;
+
+    function updateGistPreview()
+    {
+      let previewElement = document.getElementById('preview');
+      previewElement.innerHTML = 'not implemented yet';
+    }
+
+    function onClickUpdate(e)
+    {
+      localStorage.setItem(gistIdKey, gistIdElement.value);
+      localStorage.setItem(githubPATKey, githubPATElement.value);
+      updateGistPreview();
+    }
+
+    function onClickReset(e)
+    {
+      gistIdElement.value = '';
+      githubPATElement.value = '';
+      onClickUpdate(e);
+    }
+
+    function onLoadBody(e)
+    {
+      gistIdElement = document.getElementById('gistId');
+      githubPATElement = document.getElementById('githubPAT');
+      gistIdElement.value = localStorage.getItem(gistIdKey);
+      githubPATElement.value = localStorage.getItem(githubPATKey);
+      updateGistPreview();
+    }
+  </script>
+  <body onload="onLoadBody(event);">
+    <h1>Knyte.io to KnoxelSpace connection</h1>
+    <div>
+      <span>gist id: </span>
+      <input id="gistId" type="text">
+      <span> for read access</span>
+    </div>
+    <div>
+      <span>github PAT (private access token): </span>
+      <input id="githubPAT" type="text">
+      <span> for write access</span>
+    </div>
+    <div>
+      <button onclick="onClickUpdate(event);">Update connection</button>
+      <button onclick="onClickReset(event);">Reset connection</button>
+    </div>
+    <h2>Gist preview</h2>
+    <div id="preview"></div>
+  </body>
+</html>
