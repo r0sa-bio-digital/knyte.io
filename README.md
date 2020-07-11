@@ -17,10 +17,10 @@
 ---------------------
 * Ссылки на модули
   * Интерактивный прототип: <https://knyte.io/space/>
-  * Спецификация Knoxel Space: <https://github.com/r0sa-bio-digital/knyte.io/blob/master/space/knoxelSpace.json>
+  * Подключение к gist'у: <https://knyte.io/space/connect/>
+  * Спецификация на ядро системы: <https://gist.github.com/x-rodionov/db2e7e564eb343beddcc7fd71b3bba21>
     * документ в собственном формате Knoxel Space
-    * для использования его нужно сохранить локально в json-файл
-      * и затем загрузить в систему как стейт
+    * для использования нужно прописать его gist id (db2e7e564eb343beddcc7fd71b3bba21) в connect'е
   * Версия в активной разработке: <https://knyte-dev.netlify.app/space/>
 * Управление
   * drop file on app screen - загрузить стейт системы из json-файла
