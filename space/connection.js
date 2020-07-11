@@ -36,5 +36,5 @@ async function fetchGistStatus()
       }
     }
   }
-  return {readRawUrl, authDone, writeAccess};
+  return {gistId, githubPAT, readRawUrl, authDone, writeAccess};
 }

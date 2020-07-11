@@ -32,6 +32,7 @@
   * shift + vertical scroll - изменение масштаба пространства root knoxel'я
   * shortcuts
     * cmd + s - сохранить стейт системы в json-файл
+    * cmd + g - загрузить стейт системы в gist при наличии writable conection'а
     * cmd + click - создать новый knyte и knoxel для него в указанной точке пространства
     * cmd + alt + click - создать новый run block knyte и knoxel для него в указанной точке пространства
     * click в knoxel - перейти в пространство knoxel'я

@@ -194,14 +194,15 @@ function checkAppBusy()
 {
   if (Object.keys(runBlockBusyList).length > 0)
   {
-    alert('Can\'t save/load state while code is running.\nPlease, stop all active flows first.')
+    alert('Can\'t save/load/upload state while code is running.\nPlease, stop all active flows first.')
     return false;
   }
   return true;
 }
 
-function saveAppState()
+async function saveAppState(desc)
 {
+  // desc: {gistId, githubPAT}
   if (!checkAppBusy())
     return;
   const state = {masterKnoxelId, spacemapKnoxelId, knyteVectors, knoxelVectors,
@@ -212,8 +213,29 @@ function saveAppState()
     (key, value) => {if (!(key in keyMap)) {keyMap[key] = true; keys.push(key);} return value;}
   );
   const stateText = JSON.stringify(state, keys.sort(), '\t');
-  const blob = new Blob([stateText], {type: 'text/plain;charset=utf-8'});
-  saveAs(blob, 'knoxelSpace.json', true);
+  if (desc)
+  {
+    const method = 'PATCH';
+    const gist_id = desc.gistId;
+    const headers = {
+      authorization: 'token ' + desc.githubPAT,
+      'Content-Type': 'application/json'
+    };
+    const body = JSON.stringify({files: {[gistKnyteAppstateFilename]: {content: stateText}}});
+    const response = await fetch('https://api.github.com/gists/' + gist_id, {method, headers, body});
+    const json = await response.json();
+    if (response.status !== 200)
+      alert('Upload failed.');
+    else
+      alert('Upload complete.');
+    console.log('Appstate upload result:');
+    console.log(json);
+  }
+  else
+  {
+    const blob = new Blob([stateText], {type: 'text/plain;charset=utf-8'});
+    saveAs(blob, 'knoxelSpace.json', true);
+  }
 }
 
 async function loadAppState(desc)
@@ -2378,7 +2400,7 @@ function getRecordtype(record)
   return record ? record.viewertype : 'oneliner';
 }
 
-function onKeyDownWindow(e)
+async function onKeyDownWindow(e)
 {
   if (document.getElementById('colorpicker').open || document.getElementById('recordeditor').open)
     return;
@@ -2583,6 +2605,17 @@ function onKeyDownWindow(e)
       saveAppState();
     }
   }
+  else if (e.code === 'KeyG')
+  {
+    if (!e.shiftKey && !e.altKey && e.cmdKey())
+    {
+      const {gistId, githubPAT, writeAccess} = await fetchGistStatus();
+      if (gistId && githubPAT && writeAccess)
+        await saveAppState({gistId, githubPAT}); // TODO: implement spinner while uploading and optional comment for uploaded changes
+      else
+        alert('Imposible to upload appstate to gist without writable connection.');
+    }
+  }
   else if (e.code === 'KeyD')
   {
     if (!e.shiftKey && !e.altKey && !e.cmdKey())
@@ -2599,7 +2632,7 @@ function onKeyDownWindow(e)
         if (confirm('Sure to collapse knoxel content?'))
           knoxelViews[knoxelId].collapse = true;
       }
-      if (collapse !== knoxelViews[knoxelId].collapse)        
+      if (collapse !== knoxelViews[knoxelId].collapse)
       {
         setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
         handleSpacemapChanged();
@@ -3735,7 +3768,7 @@ async function onLoadBody(e)
   // initialise steering
   handleSteeringChanged = steeringChangedHandler;
   // init startup gist
-  const {readRawUrl, authDone, writeAccess} = await fetchGistStatus();
+  const {readRawUrl} = await fetchGistStatus();
   if (readRawUrl)
     await loadAppState({rawUrl: readRawUrl});
   document.getElementById('bootLoadingSpinner').remove();
