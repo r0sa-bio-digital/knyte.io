@@ -1,4 +1,4 @@
-const fs = require('fs');
+const fetch = require('node-fetch');
 
 // state variables to save/load
 let masterKnoxelId;
