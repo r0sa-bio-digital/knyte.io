@@ -5,7 +5,7 @@ const {loadAppState, runBlockHandleClick} = require('./server');
 
 const app = express();
 app.use(bodyParser.json());
-app.use(cors({allowedHeaders: ['Content-Type']}));
+app.use(cors({methods: ['GET','HEAD','POST','OPTIONS'], allowedHeaders: ['Content-Type']}));
 
 async function fetchKnyteAppstate(body)
 {
