@@ -208,14 +208,18 @@ function saveAppState()
     knyteConnects, knyteInitialConnects, knyteTerminalConnects, informationMap, knoxels, knoxelViews};
   const keys = [];
   const keyMap = {};
-  JSON.stringify(state, (key, value) => {if (!(key in keyMap)) {keyMap[key] = true; keys.push(key);} return value;});
+  JSON.stringify(state, 
+    (key, value) => {if (!(key in keyMap)) {keyMap[key] = true; keys.push(key);} return value;}
+  );
   const stateText = JSON.stringify(state, keys.sort(), '\t');
   const blob = new Blob([stateText], {type: 'text/plain;charset=utf-8'});
   saveAs(blob, 'knoxelSpace.json', true);
 }
 
-function loadAppState(files)
+async function loadAppState(desc)
 {
+  // desc: {files, rawUrl}
+
   function assignAppState(state)
   {
     function assignObject(source, destination)
@@ -246,20 +250,35 @@ function loadAppState(files)
     steeringForwardStack.length = 0;
   }
 
-  if (!checkAppBusy())
-    return;
-  // TODO: implement files count and format check
-  const file = files[0];
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const state = JSON.parse(e.target.result);
+  function onAppStateLoaded(state)
+  {
     assignAppState(state);
     setSpaceRootKnoxel({knoxelId: masterKnoxelId}); // +++0
     steeringGear.setPan({x: 0, y: 0});
     handleSpacemapChanged();
     setNavigationControlState({});
-  };
-  reader.readAsText(file);
+  }
+
+  if (!checkAppBusy())
+    return;
+  if (desc.files)
+  {
+    // TODO: implement files count and format check
+    const file = desc.files[0];
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const state = JSON.parse(e.target.result);
+      onAppStateLoaded(state)
+    };
+    reader.readAsText(file);
+  }
+  else if (desc.rawUrl)
+  {
+    const response = await fetch(desc.rawUrl);
+    const json = await response.json();
+    const state = json; // TODO: implement json format check
+    onAppStateLoaded(state);
+  }
 }
 
 function updateKnyteConnects(knyteId, connectType, connectOperation, connectKnyteId)
@@ -3672,7 +3691,7 @@ function steeringChangedHandler()
     knoxelArrow.updateElement({knoxelId, element});
 }
 
-function onLoadBody(e)
+async function onLoadBody(e)
 {
   // init space root element
   spaceRootElement = document.getElementsByClassName('spaceRoot')[0];
@@ -3715,6 +3734,10 @@ function onLoadBody(e)
   handleSpacemapChanged();
   // initialise steering
   handleSteeringChanged = steeringChangedHandler;
+  // init startup gist
+  const {readRawUrl, authDone, writeAccess} = await fetchGistStatus();
+  if (readRawUrl)
+    await loadAppState({rawUrl: readRawUrl});
 
   console.log('ready');
 }

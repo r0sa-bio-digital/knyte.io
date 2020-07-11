@@ -10,48 +10,16 @@
     <script src="../connection.js"></script>
   </head>  
   <script type="text/javascript">
-    let gistIdElement, githubPATElement;
+    let gistIdElement, githubPATElement, readElement, authElement, writeElement;
 
     async function updateGistPreview()
     {
-      const readElement = document.getElementById('previewRead');
-      const authElement = document.getElementById('previewAuth');
-      const writeElement = document.getElementById('previewWrite');
       readElement.innerHTML = '...';
       authElement.innerHTML = '...';
       writeElement.innerHTML = '...';
-      const gistId = localStorage.getItem(gistIdKey);
-      const githubPAT = localStorage.getItem(githubPATKey);
-      let raw_url, authDone, writeAccess;
-      if (gistId)
-      {
-        const response = await fetch('https://api.github.com/gists/' + gistId);
-        const json = await response.json();
-        const file = json.files ? json.files[gistKnyteAppstateFilename] : undefined;
-        raw_url = file ? file.raw_url : undefined;
-      }
-      if (githubPAT)
-      {
-        const response = await fetch('https://api.github.com/gists/starred', {headers: {authorization: 'token ' + githubPAT}});
-        const json = await response.json();
-        authDone = json ? json.length !== undefined : false;
-        if (authDone)
-        {
-          const response = await fetch('https://api.github.com/gists', {headers: {authorization: 'token ' + githubPAT}});
-          const json = await response.json();
-          for (let i = 0; i < json.length; ++i)
-          {
-            const id = json[i].id;
-            if (id === gistId)
-            {
-              writeAccess = true;
-              break;
-            }
-          }
-        }
-      }
-      readElement.innerHTML = raw_url ? '<a href="' + raw_url + '">' + raw_url + '</a>'
-        : 'not connected';
+      const {readRawUrl, authDone, writeAccess} = await fetchGistStatus();
+      readElement.innerHTML = readRawUrl
+        ? '<a href="' + readRawUrl + '">' + readRawUrl + '</a>' : 'not connected';
       authElement.innerHTML = authDone ? 'yes' : 'no';
       writeElement.innerHTML = writeAccess ? 'true' : 'false';
     }
@@ -74,6 +42,9 @@
     {
       gistIdElement = document.getElementById('gistId');
       githubPATElement = document.getElementById('githubPAT');
+      readElement = document.getElementById('previewRead');
+      authElement = document.getElementById('previewAuth');
+      writeElement = document.getElementById('previewWrite');
       gistIdElement.value = localStorage.getItem(gistIdKey);
       githubPATElement.value = localStorage.getItem(githubPATKey);
       updateGistPreview();
