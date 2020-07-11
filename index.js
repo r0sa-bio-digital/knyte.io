@@ -7,16 +7,23 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors({allowedHeaders: ['Content-Type']}));
 
-function runBlockAsync(body) {
+async function fetchKnyteAppstate(body)
+{
   body = body ? body : {};
-  return new Promise(resolve => {
-    runBlockHandleClick(body.rootRunBlockKnyteId, body, null, resolve);
-  });
+  await loadAppState(body.appstateGistId);
+}
+
+function runBlockAsync(body)
+{
+  body = body ? body : {};
+  return new Promise(
+    (resolve) => {runBlockHandleClick(body.rootRunBlockKnyteId, body, null, resolve);}
+  );
 }
 
 app.post('/', async(request, response) => {
-  console.log('knyte loading started...');
-  loadAppState('./space/knoxelSpace.json');
+  console.log('knyte boot loading...');
+  await fetchKnyteAppstate(request.body);
   console.log('run block starting...');
   const result = await runBlockAsync(request.body);
   response.send(result);

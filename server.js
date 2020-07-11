@@ -24,7 +24,10 @@ const steeringForwardStack = []; // [next space root steering]
 let runBlockDelay = 0;
 const runBlockBusyList = {};
 
-function loadAppState(filename)
+// duplicates from client-side code
+const gistKnyteAppstateFilename = 'knyte-appstate.json';
+
+async function loadAppState(gistId)
 {
   function assignAppState(state)
   {
@@ -56,10 +59,17 @@ function loadAppState(filename)
     steeringForwardStack.length = 0;
   }
 
-  // TODO: implement format check
-  const rawdata = fs.readFileSync(filename);
-  const state = JSON.parse(rawdata.toString());
-  assignAppState(state);
+  const response = await fetch('https://api.github.com/gists/' + gistId);
+  const json = await response.json();
+  const file = json.files ? json.files[gistKnyteAppstateFilename] : undefined;
+  const readRawUrl = file ? file.raw_url : undefined;
+  if (readRawUrl)
+  {
+    const response = await fetch(readRawUrl);
+    const json = await response.json();
+    const state = json; // TODO: implement json format check
+    assignAppState(state);
+  }
 }
 
 function getConnectsByDataMatchFunction(knyteId, match, token, type)
