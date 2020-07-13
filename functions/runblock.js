@@ -121,8 +121,9 @@ async function loadAppState(gistId)
   }
   else
   {
-  	json.content = '(...)';
-    throw Error('fetch 3: ' + JSON.stringify(json));
+  	console.log('failed to get raw url:');
+  	console.log(JSON.stringify(Object.keys(json.files)));
+    throw Error('fetch 3: ' + JSON.stringify(json.url));
     return false;
   }
   return true;
