@@ -95,7 +95,7 @@ async function loadAppState(gistId)
     steeringForwardStack.length = 0;
   }
 
-  const response = await fetch('https://api.github.com/gists/');// + gistId, {headers: {'User-Agent': 'Mozilla/5.0'}});
+  const response = await fetch('https://api.github.com/gists/' + gistId, {headers: {'User-Agent': 'Mozilla/5.0'}});
   if (response.statusCode !== 200)
   {
     throw Error('fetch 1: ' + JSON.stringify(response));
@@ -176,7 +176,7 @@ function runBlockHandleClick(knyteId, body, finalKnyteId, resolve)
 {
   if (!knyteId || !knyteVectors[knyteId])
   {
-    const result = JSON.stringify({success: false, result: 'run block not found.'});
+    const result = JSON.stringify({success: false, result: 'run block not found.', knyteId, knyteVectors: JSON.stringify(knyteVectors)});
     resolve(result);
   }
 
