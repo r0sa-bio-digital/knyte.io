@@ -116,6 +116,11 @@ async function loadAppState(gistId)
     const state = json; // TODO: implement json format check
     assignAppState(state);
   }
+  else
+  {
+    throw Error('fetch 3: ' + JSON.stringify(json));
+    return false;
+  }
   return true;
 }
 
