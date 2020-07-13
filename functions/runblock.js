@@ -18,7 +18,8 @@ function fetch(url, options = {}) {
       });
 
       res.on('end', () => {
-        resolve({ res, body: chunks });
+      	const {complete, headers, trailers, aborted, upgrade, statusCode, statusMessage, url, method, client} = res;
+        resolve({complete, headers, trailers, aborted, upgrade, statusCode, statusMessage, url, method, client, body: chunks });
       });
     });
 
@@ -95,9 +96,9 @@ async function loadAppState(gistId)
   }
 
   const response = await fetch('https://api.github.com/gists/' + gistId);
-  if (response.res.statusCode !== 200)
+  if (response.statusCode !== 200)
   {
-    throw Error('fetch 1: ' + JSON.stringify(Object.keys(response.res)));
+    throw Error('fetch 1: ' + JSON.stringify(response));
     return false;
   }
   const json = response.body; //await response.json();
@@ -106,9 +107,9 @@ async function loadAppState(gistId)
   if (readRawUrl)
   {
     const response = await fetch(readRawUrl);
-    if (response.res.statusCode !== 200)
+    if (response.statusCode !== 200)
     {
-      throw Error('fetch 2: ' + JSON.stringify(Object.keys(response.res)));
+      throw Error('fetch 2: ' + JSON.stringify(response));
       return false;
     }
     const json = response.body; //await response.json();
