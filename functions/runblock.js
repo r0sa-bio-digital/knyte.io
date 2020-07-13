@@ -121,6 +121,7 @@ async function loadAppState(gistId)
   }
   else
   {
+  	json.content = '(...)';
     throw Error('fetch 3: ' + JSON.stringify(json));
     return false;
   }
