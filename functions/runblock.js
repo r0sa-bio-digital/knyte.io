@@ -18,8 +18,8 @@ function fetch(url, options = {}) {
       });
 
       res.on('end', () => {
-      	const {/*complete, headers, trailers, aborted, upgrade, url, method, client,*/ statusCode, statusMessage} = res;
-        resolve({/*complete, headers, trailers, aborted, upgrade, url, method, client,*/ statusCode, statusMessage, body: chunks});
+      	const {complete, headers, trailers, aborted, upgrade, url, method, client, statusCode, statusMessage} = res;
+        resolve({complete, headers, trailers, aborted, upgrade, url, method, client, statusCode, statusMessage, body: chunks});
       });
     });
 
@@ -95,7 +95,7 @@ async function loadAppState(gistId)
     steeringForwardStack.length = 0;
   }
 
-  const response = await fetch('https://api.github.com/gists/' + gistId, {headers: {'User-Agent': 'Mozilla/5.0'}});
+  const response = await fetch('https://api.github.com/gists/' + gistId);//, {headers: {'User-Agent': 'Mozilla/5.0'}});
   if (response.statusCode !== 200)
   {
     throw Error('fetch 1: ' + JSON.stringify(response));
@@ -106,7 +106,7 @@ async function loadAppState(gistId)
   const readRawUrl = file ? file.raw_url : undefined;
   if (readRawUrl)
   {
-    const response = await fetch(readRawUrl, {headers: {'User-Agent': 'Mozilla/5.0'}});
+    const response = await fetch(readRawUrl);//, {headers: {'User-Agent': 'Mozilla/5.0'}});
     if (response.statusCode !== 200)
     {
       throw Error('fetch 2: ' + JSON.stringify(response));
