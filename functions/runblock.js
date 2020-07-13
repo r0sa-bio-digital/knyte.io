@@ -6,9 +6,9 @@ function fetch(url, options = {}) {
     if (!url) return reject(new Error('Url is required'));
 
     const { body, method = 'GET', ...restOptions } = options;
-    const client = url.startsWith('https') ? https : http;
+    const clientProtocol = url.startsWith('https') ? https : http;
 
-    const request = client.request(url, { method, ...restOptions }, (res) => {
+    const request = clientProtocol.request(url, { method, ...restOptions }, (res) => {
       let chunks = '';
 
       res.setEncoding('utf8');
@@ -95,7 +95,7 @@ async function loadAppState(gistId)
     steeringForwardStack.length = 0;
   }
 
-  const response = await fetch('https://api.github.com/gists/' + gistId);
+  const response = await fetch('https://api.github.com/gists/' + gistId, {headers: {'User-Agent': 'Mozilla/5.0'}});
   if (response.statusCode !== 200)
   {
     throw Error('fetch 1: ' + JSON.stringify(response));
@@ -106,7 +106,7 @@ async function loadAppState(gistId)
   const readRawUrl = file ? file.raw_url : undefined;
   if (readRawUrl)
   {
-    const response = await fetch(readRawUrl);
+    const response = await fetch(readRawUrl, {headers: {'User-Agent': 'Mozilla/5.0'}});
     if (response.statusCode !== 200)
     {
       throw Error('fetch 2: ' + JSON.stringify(response));
