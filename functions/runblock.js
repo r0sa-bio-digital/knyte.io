@@ -97,7 +97,7 @@ async function loadAppState(gistId)
   }
 
   const response = await fetch('https://api.github.com/gists/' + gistId,
-    {authorization: 'token ' + githubPAT, headers: {'User-Agent': 'Mozilla/5.0'}});
+    {headers: {authorization: 'token ' + githubPAT, 'User-Agent': 'Mozilla/5.0'}});
   if (response.statusCode !== 200)
   {
     throw Error('fetch 1: ' + JSON.stringify(response));
@@ -109,7 +109,7 @@ async function loadAppState(gistId)
   if (readRawUrl)
   {
     const response = await fetch(readRawUrl,
-      {authorization: 'token ' + githubPAT, headers: {'User-Agent': 'Mozilla/5.0'}});
+      {headers: {authorization: 'token ' + githubPAT, 'User-Agent': 'Mozilla/5.0'}});
     if (response.statusCode !== 200)
     {
       throw Error('fetch 2: ' + JSON.stringify(response));
