@@ -103,7 +103,7 @@ async function loadAppState(gistId)
     throw Error('fetch 1: ' + JSON.stringify(response));
     return false;
   }
-  const json = response.body; //await response.json();
+  const json = JSON.parse(response.body); //await response.json();
   const file = json.files ? json.files[gistKnyteAppstateFilename] : undefined;
   const readRawUrl = file ? file.raw_url : undefined;
   if (readRawUrl)
@@ -115,14 +115,12 @@ async function loadAppState(gistId)
       throw Error('fetch 2: ' + JSON.stringify(response));
       return false;
     }
-    const json = response.body; //await response.json();
+    const json = JSON.parse(response.body); //await response.json();
     const state = json; // TODO: implement json format check
     assignAppState(state);
   }
   else
   {
-  	console.log('failed to get raw url:');
-  	console.log(JSON.stringify(Object.keys(json.files)));
     throw Error('fetch 3: ' + JSON.stringify(json.url));
     return false;
   }
