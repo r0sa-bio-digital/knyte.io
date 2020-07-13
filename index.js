@@ -32,7 +32,10 @@ app.post('/', async(request, response) => {
     result = await runBlockAsync(request.body);
   }
   else
+  {
+    console.log('knyte boot failed');
     result = JSON.stringify({success: false, result: 'knyte boot loading failed.'});    
+  }
   response.send(result);
 });
 
