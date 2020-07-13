@@ -851,7 +851,8 @@ exports.handler = async (event, context) => {
 
   const body = event.body ? JSON.parse(event.body) : {};
   console.log('knyte boot loading...');
-  if (await loadAppState(body.appstateGistId))
+  const success = await loadAppState(body.appstateGistId);
+  if (success)
   {
     console.log('run block starting...');
     result = await runBlockAsync(body);
@@ -863,6 +864,6 @@ exports.handler = async (event, context) => {
   }
   return {
     statusCode: 200,
-    body: JSON.stringify(result)
+    body: result
   };
 };
