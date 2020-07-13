@@ -10,7 +10,8 @@ app.use(cors({methods: ['GET','HEAD','POST','OPTIONS'], allowedHeaders: ['Conten
 async function fetchKnyteAppstate(body)
 {
   body = body ? body : {};
-  await loadAppState(body.appstateGistId);
+  const success = await loadAppState(body.appstateGistId);
+  return success;
 }
 
 function runBlockAsync(body)
@@ -22,10 +23,16 @@ function runBlockAsync(body)
 }
 
 app.post('/', async(request, response) => {
+  let result;
   console.log('knyte boot loading...');
-  await fetchKnyteAppstate(request.body);
-  console.log('run block starting...');
-  const result = await runBlockAsync(request.body);
+  const success = await fetchKnyteAppstate(request.body);
+  if (success)
+  {
+    console.log('run block starting...');
+    result = await runBlockAsync(request.body);
+  }
+  else
+    result = JSON.stringify({success: false, result: 'knyte boot loading failed.'});    
   response.send(result);
 });
 
