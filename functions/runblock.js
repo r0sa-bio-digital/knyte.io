@@ -1,5 +1,6 @@
 const https = require('https');
 const http = require('http');
+const { githubPAT } = process.env;
 
 function fetch(url, options = {}) {
   return new Promise((resolve, reject) => {
@@ -95,7 +96,8 @@ async function loadAppState(gistId)
     steeringForwardStack.length = 0;
   }
 
-  const response = await fetch('https://api.github.com/gists/' + gistId, {headers: {'User-Agent': 'Mozilla/5.0'}});
+  const response = await fetch('https://api.github.com/gists/' + gistId,
+    {authorization: 'token ' + githubPAT, headers: {'User-Agent': 'Mozilla/5.0'}});
   if (response.statusCode !== 200)
   {
     throw Error('fetch 1: ' + JSON.stringify(response));
@@ -106,7 +108,8 @@ async function loadAppState(gistId)
   const readRawUrl = file ? file.raw_url : undefined;
   if (readRawUrl)
   {
-    const response = await fetch(readRawUrl, {headers: {'User-Agent': 'Mozilla/5.0'}});
+    const response = await fetch(readRawUrl,
+      {authorization: 'token ' + githubPAT, headers: {'User-Agent': 'Mozilla/5.0'}});
     if (response.statusCode !== 200)
     {
       throw Error('fetch 2: ' + JSON.stringify(response));
