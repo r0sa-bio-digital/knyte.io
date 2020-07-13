@@ -18,7 +18,7 @@ function fetch(url, options = {}) {
       });
 
       res.on('end', () => {
-        resolve({ statusCode: res.statusCode, body: chunks });
+        resolve({ res, body: chunks });
       });
     });
 
@@ -95,9 +95,9 @@ async function loadAppState(gistId)
   }
 
   const response = await fetch('https://api.github.com/gists/' + gistId);
-  if (response.statusCode !== 200)
+  if (response.res.statusCode !== 200)
   {
-    throw Error('fetch 1: ' + response.statusCode);
+    throw Error('fetch 1: ' + JSON.stringify(response));
     return false;
   }
   const json = response.body; //await response.json();
@@ -106,9 +106,9 @@ async function loadAppState(gistId)
   if (readRawUrl)
   {
     const response = await fetch(readRawUrl);
-    if (response.statusCode !== 200)
+    if (response.res.statusCode !== 200)
     {
-      throw Error('fetch 2: ' + response.statusCode);
+      throw Error('fetch 2: ' + JSON.stringify(response));
       return false;
     }
     const json = response.body; //await response.json();
