@@ -796,7 +796,6 @@ function runBlockHandleClick(knyteId, body, finalKnyteId, resolve)
 }
 */
 exports.handler = async (event, context) => {
-{
   if (event.httpMethod === "GET") {
     return {
       statusCode: 200,
