@@ -18,8 +18,8 @@ function fetch(url, options = {}) {
       });
 
       res.on('end', () => {
-      	const {complete, headers, trailers, aborted, upgrade, statusCode, statusMessage, url, method, client} = res;
-        resolve({complete, headers, trailers, aborted, upgrade, statusCode, statusMessage, url, method, client, body: chunks });
+      	const {complete, /*headers, trailers, aborted, upgrade,*/ statusCode, statusMessage, url, method, client} = res;
+        resolve({complete, /*headers, trailers, aborted, upgrade,*/ statusCode, statusMessage, url, method, client, body: chunks});
       });
     });
 
