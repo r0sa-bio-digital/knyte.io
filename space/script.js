@@ -3,6 +3,7 @@
 /* global saveAs */
 
 let svgNameSpace;
+let bootLoadingSpinnerElement;
 let spaceRootElement;
 let spaceBackElement;
 let spaceForwardElement;
@@ -224,10 +225,10 @@ async function saveAppState(desc)
     const body = JSON.stringify({files: {[gistKnyteAppstateFilename]: {content: stateText}}});
     const response = await fetch('https://api.github.com/gists/' + gist_id, {method, headers, body});
     const json = await response.json();
-    if (response.status !== 200)
-      alert('Upload failed.');
+    if (response.status === 200 && json.files && json.files[gistKnyteAppstateFilename])
+      ; // successful upload
     else
-      alert('Upload complete.');
+      alert('Failed to upload appstate to gist.');
     console.log('Appstate upload result:');
     console.log(json);
   }
@@ -297,9 +298,17 @@ async function loadAppState(desc)
   else if (desc.rawUrl)
   {
     const response = await fetch(desc.rawUrl);
-    const json = await response.json();
-    const state = json; // TODO: implement json format check
-    onAppStateLoaded(state);
+    if (response.status === 200)
+    {
+      const json = await response.json();
+      const state = json; // TODO: implement json format check
+      onAppStateLoaded(state);
+    }
+    else
+    {
+      alert('Failed to load appstate form gist.');
+      console.log(desc.rawUrl);
+    }
   }
 }
 
@@ -2609,11 +2618,13 @@ async function onKeyDownWindow(e)
   {
     if (!e.shiftKey && !e.altKey && e.cmdKey())
     {
+      bootLoadingElement.style.display = 'block';
       const {gistId, githubPAT, writeAccess} = await fetchGistStatus();
       if (gistId && githubPAT && writeAccess)
         await saveAppState({gistId, githubPAT}); // TODO: implement spinner while uploading and optional comment for uploaded changes
       else
         alert('Imposible to upload appstate to gist without writable connection.');
+      bootLoadingElement.style.display = 'none';
     }
   }
   else if (e.code === 'KeyD')
@@ -3727,6 +3738,7 @@ function steeringChangedHandler()
 async function onLoadBody(e)
 {
   // init space root element
+  bootLoadingElement = document.getElementsByClassName('bootLoading')[0];
   spaceRootElement = document.getElementsByClassName('spaceRoot')[0];
   spaceBackElement = document.getElementsByClassName('spaceBack')[0];
   spaceForwardElement = document.getElementsByClassName('spaceForward')[0];
@@ -3771,7 +3783,7 @@ async function onLoadBody(e)
   const {readRawUrl} = await fetchGistStatus();
   if (readRawUrl)
     await loadAppState({rawUrl: readRawUrl});
-  document.getElementById('bootLoadingSpinner').remove();
+  bootLoadingElement.style.display = 'none';
 
   console.log('ready');
 }
