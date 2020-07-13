@@ -96,7 +96,10 @@ async function loadAppState(gistId)
 
   const response = await fetch('https://api.github.com/gists/' + gistId);
   if (response.status !== 200)
+  {
+    throw Error('fetch 1: ' + response.status);
     return false;
+  }
   const json = response.body; //await response.json();
   const file = json.files ? json.files[gistKnyteAppstateFilename] : undefined;
   const readRawUrl = file ? file.raw_url : undefined;
@@ -104,7 +107,10 @@ async function loadAppState(gistId)
   {
     const response = await fetch(readRawUrl);
     if (response.status !== 200)
+    {
+      throw Error('fetch 2: ' + response.status);
       return false;
+    }
     const json = response.body; //await response.json();
     const state = json; // TODO: implement json format check
     assignAppState(state);
