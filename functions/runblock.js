@@ -100,7 +100,7 @@ async function loadAppState(gistId)
     {headers: {authorization: 'token ' + githubPAT, 'User-Agent': 'Mozilla/5.0'}});
   if (response.statusCode !== 200)
   {
-    throw Error('fetch 1: ' + JSON.stringify(response));
+    console.log('fetch fail 1: ' + JSON.stringify(response));
     return false;
   }
   const json = JSON.parse(response.body); //await response.json();
@@ -112,7 +112,7 @@ async function loadAppState(gistId)
       {headers: {authorization: 'token ' + githubPAT, 'User-Agent': 'Mozilla/5.0'}});
     if (response.statusCode !== 200)
     {
-      throw Error('fetch 2: ' + JSON.stringify(response));
+      console.log('fetch fail 2: ' + JSON.stringify(response));
       return false;
     }
     const json = JSON.parse(response.body); //await response.json();
@@ -121,7 +121,7 @@ async function loadAppState(gistId)
   }
   else
   {
-    throw Error('fetch 3: ' + JSON.stringify(json.url));
+    console.log('fetch fail 3: ' + JSON.stringify(json.url));
     return false;
   }
   return true;
