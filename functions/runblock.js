@@ -797,7 +797,7 @@ function runBlockHandleClick(knyteId, body, finalKnyteId, resolve)
 exports.handler = function(event, context, callback) {
   callback(null, {
     statusCode: 200,
-    body: JSON.stringify(querystring.parse(event.body)),
+    body: JSON.stringify(querystring.parse(event.body))
   });
 };
 /*
