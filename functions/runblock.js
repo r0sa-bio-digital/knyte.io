@@ -35,9 +35,6 @@ function fetch(url, options = {}) {
   });
 }
 
-/*
-import fetch from 'node-fetch';
-
 // state variables to save/load
 let masterKnoxelId;
 let spacemapKnoxelId;
@@ -830,7 +827,14 @@ function runBlockHandleClick(knyteId, body, finalKnyteId, resolve)
   {
   }
 }
-*/
+
+function runBlockAsync(body)
+{
+  return new Promise(
+    (resolve) => {runBlockHandleClick(body.rootRunBlockKnyteId, body, null, resolve);}
+  );
+}
+
 exports.handler = async (event, context) => {
   if (event.httpMethod === "GET") {
     return {
@@ -845,9 +849,20 @@ exports.handler = async (event, context) => {
     };
   }
 
-  const body = JSON.parse(event.body);
+  const body = event.body ? JSON.parse(event.body) : {};
+  console.log('knyte boot loading...');
+  if (await loadAppState(body.appstateGistId))
+  {
+    console.log('run block starting...');
+    result = await runBlockAsync(body);
+  }
+  else
+  {
+    console.log('knyte boot failed');
+    result = JSON.stringify({success: false, result: 'knyte boot loading failed.'});
+  }
   return {
     statusCode: 200,
-    body: JSON.stringify({body, server: true})
+    body: JSON.stringify(result)
   };
 };
