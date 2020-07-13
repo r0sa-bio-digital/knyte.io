@@ -1,7 +1,7 @@
-exports.handler = function(event, context, callback)
+exports.handler = async (event, context) => {
 {
-  callback(null, {
+  return {
     statusCode: 200,
-    body: "hello from netlify functions"
-  });
+    body: 'hello from netlify functions',
+  };
 }
