@@ -1,6 +1,6 @@
 import querystring from 'querystring';
 import fetch from "node-fetch";
-
+/*
 // state variables to save/load
 let masterKnoxelId;
 let spacemapKnoxelId;
@@ -793,7 +793,14 @@ function runBlockHandleClick(knyteId, body, finalKnyteId, resolve)
   {
   }
 }
-
+*/
+exports.handler = function(event, context, callback) {
+  callback(null, {
+    statusCode: 200,
+    body: JSON.stringify(querystring.parse(event.body)),
+  });
+};
+/*
 exports.handler = async (event, context) => {
 {
   if (event.httpMethod === "GET") {
@@ -815,3 +822,4 @@ exports.handler = async (event, context) => {
     body: JSON.stringify({body, server: true}),
   };
 };
+*/
