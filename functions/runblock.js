@@ -97,7 +97,7 @@ async function loadAppState(gistId)
   const response = await fetch('https://api.github.com/gists/' + gistId);
   if (response.statusCode !== 200)
   {
-    throw Error('fetch 1: ' + response.status);
+    throw Error('fetch 1: ' + response.statusCode);
     return false;
   }
   const json = response.body; //await response.json();
@@ -108,7 +108,7 @@ async function loadAppState(gistId)
     const response = await fetch(readRawUrl);
     if (response.statusCode !== 200)
     {
-      throw Error('fetch 2: ' + response.status);
+      throw Error('fetch 2: ' + response.statusCode);
       return false;
     }
     const json = response.body; //await response.json();
