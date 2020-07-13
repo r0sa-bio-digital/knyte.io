@@ -18,8 +18,8 @@ function fetch(url, options = {}) {
       });
 
       res.on('end', () => {
-      	const {url, method, client, statusCode, statusMessage} = res;
-        resolve({url, method, client, statusCode, statusMessage, body: chunks});
+      	const {url, method, statusCode, statusMessage} = res;
+        resolve({url, method, statusCode, statusMessage, body: chunks});
       });
     });
 
