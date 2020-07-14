@@ -857,6 +857,11 @@ exports.handler = async (event, context) => {
       body: 'Welcome to knyte lambda functions.'
     };
   }
+  if (event.httpMethod === "OPTIONS") {
+    return {
+      statusCode: 204
+    };
+  }
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
