@@ -2677,10 +2677,19 @@ async function onKeyDownWindow(e)
       const colorpickerDialog = document.getElementById('colorpicker');
       const colorpickerInput = colorpickerDialog.getElementsByTagName('input')[0];
       colorpickerInput.value = color;
+      colorpickerInput.focus();
+      colorpickerInput.select();
       colorpickerDialog.returnValue = '';
       colorpickerDialog.dataset.knyteId = knyteId;
       colorpickerDialog.addEventListener('close', onCloseDialog);
-      setTimeout(function(){colorpickerDialog.showModal();}, 0);
+      setTimeout(
+        function()
+        {
+          colorpickerDialog.showModal();
+          colorpickerInput.focus();
+          colorpickerInput.select();
+        },
+      0);
     }
   }
   else if (e.code === 'KeyV')
