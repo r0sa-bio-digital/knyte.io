@@ -35,6 +35,8 @@
     * cmd + g - загрузить стейт системы в gist при наличии writable conection'а
     * cmd + click - создать новый knyte и knoxel для него в указанной точке пространства
     * cmd + alt + click - создать новый run block knyte и knoxel для него в указанной точке пространства
+    * cmd + shift + click - создать knyte с заданным knyte id и knoxel для него в указанной точке пространства
+      * knyte id должен быть уникальным в рамках текущего knyte cloud'а и иметь формат uuid v4
     * click в knoxel - перейти в пространство knoxel'я
     * space
       * без ghost'а - создать ghost для выбранного knoxel'я

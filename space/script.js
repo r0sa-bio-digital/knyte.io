@@ -1737,9 +1737,23 @@ function replaceKnoxelInStacks(desc)
 function onClickSpaceRoot(e)
 {
   const mousePosition = {x: e.clientX, y: e.clientY};
-  if (!e.shiftKey && e.cmdKey())
+  if (!(e.shiftKey && e.altKey) && e.cmdKey())
   {
-    const knyteId = knit.new();
+    const targetKnyteId = e.shiftKey ? prompt('Specify knyte id for new block:') : knit.new();
+    const uuidv4pattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[4][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!targetKnyteId)
+      return;
+    if (!uuidv4pattern.test(targetKnyteId))
+    {
+      alert('Invalid knyte id specified. Must be uuid v4. Block creation cancelled.');
+      return;
+    }
+    if (targetKnyteId.toLowerCase() in knyteVectors)
+    {
+      alert('Duplicated knyte id specified. Block creation cancelled.');
+      return;
+    }
+    const knyteId = targetKnyteId;
     const color = visualTheme.rect.fillColor;
     addKnyte({knyteId, color});
     const position = steeringGear.screenToSpacePosition(mousePosition);
