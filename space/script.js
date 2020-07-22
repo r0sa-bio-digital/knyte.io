@@ -71,6 +71,9 @@ const visualTheme = {
   knoxel: {
     defaultColor: visualThemeColors.stroke,
   },
+  frame: {
+    color: visualThemeColors.frame,
+  },
   navigation: {
     strokeColor: visualThemeColors.control,
     fillColor: visualThemeColors.navigation,
@@ -1081,6 +1084,9 @@ function setSpaceRootKnoxel(desc)
   // desc: {knoxelId}
   const priorKnoxelId = spaceRootElement.dataset.knoxelId;
   const newKnoxelId = desc.knoxelId;
+  // terminate frame
+  if (activeFrame.element && priorKnoxelId !== newKnoxelId)
+    terminateFrameRect();
   // clear children rects
   const spaceRootKnoxels = document.getElementById('knoxels');
   while (spaceRootKnoxels.firstElementChild)
@@ -1528,6 +1534,8 @@ function parseTransform(s)
 
 function onClickRect(e)
 {
+  if (activeFrame.element)
+    return;
   const targetKnoxelElement = knoxelRect.getRootByTarget(e.target);
   if (!e.shiftKey && !e.altKey && !e.cmdKey())
   {
@@ -1732,6 +1740,12 @@ function replaceKnoxelInStacks(desc)
   for (let i = 0; i < spaceForwardStack.length; ++i)
     if (spaceForwardStack[i] === desc.removeKnoxelId)
       spaceForwardStack[i] = desc.stayKnoxelId;
+}
+
+function rectContainsRect(rect1, rect2)
+{
+  return rect1.left < rect2.left && rect1.top < rect2.top &&
+    rect1.right > rect2.right && rect1.bottom > rect2.bottom;
 }
 
 function onClickSpaceRoot(e)
@@ -1979,6 +1993,24 @@ function refreshActiveRect(desc)
   }
 }
 
+function createActiveFrame(desc)
+{
+  // desc: {position}
+  const strokeWidth = visualTheme.rect.strokeWidth;
+  const color = visualTheme.frame.color;
+  const rect = document.createElementNS(svgNameSpace, 'rect');
+  rect.setAttribute('x', desc.position.x);
+  rect.setAttribute('y', desc.position.y);
+  rect.setAttribute('width', strokeWidth);
+  rect.setAttribute('height', strokeWidth);
+  rect.setAttribute('fill', color + '40');
+  rect.setAttribute('stroke', color);
+  rect.setAttribute('stroke-width', strokeWidth);
+  rect.style.pointerEvents = 'none';
+  document.getElementById('frames').appendChild(rect);
+  return rect;
+}
+
 const activeGhost = {
   knoxelId: null,
   spawnSpaceRootKnoxelId: null,
@@ -2060,6 +2092,25 @@ function terminateBubbleRect()
   activeBubble.knoxelId = null;
   activeBubble.offset = {x: 0, y: 0};
   activeBubble.element = null;
+}
+
+const activeFrame = {
+  origin: {x: 0, y: 0},
+  element: null,
+};
+
+function spawnFrameRect(desc)
+{
+  // desc: {position}
+  activeFrame.element = createActiveFrame(desc);
+  activeFrame.origin = desc.position;
+}
+
+function terminateFrameRect()
+{
+  activeFrame.element.remove();
+  activeFrame.origin = {x: 0, y: 0};
+  activeFrame.element = null;
 }
 
 function createActiveArrow(desc)
@@ -2223,23 +2274,40 @@ function onMouseDownSpaceRoot(e)
 let mouseMovePosition = {x: 0, y: 0};
 let mouseMovePagePosition = {x: 0, y: 0};
 
+function updateFrameRect(desc)
+{
+  // desc: {position}
+  const position1 = activeFrame.origin;
+  const position2 = desc.position;
+  const x = Math.min(position1.x, position2.x);
+  const w = Math.abs(position1.x - position2.x);
+  const y = Math.min(position1.y, position2.y);
+  const h = Math.abs(position1.y - position2.y);
+  activeFrame.element.setAttribute('x', x);
+  activeFrame.element.setAttribute('y', y);
+  activeFrame.element.setAttribute('width', w);
+  activeFrame.element.setAttribute('height', h);
+}
+
 function onMouseMoveSpaceRoot(e)
 {
   mouseMovePosition = {x: e.clientX, y: e.clientY};
   mouseMovePagePosition = {x: e.pageX, y: e.pageY};
-  const position = mouseMovePosition;
+  const {x, y} = mouseMovePosition;
   if (activeGhost.knoxelId)
   {
-    const {x, y} = position;
     knoxelRect.moveElement({element: activeGhost.element, x, y});
     knoxelRect.updateArrowShape(activeGhost.knoxelId, {x, y}, true);
   }
   if (activeBubble.knoxelId)
   {
-    const {x, y} = position;
     knoxelRect.moveElement({element: activeBubble.element, x, y});
   }
-  const {x, y} = position;
+  if (activeFrame.element)
+  {
+    const position = steeringGear.screenToSpacePosition(mouseMovePosition);
+    updateFrameRect({position});
+  }
   if (activeInitialGhost.knoxelId)
     var {knoxelId, element} = activeInitialGhost;
   if (activeTerminalGhost.knoxelId)
@@ -2443,16 +2511,18 @@ async function onKeyDownWindow(e)
   {
     if (activeGhost.knoxelId)
       terminateGhostRect();
-    if (activeBubble.knoxelId)
+    else if (activeBubble.knoxelId)
       terminateBubbleRect();
-    if (activeInitialGhost.knoxelId)
+    else if (activeInitialGhost.knoxelId)
       terminateInitialGhostArrow();
-    if (activeTerminalGhost.knoxelId)
+    else if (activeTerminalGhost.knoxelId)
       terminateTerminalGhostArrow();
-    if (activeInitialBubble.knoxelId)
+    else if (activeInitialBubble.knoxelId)
       terminateInitialBubbleArrow();
-    if (activeTerminalBubble.knoxelId)
+    else if (activeTerminalBubble.knoxelId)
       terminateTerminalBubbleArrow();
+    else if (activeFrame.element)
+      terminateFrameRect();
     setNavigationControlState({
       backKnoxelId: spaceBackStack[spaceBackStack.length - 1],
       forwardKnoxelId: spaceForwardStack[spaceForwardStack.length - 1]
@@ -2662,6 +2732,36 @@ async function onKeyDownWindow(e)
         setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
         handleSpacemapChanged();
       }
+    }
+  }
+  else if (e.code === 'KeyF')
+  {
+    if (!activeFrame.element)
+    {
+      const position = steeringGear.screenToSpacePosition(mouseMovePosition);
+      spawnFrameRect({position});
+    }
+    else
+    {
+      const p1 = activeFrame.origin;
+      const p2 = steeringGear.screenToSpacePosition(mouseMovePosition);
+      const frameRect = {
+        left: Math.min(p1.x, p2.x), top: Math.min(p1.y, p2.y),
+        right: Math.max(p1.x, p2.x), bottom: Math.max(p1.y, p2.y)
+      };
+      const knoxelsToInsert = {};
+      const hostKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
+      const space = informationMap[hostKnyteId].space;
+      for (let knoxelId in space)
+      {
+        const p = space[knoxelId];
+        const {w, h} = knoxelRect.getKnoxelDimensions(knoxelId);
+        const rect = {left: p.x - w/2, top: p.y - h/2, right: p.x + w/2, bottom: p.y + h/2};
+        if (rectContainsRect(frameRect, rect))
+          knoxelsToInsert[knoxelId] = true;
+      }
+      console.log(knoxelsToInsert); // TODO: create group knoxel and place knoxelsToInsert into it
+      terminateFrameRect();
     }
   }
   else if (e.code === 'KeyE')
@@ -2939,6 +3039,11 @@ function onMouseWheelWindow(e)
     steeringGear.zoom(mouseMovePosition, e.wheelDelta);
     e.stopPropagation();
     e.preventDefault();
+  }
+  if (activeFrame.element)
+  {
+    const position = steeringGear.screenToSpacePosition(mouseMovePosition);
+    updateFrameRect({position});
   }
 }
 

@@ -7,6 +7,7 @@ const visualThemeColors = {
   control: '#160f19',
   success: '#55ff84',
   fail: '#ff5d5d',
+  frame: '#0000ff',
   elements: [
     '#79e6d9',
     '#a4a4e4',
