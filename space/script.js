@@ -2664,6 +2664,50 @@ async function onKeyDownWindow(e)
       }
     }
   }
+  else if (e.code === 'KeyE')
+  {
+    if (!e.shiftKey && !e.altKey && !e.cmdKey())
+    {
+      const knoxelId = mouseoverKnoxelId;
+      if (knoxelId)
+      {
+        const knyteId = knoxels[knoxelId];
+        const knoxelPosition = steeringGear.screenToSpacePosition(mouseMovePosition);
+        const spaceRootKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
+        const {x, y} = informationMap[spaceRootKnyteId].space[knoxelId];
+        const {leftTop, w, h} = knoxelRect.getKnoxelDimensions(knoxelId);
+        const knoxelSpace = informationMap[knyteId].space;
+        if (Object.keys(knoxelSpace).length > 0)
+        {
+          if (confirm('Sure to extract inner knoxels to space root?'))
+          {
+            const landingKnoxelId = spaceRootElement.dataset.knoxelId;  
+            const landingKnyteId = knoxels[landingKnoxelId];
+            for (let extractedKnoxelId in knoxelSpace)
+            {
+              if (
+                extractedKnoxelId === landingKnoxelId &&
+                !(extractedKnoxelId in informationMap[landingKnyteId].space)
+              )
+                continue;
+              const landingKnoxelPosition = knoxelSpace[extractedKnoxelId];
+              const landingKnoxelNewPosition = {
+                x: x + landingKnoxelPosition.x - w/2 - leftTop.x,
+                y: y + landingKnoxelPosition.y - h/2 - leftTop.y
+              };
+              delete informationMap[knyteId].space[extractedKnoxelId];
+              informationMap[landingKnyteId].space[extractedKnoxelId] = landingKnoxelNewPosition;
+            }
+            informationMap[spaceRootKnyteId].space[knoxelId] = knoxelPosition;
+            setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+            handleSpacemapChanged();
+          }
+        }
+        else
+          alert('There is no any knoxel to extract to space root.')
+      }
+    }
+  }
   else if (e.code === 'KeyC')
   {
     if (!e.shiftKey && !e.altKey && !e.cmdKey())

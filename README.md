@@ -77,6 +77,9 @@
       * в режиме пространства - вызвать редактор size'а для knyte.record knoxel'я под курсором
     * d
       * в режиме пространства - задать collapse/expand для knoxel'я под курсором
+    * e
+      * в режиме пространства - произвести extract для knoxel'я под курсором
+        * вынуть из пространства knoxel'я все вложенные в него knoxel'и и поместить их в space root
     * escape
       * c ghost'ом - сбросить ghost
       * c bubble'ом - сбросить bubble
