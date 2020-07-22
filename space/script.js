@@ -1522,6 +1522,7 @@ function addKnoxelRect(desc)
   addKnoxel({hostKnyteId, knyteId: desc.knyteId, knoxelId, position, collapse: desc.collapse, color: desc.color});
   knoxelRect.add({knoxelId, position});
   knoxelRect.updateArrowShape(knoxelId, position);
+  return knoxelId;
 }
 
 function parseTransform(s)
@@ -1746,6 +1747,18 @@ function rectContainsRect(rect1, rect2)
 {
   return rect1.left < rect2.left && rect1.top < rect2.top &&
     rect1.right > rect2.right && rect1.bottom > rect2.bottom;
+}
+
+function rectExpandByRect(rect1, rect2)
+{
+  if (rect1.left > rect2.left)
+    rect1.left = rect2.left;
+  if (rect1.top > rect2.top)
+    rect1.top = rect2.top;
+  if (rect1.right < rect2.right)
+    rect1.right = rect2.right;
+  if (rect1.bottom < rect2.bottom)
+    rect1.bottom = rect2.bottom;
 }
 
 function onClickSpaceRoot(e)
@@ -2749,6 +2762,10 @@ async function onKeyDownWindow(e)
         left: Math.min(p1.x, p2.x), top: Math.min(p1.y, p2.y),
         right: Math.max(p1.x, p2.x), bottom: Math.max(p1.y, p2.y)
       };
+      const groupRect = {
+        left: 1000000, top: 1000000,
+        right: -1000000, bottom: -1000000
+      };
       const knoxelsToInsert = {};
       const hostKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
       const space = informationMap[hostKnyteId].space;
@@ -2758,9 +2775,34 @@ async function onKeyDownWindow(e)
         const {w, h} = knoxelRect.getKnoxelDimensions(knoxelId);
         const rect = {left: p.x - w/2, top: p.y - h/2, right: p.x + w/2, bottom: p.y + h/2};
         if (rectContainsRect(frameRect, rect))
+        {
           knoxelsToInsert[knoxelId] = true;
+          rectExpandByRect(groupRect, rect);
+        }
       }
-      console.log(knoxelsToInsert); // TODO: create group knoxel and place knoxelsToInsert into it
+      if (Object.keys(knoxelsToInsert).length > 0)
+      {
+        const knyteId = knit.new();
+        const color = visualTheme.rect.fillColor;
+        addKnyte({knyteId, color});
+        const position = {x:(groupRect.right + groupRect.left)/2, y: (groupRect.bottom + groupRect.top)/2};
+        const hostKnoxelId = spaceRootElement.dataset.knoxelId;
+        const hostKnyteId = knoxels[hostKnoxelId];
+        for (let subKnoxelId in knoxelsToInsert)
+        {
+          const subPosition = informationMap[hostKnyteId].space[subKnoxelId];
+          delete informationMap[hostKnyteId].space[subKnoxelId];
+          informationMap[knyteId].space[subKnoxelId] = {
+            x: subPosition.x - groupRect.left,
+            y: subPosition.y - groupRect.top
+          };
+        }
+        const knoxelId = addKnoxelRect({knyteId, hostKnoxelId, position});
+        knoxelViews[knoxelId].color = visualTheme.frame.color;
+        knoxelSpaceRoot.update();
+        setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+        handleSpacemapChanged();
+      }
       terminateFrameRect();
     }
   }
@@ -2798,6 +2840,7 @@ async function onKeyDownWindow(e)
               delete informationMap[knyteId].space[extractedKnoxelId];
               informationMap[landingKnyteId].space[extractedKnoxelId] = landingKnoxelNewPosition;
             }
+            delete informationMap[spaceRootKnyteId].space[knoxelId];
             informationMap[spaceRootKnyteId].space[knoxelId] = knoxelPosition;
             setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
             handleSpacemapChanged();
