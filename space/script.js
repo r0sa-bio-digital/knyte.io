@@ -3877,6 +3877,10 @@ function runBlockHandleClick(knyteId)
 
 function spacemapChangedHandler()
 {
+  // do it for spacemap spaces only
+  if (knoxels[spaceRootElement.dataset.knoxelId] !== knoxels[spacemapKnoxelId])
+    return;
+  
   // rebuild spacemapKnoxelId space: add knoxels for all new knytes; recreate all arrows.
 
   // build new knytes map
