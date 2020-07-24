@@ -205,19 +205,27 @@ function checkAppBusy()
   return true;
 }
 
-async function saveAppState(desc)
+async function saveAppState(desc, fastMode)
 {
   // desc: {gistId, githubPAT}
   if (!checkAppBusy())
     return;
   const state = {masterKnoxelId, spacemapKnoxelId, knyteVectors, knoxelVectors,
     knyteConnects, knyteInitialConnects, knyteTerminalConnects, informationMap, knoxels, knoxelViews};
-  const keys = [];
-  const keyMap = {};
-  JSON.stringify(state, 
-    (key, value) => {if (!(key in keyMap)) {keyMap[key] = true; keys.push(key);} return value;}
-  );
-  const stateText = JSON.stringify(state, keys.sort(), '\t');
+  let stateText;
+  if (fastMode)
+  {
+    stateText = JSON.stringify(state);
+  }
+  else
+  {
+    const keys = [];
+    const keyMap = {};
+    JSON.stringify(state, 
+      (key, value) => {if (!(key in keyMap)) {keyMap[key] = true; keys.push(key);} return value;}
+    );
+    stateText = JSON.stringify(state, keys.sort(), '\t');
+  }
   if (desc)
   {
     const method = 'PATCH';
@@ -239,7 +247,7 @@ async function saveAppState(desc)
   else
   {
     const blob = new Blob([stateText], {type: 'text/plain;charset=utf-8'});
-    saveAs(blob, 'knoxelSpace.json', true);
+    saveAs(blob, fastMode ? 'knoxelSpace.min.json' : 'knoxelSpace.json', true);
   }
 }
 
@@ -2722,8 +2730,22 @@ async function onKeyDownWindow(e)
     }
     else if (!e.shiftKey && !e.altKey && e.cmdKey())
     {
-      bootLoadingElement.style.display = 'block';
-      setTimeout(function(){saveAppState(); bootLoadingElement.style.display = 'none';}, 300);
+      saveAppState(undefined, true); // no keys sorting (not diff friendly), but fast
+    }
+    else if (e.shiftKey && !e.altKey && e.cmdKey())
+    {
+      if (confirm('Sure to apply slow diff friendly save method?'))
+      {
+        bootLoadingElement.style.display = 'block';
+        setTimeout(
+          function()
+          {
+            saveAppState(); // sorted (diff friendly), but slow
+            bootLoadingElement.style.display = 'none';
+          },
+          300
+        );
+      }
     }
   }
   else if (e.code === 'KeyG')
