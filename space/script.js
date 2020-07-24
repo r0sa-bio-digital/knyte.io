@@ -142,7 +142,8 @@ const steeringGear = new function()
     const p = spaceRootElement.createSVGPoint();
     p.x = screenPosition.x;
     p.y = screenPosition.y;
-    return p.matrixTransform(this.getCTM().inverse());
+    const {x, y} = p.matrixTransform(this.getCTM().inverse());
+    return {x, y};
   };
 
   this.spaceToScreenPosition = function(position)
@@ -150,7 +151,8 @@ const steeringGear = new function()
     const p = spaceRootElement.createSVGPoint();
     p.x = position.x;
     p.y = position.y;
-    return p.matrixTransform(this.getCTM());
+    const {x, y} = p.matrixTransform(this.getCTM());
+    return {x, y};
   };
 
   this.pan = function(delta, noSpeedCorrection)
@@ -208,8 +210,27 @@ function checkAppBusy()
 async function saveAppState(desc, fastMode)
 {
   // desc: {gistId, githubPAT}
+
+  function checkInformationMapSpaces()
+  {
+    for (let knyteId in informationMap)
+    {
+      const {space} = informationMap[knyteId];
+      for (let knoxelId in space)
+      {
+        const position = space[knoxelId];
+        if (position instanceof SVGPoint)
+        {
+          console.warn('illegal position of ' + knoxelId + ' at ' + knyteId + ' space');
+          space[knoxelId] = {x: position.x, y: position.y};
+        }
+      }
+    }
+  }
+
   if (!checkAppBusy())
     return;
+  checkInformationMapSpaces();
   const state = {masterKnoxelId, spacemapKnoxelId, knyteVectors, knoxelVectors,
     knyteConnects, knyteInitialConnects, knyteTerminalConnects, informationMap, knoxels, knoxelViews};
   let stateText;
