@@ -153,11 +153,12 @@ const steeringGear = new function()
     return p.matrixTransform(this.getCTM());
   };
 
-  this.pan = function(delta)
+  this.pan = function(delta, noSpeedCorrection)
   {
     const ctm = this.getCTM().inverse();
-    delta.x *= panSpeed * ctm.a;
-    delta.y *= panSpeed * ctm.a;
+    const speed = noSpeedCorrection ? 1.0 : panSpeed;
+    delta.x *= speed * ctm.a;
+    delta.y *= speed * ctm.a;
     this.setCTM(ctm.inverse().translate(delta.x, delta.y));
     handleSteeringChanged();
   };
@@ -2280,12 +2281,12 @@ function terminateTerminalBubbleArrow()
   activeTerminalBubble.element = null;
 }
 
+let mouseMovePosition = {x: 0, y: 0};
+let mouseMovePagePosition = {x: 0, y: 0};
+
 function onMouseDownSpaceRoot(e)
 {
 }
-
-let mouseMovePosition = {x: 0, y: 0};
-let mouseMovePagePosition = {x: 0, y: 0};
 
 function updateFrameRect(desc)
 {
@@ -2306,6 +2307,19 @@ function onMouseMoveSpaceRoot(e)
 {
   mouseMovePosition = {x: e.clientX, y: e.clientY};
   mouseMovePagePosition = {x: e.pageX, y: e.pageY};
+
+  if (e.buttons === 4) // mouse input systems support
+  {
+    if (!document.getElementById('colorpicker').open && !document.getElementById('recordeditor').open)
+    {
+      if (!e.shiftKey && !e.altKey && !e.cmdKey())
+      {
+        const panDelta = {x: e.movementX, y: e.movementY};
+        steeringGear.pan(panDelta, true);
+      }
+    }
+  }
+
   const {x, y} = mouseMovePosition;
   if (activeGhost.knoxelId)
   {
@@ -2708,7 +2722,8 @@ async function onKeyDownWindow(e)
     }
     else if (!e.shiftKey && !e.altKey && e.cmdKey())
     {
-      saveAppState();
+      bootLoadingElement.style.display = 'block';
+      setTimeout(function(){saveAppState(); bootLoadingElement.style.display = 'none';}, 300);
     }
   }
   else if (e.code === 'KeyG')
@@ -2890,7 +2905,8 @@ async function onKeyDownWindow(e)
           colorpickerInput.focus();
           colorpickerInput.select();
         },
-      0);
+        0
+      );
     }
   }
   else if (e.code === 'KeyV')
@@ -3880,7 +3896,7 @@ function spacemapChangedHandler()
   // do it for spacemap spaces only
   if (knoxels[spaceRootElement.dataset.knoxelId] !== knoxels[spacemapKnoxelId])
     return;
-  
+
   // rebuild spacemapKnoxelId space: add knoxels for all new knytes; recreate all arrows.
 
   // build new knytes map
