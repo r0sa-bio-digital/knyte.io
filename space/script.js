@@ -265,6 +265,23 @@ async function loadAppState(desc)
         destination[key] = source[key];
     }
 
+    function checkInformationMapSpaces()
+    {
+      for (let knyteId in informationMap)
+      {
+        const {space} = informationMap[knyteId];
+        for (let knoxelId in space)
+        {
+          const position = space[knoxelId];
+          if (position.x === undefined || position.y === undefined)
+          {
+            console.warn('invalid position of ' + knoxelId + ' at ' + knyteId + ' space');
+            space[knoxelId] = {x: 0, y: 0};
+          }
+        }
+      }
+    }
+
     masterKnoxelId = state.masterKnoxelId;
     spacemapKnoxelId = state.spacemapKnoxelId;
     assignObject(state.knyteVectors, knyteVectors);
@@ -283,6 +300,7 @@ async function loadAppState(desc)
     steeringBackStack.length = 0;
     spaceForwardStack.length = 0;
     steeringForwardStack.length = 0;
+    checkInformationMapSpaces();
   }
 
   function onAppStateLoaded(state)
@@ -2878,7 +2896,7 @@ async function onKeyDownWindow(e)
               informationMap[landingKnyteId].space[extractedKnoxelId] = landingKnoxelNewPosition;
             }
             delete informationMap[spaceRootKnyteId].space[knoxelId];
-            informationMap[spaceRootKnyteId].space[knoxelId] = knoxelPosition;
+            informationMap[spaceRootKnyteId].space[knoxelId] = {x: knoxelPosition.x, y: knoxelPosition.y};
             setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
             handleSpacemapChanged();
           }
