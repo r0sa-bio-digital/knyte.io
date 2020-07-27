@@ -255,10 +255,10 @@ async function saveAppState(desc, fastMode)
       authorization: 'token ' + desc.githubPAT,
       'Content-Type': 'application/json'
     };
-    const body = JSON.stringify({files: {[gistKnyteAppstateFilename]: {content: stateText}}});
+    const body = JSON.stringify({files: {[knyteAppstateFilename]: {content: stateText}}});
     const response = await fetch('https://api.github.com/gists/' + gist_id, {method, headers, body});
     const json = await response.json();
-    if (response.status === 200 && json.files && json.files[gistKnyteAppstateFilename])
+    if (response.status === 200 && json.files && json.files[knyteAppstateFilename])
       ; // successful upload
     else
       alert('Failed to upload appstate to gist.');
@@ -268,7 +268,7 @@ async function saveAppState(desc, fastMode)
   else
   {
     const blob = new Blob([stateText], {type: 'text/plain;charset=utf-8'});
-    saveAs(blob, fastMode ? 'knoxelSpace.min.json' : 'knoxelSpace.json', true);
+    saveAs(blob, fastMode ? knyteAppstateFilenameMin : knyteAppstateFilename, true);
   }
 }
 

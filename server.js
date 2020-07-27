@@ -25,7 +25,7 @@ let runBlockDelay = 0;
 const runBlockBusyList = {};
 
 // duplicates from client-side code
-const gistKnyteAppstateFilename = 'knyte-appstate.json';
+const knyteAppstateFilename = 'knyte-appstate.json';
 
 async function loadAppState(gistId)
 {
@@ -63,7 +63,7 @@ async function loadAppState(gistId)
   if (response.status !== 200)
     return false;
   const json = await response.json();
-  const file = json.files ? json.files[gistKnyteAppstateFilename] : undefined;
+  const file = json.files ? json.files[knyteAppstateFilename] : undefined;
   const readRawUrl = file ? file.raw_url : undefined;
   if (readRawUrl)
   {

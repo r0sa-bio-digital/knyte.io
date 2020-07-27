@@ -1,6 +1,7 @@
 const gistIdKey = 'knoxelSpaceGistId';
 const githubPATKey = 'knoxelSpaceGithubPAT';
-const gistKnyteAppstateFilename = 'knyte-appstate.json';
+const knyteAppstateFilename = 'knyte-appstate.json';
+const knyteAppstateFilenameMin = 'knyte-appstate.min.json';
 
 async function fetchGistStatus()
 {
@@ -11,7 +12,7 @@ async function fetchGistStatus()
   {
     const response = await fetch('https://api.github.com/gists/' + gistId);
     const json = await response.json();
-    const file = json.files ? json.files[gistKnyteAppstateFilename] : undefined;
+    const file = json.files ? json.files[knyteAppstateFilename] : undefined;
     readRawUrl = file ? file.raw_url : undefined;
   }
   if (githubPAT)
