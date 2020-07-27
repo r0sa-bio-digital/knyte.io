@@ -477,6 +477,7 @@ function runBlockHandleClick(knyteId, body, finalKnyteId, resolve)
       ++computeIteration;
     }
     // set results
+    const solution = {}; // host knyte id --> domain knyte id
     const maxResultIterations = 128;
     let resultIteration = 0;
     while (resultIteration < maxResultIterations)
@@ -501,6 +502,9 @@ function runBlockHandleClick(knyteId, body, finalKnyteId, resolve)
           succeedKnytes[incomeValueLinkId] = true;
           succeedKnytes[resultHostKnyteId] = true;
           markProcessedLink(incomeValueLinkId, true);
+          const resultKnyteId = resultHostKnytes[resultHostKnyteId];
+          if (resultKnyteId)
+            solution[resultHostKnyteId] = resultKnyteId;
         }
         else
         {
@@ -514,7 +518,7 @@ function runBlockHandleClick(knyteId, body, finalKnyteId, resolve)
       ++resultIteration;
     }
     // return result
-    return {complete: true};
+    return {complete: true, solution};
   }
 
   const codeKnytes = getConnectsByDataMatchFunction(knyteId, matchToken, 'code', 'terminal');
@@ -713,9 +717,26 @@ function runBlockHandleClick(knyteId, body, finalKnyteId, resolve)
         {
           delete runBlockBusyList[knyteId];
           const logicResult = logicCallHandler(logicKnyteId);
-          onComplete(logicResult.complete, nextKnyteId);
+          // write solution to output
+          if (namesMap.solution && namesMap.solution.type === 'json')
+          {
+            const resultValue = logicResult.complete
+              ? JSON.stringify(logicResult.solution)
+              : '{}';
+            const resultKnyteId = outputNameToKnyteMap.solution;
+            const {record} = informationMap[resultKnyteId];
+            const recordtype = getRecordtype(record);
+            setKnyteRecordData(resultKnyteId, recordtype, resultValue);
+            onComplete(logicResult.complete, nextKnyteId);
+          }
+          else
+            onComplete(false);
           if (!logicResult.complete)
             throw Error(logicResult.error);
+          if (!namesMap.solution)
+            throw Error('logic solution output not found');
+          if (namesMap.solution.type !== 'json')
+            throw Error('logic solution output must have json type');
         },
         runBlockDelay
       );
