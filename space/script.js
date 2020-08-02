@@ -2570,6 +2570,7 @@ async function onKeyDownWindow(e)
   if (document.getElementById('colorpicker').open || document.getElementById('recordeditor').open)
     return;
   const allowedBrowserCommand = (e.code === 'KeyR' && !e.altKey && e.cmdKey()) || 
+    (e.code === 'KeyF' && !e.shiftKey && !e.altKey && e.cmdKey()) || 
     (e.code === 'KeyI' && !e.shiftKey && e.altKey && e.cmdKey()) || 
     (e.code === 'F12' && !e.shiftKey && !e.altKey && !e.cmdKey()) || 
     ((e.code === 'Minus' || e.code === 'Equal') && !e.shiftKey && !e.altKey && e.cmdKey());
@@ -2825,61 +2826,64 @@ async function onKeyDownWindow(e)
   }
   else if (e.code === 'KeyF')
   {
-    if (!activeFrame.element)
+    if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
-      const position = steeringGear.screenToSpacePosition(mouseMovePosition);
-      spawnFrameRect({position});
-    }
-    else
-    {
-      const p1 = activeFrame.origin;
-      const p2 = steeringGear.screenToSpacePosition(mouseMovePosition);
-      const frameRect = {
-        left: Math.min(p1.x, p2.x), top: Math.min(p1.y, p2.y),
-        right: Math.max(p1.x, p2.x), bottom: Math.max(p1.y, p2.y)
-      };
-      const groupRect = {
-        left: 1000000, top: 1000000,
-        right: -1000000, bottom: -1000000
-      };
-      const knoxelsToInsert = {};
-      const hostKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
-      const space = informationMap[hostKnyteId].space;
-      for (let knoxelId in space)
+      if (!activeFrame.element)
       {
-        const p = space[knoxelId];
-        const {w, h} = knoxelRect.getKnoxelDimensions(knoxelId);
-        const rect = {left: p.x - w/2, top: p.y - h/2, right: p.x + w/2, bottom: p.y + h/2};
-        if (rectContainsRect(frameRect, rect))
-        {
-          knoxelsToInsert[knoxelId] = true;
-          rectExpandByRect(groupRect, rect);
-        }
+        const position = steeringGear.screenToSpacePosition(mouseMovePosition);
+        spawnFrameRect({position});
       }
-      if (Object.keys(knoxelsToInsert).length > 0)
+      else
       {
-        const knyteId = knit.new();
-        const color = visualTheme.rect.fillColor;
-        addKnyte({knyteId, color});
-        const position = {x:(groupRect.right + groupRect.left)/2, y: (groupRect.bottom + groupRect.top)/2};
-        const hostKnoxelId = spaceRootElement.dataset.knoxelId;
-        const hostKnyteId = knoxels[hostKnoxelId];
-        for (let subKnoxelId in knoxelsToInsert)
+        const p1 = activeFrame.origin;
+        const p2 = steeringGear.screenToSpacePosition(mouseMovePosition);
+        const frameRect = {
+          left: Math.min(p1.x, p2.x), top: Math.min(p1.y, p2.y),
+          right: Math.max(p1.x, p2.x), bottom: Math.max(p1.y, p2.y)
+        };
+        const groupRect = {
+          left: 1000000, top: 1000000,
+          right: -1000000, bottom: -1000000
+        };
+        const knoxelsToInsert = {};
+        const hostKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
+        const space = informationMap[hostKnyteId].space;
+        for (let knoxelId in space)
         {
-          const subPosition = informationMap[hostKnyteId].space[subKnoxelId];
-          delete informationMap[hostKnyteId].space[subKnoxelId];
-          informationMap[knyteId].space[subKnoxelId] = {
-            x: subPosition.x - groupRect.left,
-            y: subPosition.y - groupRect.top
-          };
+          const p = space[knoxelId];
+          const {w, h} = knoxelRect.getKnoxelDimensions(knoxelId);
+          const rect = {left: p.x - w/2, top: p.y - h/2, right: p.x + w/2, bottom: p.y + h/2};
+          if (rectContainsRect(frameRect, rect))
+          {
+            knoxelsToInsert[knoxelId] = true;
+            rectExpandByRect(groupRect, rect);
+          }
         }
-        const knoxelId = addKnoxelRect({knyteId, hostKnoxelId, position});
-        knoxelViews[knoxelId].color = visualTheme.frame.color;
-        knoxelSpaceRoot.update();
-        setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
-        handleSpacemapChanged();
+        if (Object.keys(knoxelsToInsert).length > 0)
+        {
+          const knyteId = knit.new();
+          const color = visualTheme.rect.fillColor;
+          addKnyte({knyteId, color});
+          const position = {x:(groupRect.right + groupRect.left)/2, y: (groupRect.bottom + groupRect.top)/2};
+          const hostKnoxelId = spaceRootElement.dataset.knoxelId;
+          const hostKnyteId = knoxels[hostKnoxelId];
+          for (let subKnoxelId in knoxelsToInsert)
+          {
+            const subPosition = informationMap[hostKnyteId].space[subKnoxelId];
+            delete informationMap[hostKnyteId].space[subKnoxelId];
+            informationMap[knyteId].space[subKnoxelId] = {
+              x: subPosition.x - groupRect.left,
+              y: subPosition.y - groupRect.top
+            };
+          }
+          const knoxelId = addKnoxelRect({knyteId, hostKnoxelId, position});
+          knoxelViews[knoxelId].color = visualTheme.frame.color;
+          knoxelSpaceRoot.update();
+          setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+          handleSpacemapChanged();
+        }
+        terminateFrameRect();
       }
-      terminateFrameRect();
     }
   }
   else if (e.code === 'KeyE')
