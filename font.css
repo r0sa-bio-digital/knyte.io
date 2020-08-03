@@ -1,0 +1,24 @@
+@font-face {
+	font-family: "meslo";
+	src: url("font/MesloLGM-Italic.ttf") format("truetype");
+	font-weight: normal;
+	font-style: italic;
+}
+@font-face {
+	font-family: "meslo";
+	src: url("font/MesloLGM-Regular.ttf") format("truetype");
+	font-weight: normal;
+	font-style: normal;
+}
+@font-face {
+	font-family: "meslo";
+	src: url("font/MesloLGM-Bold.ttf") format("truetype");
+	font-weight: bold;
+	font-style: normal;
+}
+@font-face {
+	font-family: "meslo";
+	src: url("font/MesloLGM-BoldItalic.ttf") format("truetype");
+	font-weight: bold;
+	font-style: italic;
+}
