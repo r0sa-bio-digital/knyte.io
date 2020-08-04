@@ -1,7 +1,6 @@
 const gistIdKey = 'knoxelSpaceGistId';
 const githubPATKey = 'knoxelSpaceGithubPAT';
 const knyteAppstateFilename = 'knyte-appstate.json';
-const knyteAppstateFilenameMin = 'knyte-appstate.min.json';
 
 async function fetchGistStatus()
 {

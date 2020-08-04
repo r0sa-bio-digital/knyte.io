@@ -267,8 +267,11 @@ async function saveAppState(desc, fastMode)
   }
   else
   {
+    const timestamp = Date.now();
+    const min = fastMode ? '.min' : '';
+    const knyteAppstateTemplate = `knyte-appstate.${timestamp}${min}.json`;
     const blob = new Blob([stateText], {type: 'text/plain;charset=utf-8'});
-    saveAs(blob, fastMode ? knyteAppstateFilenameMin : knyteAppstateFilename, true);
+    saveAs(blob, knyteAppstateTemplate, true);
   }
 }
 
