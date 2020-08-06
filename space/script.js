@@ -3148,6 +3148,26 @@ async function onKeyDownWindow(e)
         jumpToKnoxel(jumpTargetKnoxelId);
     }
   }
+  else if (e.code === 'KeyK')
+  {
+    if (!e.shiftKey && !e.altKey && !e.cmdKey())
+    {
+      const targetKnoxelId = mouseoverKnoxelId;
+      const targetKnyteId = knoxels[targetKnoxelId];
+      const matchKnoxels = [targetKnoxelId];
+      for (const knoxelId in knoxels)
+      {
+        if (knoxelId === targetKnoxelId)
+          continue;
+        const knyteId = knoxels[knoxelId];
+        if (knyteId === targetKnyteId)
+          matchKnoxels.push(knoxelId);
+      }
+      console.log('knoxels of knyte ' + targetKnyteId + ':');
+      console.log(matchKnoxels);
+      alert('list of ' + matchKnoxels.length + ' knoxels of the knyte logged to console');
+    }
+  }
   else if (e.code === 'ArrowUp')
   {
     if (!e.shiftKey && !e.altKey && !e.cmdKey())
