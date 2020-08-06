@@ -185,6 +185,16 @@ const steeringGear = new function()
     handleSteeringChanged();
   };
 
+  this.setZoom = function(zoom)
+  {
+    const scale = 1.0 / zoom;
+    const ctm = this.getCTM();
+    ctm.a = scale;
+    ctm.d = scale;
+    this.setCTM(ctm);
+    handleSteeringChanged();
+  };
+
   this.getZoom = function(element)
   {
     return 1.0 / (element ? element : this).getCTM().a;
@@ -3129,6 +3139,15 @@ async function onKeyDownWindow(e)
       });
     }
   }
+  else if (e.code === 'KeyJ')
+  {
+    if (!e.shiftKey && !e.altKey && !e.cmdKey())
+    {
+      const jumpTargetKnoxelId = prompt('Enter knoxel id to jump:');
+      if (jumpTargetKnoxelId && (jumpTargetKnoxelId in knoxels))
+        jumpToKnoxel(jumpTargetKnoxelId);
+    }
+  }
   else if (e.code === 'ArrowUp')
   {
     if (!e.shiftKey && !e.altKey && !e.cmdKey())
@@ -3141,6 +3160,40 @@ async function onKeyDownWindow(e)
       if (spaceForwardElement.style.display !== 'none')
         onClickSpaceForward();
   }
+}
+
+function jumpToKnoxel(targetKnoxelId)
+{
+  // set space root to the space containing target knoxel
+
+  // check if we are already in the right space
+  let hostKnyteId;
+  const spaceRootKnyteId = knoxels[spaceRootElement.dataset.knoxelId];
+  const spaceRootSpace = informationMap[spaceRootKnyteId].space;
+  if (spaceRootSpace && (targetKnoxelId in spaceRootSpace))
+    hostKnyteId = spaceRootKnyteId;
+  else
+  {
+    alert('knoxel not found in the current space');
+    return;
+    // TODO: ask if user want to jump to another space
+    // TODO: find the space containing target knoxel
+    // TODO: jump to this space
+  }
+
+  // jump to target knoxel inside of thr current space
+  const targetKnoxelPosition = informationMap[hostKnyteId].space[targetKnoxelId];
+  const width = parseFloat(spaceRootElement.getAttribute('width'));
+  const height = parseFloat(spaceRootElement.getAttribute('height'));
+  const {w, h} = knoxelRect.getKnoxelDimensions(targetKnoxelId);
+  const screenOccupationCoefficient = 0.9;
+  const zoomW = (w + 0.5 * visualTheme.rect.strokeWidth) / (screenOccupationCoefficient * width);
+  const zoomH = (h + 0.5 * visualTheme.rect.strokeWidth) / (screenOccupationCoefficient * height);
+  const zoom = Math.max(zoomW, zoomH);
+  steeringGear.setZoom(zoom);
+  const x = width/2 - targetKnoxelPosition.x/zoom;
+  const y = height/2 - targetKnoxelPosition.y/zoom;
+  steeringGear.setPan({x, y});
 }
 
 function onMouseWheelWindow(e)
