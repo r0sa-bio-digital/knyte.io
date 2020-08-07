@@ -36,6 +36,10 @@ const steeringForwardStack = []; // [next space root steering]
 let runBlockDelay = 0;
 const runBlockBusyList = {};
 const useCtrlInsteadOfMeta = navigator.appVersion.indexOf('Mac') < 0; // for 'Win' and 'Linux'
+const inputOptions = {
+  handleMouseClick: true,
+  handleKeyPress: true,
+};
 
 MouseEvent.prototype.cmdKey = function()
 {
@@ -1596,6 +1600,8 @@ function parseTransform(s)
 
 function onClickRect(e)
 {
+  if (!inputOptions.handleMouseClick)
+    return;
   if (activeFrame.element)
     return;
   const targetKnoxelElement = knoxelRect.getRootByTarget(e.target);
@@ -1824,6 +1830,8 @@ function rectExpandByRect(rect1, rect2)
 
 function onClickSpaceRoot(e)
 {
+  if (!inputOptions.handleMouseClick)
+    return;
   const mousePosition = {x: e.clientX, y: e.clientY};
   if (!(e.shiftKey && e.altKey) && e.cmdKey())
   {
@@ -2344,10 +2352,6 @@ function terminateTerminalBubbleArrow()
 let mouseMovePosition = {x: 0, y: 0};
 let mouseMovePagePosition = {x: 0, y: 0};
 
-function onMouseDownSpaceRoot(e)
-{
-}
-
 function updateFrameRect(desc)
 {
   // desc: {position}
@@ -2405,10 +2409,6 @@ function onMouseMoveSpaceRoot(e)
     var {knoxelId, element} = activeTerminalBubble;
   if (knoxelId)
     knoxelArrow.moveElement({knoxelId, element, x, y});
-}
-
-function onMouseUpSpaceRoot(e)
-{
 }
 
 function dropGhostRect(desc)
@@ -2591,6 +2591,57 @@ async function onKeyDownWindow(e)
     return;
   e.stopPropagation();
   e.preventDefault();
+  if (e.code === 'ArrowUp')
+  {
+    if (!e.shiftKey && !e.altKey && !e.cmdKey())
+      if (spaceBackElement.style.display !== 'none')
+        onClickSpaceBack();
+  }
+  else if (e.code === 'ArrowDown')
+  {
+    if (!e.shiftKey && !e.altKey && !e.cmdKey())
+      if (spaceForwardElement.style.display !== 'none')
+        onClickSpaceForward();
+  }
+  else if (e.code === 'KeyS')
+  {
+    if (!e.shiftKey && !e.altKey && e.cmdKey())
+    {
+      saveAppState(undefined, true); // no keys sorting (not diff friendly), but fast
+    }
+    else if (e.shiftKey && !e.altKey && e.cmdKey())
+    {
+      if (confirm('Sure to apply slow diff friendly save method?'))
+      {
+        bootLoadingElement.style.display = 'block';
+        setTimeout(
+          function()
+          {
+            saveAppState(); // sorted (diff friendly), but slow
+            bootLoadingElement.style.display = 'none';
+          },
+          300
+        );
+      }
+    }
+  }
+  else if (e.code === 'KeyG')
+  {
+    if (!e.shiftKey && !e.altKey && e.cmdKey())
+    {
+      bootLoadingElement.style.display = 'block';
+      const {gistId, githubPAT, writeAccess} = await fetchGistStatus();
+      if (gistId && githubPAT && writeAccess)
+        await saveAppState({gistId, githubPAT}); // TODO: implement spinner while uploading and optional comment for uploaded changes
+      else
+        alert('Imposible to upload appstate to gist without writable connection.');
+      bootLoadingElement.style.display = 'none';
+    }
+  }
+
+  if (!inputOptions.handleKeyPress)
+    return;
+  
   const mouseoverTarget = document.elementFromPoint(mouseMovePagePosition.x, mouseMovePagePosition.y);
   const mouseoverElement = knoxelRect.getRootByTarget(mouseoverTarget);
   const mouseoverKnoxelId = (mouseoverElement && mouseoverElement.classList.value === 'mouseOverRect')
@@ -2780,38 +2831,6 @@ async function onKeyDownWindow(e)
         setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
         handleSpacemapChanged();
       }
-    }
-    else if (!e.shiftKey && !e.altKey && e.cmdKey())
-    {
-      saveAppState(undefined, true); // no keys sorting (not diff friendly), but fast
-    }
-    else if (e.shiftKey && !e.altKey && e.cmdKey())
-    {
-      if (confirm('Sure to apply slow diff friendly save method?'))
-      {
-        bootLoadingElement.style.display = 'block';
-        setTimeout(
-          function()
-          {
-            saveAppState(); // sorted (diff friendly), but slow
-            bootLoadingElement.style.display = 'none';
-          },
-          300
-        );
-      }
-    }
-  }
-  else if (e.code === 'KeyG')
-  {
-    if (!e.shiftKey && !e.altKey && e.cmdKey())
-    {
-      bootLoadingElement.style.display = 'block';
-      const {gistId, githubPAT, writeAccess} = await fetchGistStatus();
-      if (gistId && githubPAT && writeAccess)
-        await saveAppState({gistId, githubPAT}); // TODO: implement spinner while uploading and optional comment for uploaded changes
-      else
-        alert('Imposible to upload appstate to gist without writable connection.');
-      bootLoadingElement.style.display = 'none';
     }
   }
   else if (e.code === 'KeyD')
@@ -3168,18 +3187,11 @@ async function onKeyDownWindow(e)
       alert('list of ' + matchKnoxels.length + ' knoxels of the knyte logged to console');
     }
   }
-  else if (e.code === 'ArrowUp')
-  {
-    if (!e.shiftKey && !e.altKey && !e.cmdKey())
-      if (spaceBackElement.style.display !== 'none')
-        onClickSpaceBack();
-  }
-  else if (e.code === 'ArrowDown')
-  {
-    if (!e.shiftKey && !e.altKey && !e.cmdKey())
-      if (spaceForwardElement.style.display !== 'none')
-        onClickSpaceForward();
-  }
+}
+
+async function onKeyUpWindow(e)
+{
+  ;
 }
 
 function jumpToKnoxel(targetKnoxelId)
@@ -4158,11 +4170,10 @@ async function onLoadBody(e)
   addKnoxel({hostKnyteId: spacemapKnyteId, knyteId: spacemapKnyteId, knoxelId: spacemapKnoxelId, position});
   // setup event handlers
   spaceRootElement.addEventListener('click', onClickSpaceRoot, false);
-  spaceRootElement.addEventListener('mousedown', onMouseDownSpaceRoot, false);
   spaceRootElement.addEventListener('mousemove', onMouseMoveSpaceRoot, false);
-  spaceRootElement.addEventListener('mouseup', onMouseUpSpaceRoot, false);
   window.addEventListener('resize', onResizeWindow, false);
   window.addEventListener('keydown', onKeyDownWindow, false);
+  window.addEventListener('keyup', onKeyUpWindow, false);
   window.addEventListener('mousewheel', onMouseWheelWindow, {passive: false});
   document.getElementById('backArrowShape').addEventListener('click', onClickSpaceBack, false);
   document.getElementById('forwardArrowShape').addEventListener('click', onClickSpaceForward, false);
