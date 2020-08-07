@@ -40,6 +40,7 @@ const inputOptions = {
   handleMouseClick: true,
   handleKeyPress: true,
 };
+const inputCodeMap = {};
 
 MouseEvent.prototype.cmdKey = function()
 {
@@ -1149,6 +1150,10 @@ function setSpaceRootKnoxel(desc)
   // desc: {knoxelId}
   const priorKnoxelId = spaceRootElement.dataset.knoxelId;
   const newKnoxelId = desc.knoxelId;
+  // cleanup inputCodeMap
+  if (priorKnoxelId !== newKnoxelId)
+    for (let code in inputCodeMap)
+      delete inputCodeMap[code];
   // terminate frame
   if (activeFrame.element && priorKnoxelId !== newKnoxelId)
     terminateFrameRect();
@@ -2580,6 +2585,7 @@ function getRecordtype(record)
 
 async function onKeyDownWindow(e)
 {
+  inputCodeMap[e.code] = true;
   if (document.getElementById('colorpicker').open || document.getElementById('recordeditor').open)
     return;
   const allowedBrowserCommand = (e.code === 'KeyR' && !e.altKey && e.cmdKey()) || 
@@ -2641,7 +2647,7 @@ async function onKeyDownWindow(e)
 
   if (!inputOptions.handleKeyPress)
     return;
-  
+
   const mouseoverTarget = document.elementFromPoint(mouseMovePagePosition.x, mouseMovePagePosition.y);
   const mouseoverElement = knoxelRect.getRootByTarget(mouseoverTarget);
   const mouseoverKnoxelId = (mouseoverElement && mouseoverElement.classList.value === 'mouseOverRect')
@@ -3191,7 +3197,7 @@ async function onKeyDownWindow(e)
 
 async function onKeyUpWindow(e)
 {
-  ;
+  delete inputCodeMap[e.code];
 }
 
 function jumpToKnoxel(targetKnoxelId)
