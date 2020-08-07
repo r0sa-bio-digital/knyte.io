@@ -1145,11 +1145,58 @@ function setBubbledMode(desc)
   }
 }
 
+async function handleCustomBlockEvent(api)
+{
+  function matchToken(data, token)
+  {
+    return data === token;
+  }
+
+  // find connected custom blocks by custom links
+  const knyteId = knoxels[api.knoxelId];
+  api.knyteId = knyteId;
+  const customKnytes = getConnectsByDataMatchFunction(knyteId, matchToken, 'custom', 'terminal');
+  for (let i = 0; i < customKnytes.length; ++ i)
+  {
+    const customLinkKnyteId = customKnytes[i];
+    const customKnyteId = customLinkKnyteId ? knyteVectors[customLinkKnyteId].initialKnyteId : undefined;
+    const customRecord = customKnyteId ? informationMap[customKnyteId].record : undefined;
+    let customCodeText = customRecord ? customRecord.data : '';
+    // compile and run code of every custom block with api as the only parameter
+    const useStrict = '"use strict";\n';
+    const evalKey = 'custom' + customCodeText;
+    const evalText = 'new Function("api", useStrict + customCodeText)';
+    if (!(knyteId in knyteEvalCode))
+      knyteEvalCode[knyteId] = {};
+    if (!(evalKey in knyteEvalCode[knyteId]))
+      knyteEvalCode[knyteId][evalKey] = eval(evalText);
+    const codeFunction = knyteEvalCode[knyteId][evalKey];
+    runBlockBusyList[knyteId] = true;
+    let callComplete = false;
+    try
+    {
+      codeFunction(api);
+      callComplete = true;
+      delete runBlockBusyList[knyteId];
+    }
+    finally
+    {
+      if (!callComplete)
+      {
+        delete runBlockBusyList[knyteId];
+      }
+    }
+  }
+  // TODO: handle all possible errors
+}
+
 function setSpaceRootKnoxel(desc)
 {
   // desc: {knoxelId}
   const priorKnoxelId = spaceRootElement.dataset.knoxelId;
   const newKnoxelId = desc.knoxelId;
+  // handle custom block leave
+  handleCustomBlockEvent({event: 'leave', knoxelId: priorKnoxelId});
   // cleanup inputCodeMap
   if (priorKnoxelId !== newKnoxelId)
     for (let code in inputCodeMap)
@@ -1202,6 +1249,8 @@ function setSpaceRootKnoxel(desc)
     arrowsElement.style.display = 'none';
   }
   handleSteeringChanged();
+  // handle custom block enter
+  handleCustomBlockEvent({event: 'enter', knoxelId: newKnoxelId});
 }
 
 function collideAABBVsLine(aabb, line)
