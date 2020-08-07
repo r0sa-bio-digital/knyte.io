@@ -1145,7 +1145,15 @@ function setBubbledMode(desc)
   }
 }
 
-async function handleCustomBlockEvent(api)
+function setKnoxelColor(knoxelId, color)
+{
+  if (knoxelViews[knoxelId].color === color)
+    return;
+  knoxelViews[knoxelId].color = color;
+  setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+}
+
+function handleCustomBlockEvent(api)
 {
   function matchToken(data, token)
   {
@@ -1196,7 +1204,7 @@ function setSpaceRootKnoxel(desc)
   const priorKnoxelId = spaceRootElement.dataset.knoxelId;
   const newKnoxelId = desc.knoxelId;
   // handle custom block leave
-  handleCustomBlockEvent({event: 'leave', knoxelId: priorKnoxelId});
+  handleCustomBlockEvent({event: 'leave', knoxelId: priorKnoxelId, inputCodeMap, inputOptions, setKnoxelColor});
   // cleanup inputCodeMap
   if (priorKnoxelId !== newKnoxelId)
     for (let code in inputCodeMap)
@@ -1250,7 +1258,7 @@ function setSpaceRootKnoxel(desc)
   }
   handleSteeringChanged();
   // handle custom block enter
-  handleCustomBlockEvent({event: 'enter', knoxelId: newKnoxelId});
+  handleCustomBlockEvent({event: 'enter', knoxelId: newKnoxelId, inputCodeMap, inputOptions, setKnoxelColor});
 }
 
 function collideAABBVsLine(aabb, line)
