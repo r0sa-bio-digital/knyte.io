@@ -1153,6 +1153,30 @@ function setKnoxelColor(knoxelId, color)
   setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
 }
 
+function getKnoxelPosition(hostKnyteId, knoxelId)
+{
+  if (!(hostKnyteId in informationMap) || !(knoxelId in informationMap[hostKnyteId].space))
+    return null;
+  return informationMap[hostKnyteId].space[knoxelId];
+}
+
+function setKnoxelPosition(hostKnyteId, knoxelId, position)
+{
+  if (!(hostKnyteId in informationMap) || !(knoxelId in informationMap[hostKnyteId].space))
+    return;
+  const p = informationMap[hostKnyteId].space[knoxelId];
+  if (p.x === position.x && p.y === position.y)
+    return;
+  p.x = position.x;
+  p.y = position.y;
+  const knoxelElement = document.getElementById(knoxelId);
+  const {w, h} = knoxelRect.getKnoxelDimensions(knoxelId);
+  let {x, y} = p;
+  x -= w/2;
+  y -= h/2;
+  knoxelElement.setAttribute('transform', 'translate(' + x + ',' + y + ')');
+}
+
 function handleCustomBlockEvent(api)
 {
   function matchToken(data, token)
@@ -1204,7 +1228,8 @@ function setSpaceRootKnoxel(desc)
   const priorKnoxelId = spaceRootElement.dataset.knoxelId;
   const newKnoxelId = desc.knoxelId;
   // handle custom block leave
-  handleCustomBlockEvent({event: 'leave', knoxelId: priorKnoxelId, inputCodeMap, inputOptions, setKnoxelColor});
+  handleCustomBlockEvent({event: 'leave', knoxelId: priorKnoxelId, inputCodeMap, inputOptions,
+    setKnoxelColor, getKnoxelPosition, setKnoxelPosition});
   // cleanup inputCodeMap
   if (priorKnoxelId !== newKnoxelId)
     for (let code in inputCodeMap)
@@ -1258,7 +1283,8 @@ function setSpaceRootKnoxel(desc)
   }
   handleSteeringChanged();
   // handle custom block enter
-  handleCustomBlockEvent({event: 'enter', knoxelId: newKnoxelId, inputCodeMap, inputOptions, setKnoxelColor});
+  handleCustomBlockEvent({event: 'enter', knoxelId: newKnoxelId, inputCodeMap, inputOptions,
+    setKnoxelColor, getKnoxelPosition, setKnoxelPosition});
 }
 
 function collideAABBVsLine(aabb, line)
