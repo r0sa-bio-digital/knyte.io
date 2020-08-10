@@ -1177,6 +1177,14 @@ function setKnoxelPosition(hostKnyteId, knoxelId, position)
   knoxelElement.setAttribute('transform', 'translate(' + x + ',' + y + ')');
 }
 
+function setKnoxelCollapse(knoxelId, collapse)
+{
+  if (knoxelViews[knoxelId].collapse === collapse)
+    return;
+  knoxelViews[knoxelId].collapse = collapse;
+  setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+}
+
 function handleCustomBlockEvent(api)
 {
   function matchToken(data, token)
@@ -1229,7 +1237,7 @@ function setSpaceRootKnoxel(desc)
   const newKnoxelId = desc.knoxelId;
   // handle custom block leave
   handleCustomBlockEvent({event: 'leave', knoxelId: priorKnoxelId, inputCodeMap, inputOptions,
-    setKnoxelColor, getKnoxelPosition, setKnoxelPosition});
+    setKnoxelColor, getKnoxelPosition, setKnoxelPosition, setKnoxelCollapse});
   // cleanup inputCodeMap
   if (priorKnoxelId !== newKnoxelId)
     for (let code in inputCodeMap)
@@ -1284,7 +1292,7 @@ function setSpaceRootKnoxel(desc)
   handleSteeringChanged();
   // handle custom block enter
   handleCustomBlockEvent({event: 'enter', knoxelId: newKnoxelId, inputCodeMap, inputOptions,
-    setKnoxelColor, getKnoxelPosition, setKnoxelPosition});
+    setKnoxelColor, getKnoxelPosition, setKnoxelPosition, setKnoxelCollapse});
 }
 
 function collideAABBVsLine(aabb, line)
