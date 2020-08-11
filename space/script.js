@@ -1185,6 +1185,20 @@ function setKnoxelCollapse(knoxelId, collapse)
   setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
 }
 
+function getKnyteData(knyteId)
+{
+  if ((knyteId in informationMap) && informationMap[knyteId].record)
+    return informationMap[knyteId].record.data;
+  return undefined;
+}
+
+function setKnyteData(knyteId, newData)
+{
+  informationMap[knyteId].record = getOnelinerRecordByData(newData);
+  // assume that knoxels of this knyte are out of the simulation space
+  //setSpaceRootKnoxel({knoxelId}); // TODO: optimise space refresh
+}
+
 function handleCustomBlockEvent(api)
 {
   function matchToken(data, token)
@@ -1237,7 +1251,7 @@ function setSpaceRootKnoxel(desc)
   const newKnoxelId = desc.knoxelId;
   // handle custom block leave
   handleCustomBlockEvent({event: 'leave', knoxelId: priorKnoxelId, inputCodeMap, inputOptions,
-    setKnoxelColor, getKnoxelPosition, setKnoxelPosition, setKnoxelCollapse});
+    setKnoxelColor, getKnoxelPosition, setKnoxelPosition, setKnoxelCollapse, getKnyteData, setKnyteData});
   // cleanup inputCodeMap
   if (priorKnoxelId !== newKnoxelId)
     for (let code in inputCodeMap)
@@ -1292,7 +1306,7 @@ function setSpaceRootKnoxel(desc)
   handleSteeringChanged();
   // handle custom block enter
   handleCustomBlockEvent({event: 'enter', knoxelId: newKnoxelId, inputCodeMap, inputOptions,
-    setKnoxelColor, getKnoxelPosition, setKnoxelPosition, setKnoxelCollapse});
+    setKnoxelColor, getKnoxelPosition, setKnoxelPosition, setKnoxelCollapse, getKnyteData, setKnyteData});
 }
 
 function collideAABBVsLine(aabb, line)
