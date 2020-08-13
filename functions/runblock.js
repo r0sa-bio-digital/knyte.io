@@ -19,7 +19,7 @@ function fetch(url, options = {}) {
       });
 
       res.on('end', () => {
-      	const {url, method, statusCode, statusMessage} = res;
+        const {url, method, statusCode, statusMessage} = res;
         resolve({url, method, statusCode, statusMessage, body: chunks});
       });
     });
@@ -64,7 +64,7 @@ const runBlockBusyList = {};
 // duplicates from client-side code
 const knyteAppstateFilename = 'knyte-appstate.json';
 
-async function loadAppState(gistId)
+async function loadAppState(githubOwner, githubRepo, githubPAT)
 {
   function assignAppState(state)
   {
@@ -96,23 +96,30 @@ async function loadAppState(gistId)
     steeringForwardStack.length = 0;
   }
 
-  const response = await fetch('https://api.github.com/gists/' + gistId,
-    {headers: {authorization: 'token ' + githubPAT, 'User-Agent': 'Mozilla/5.0'}});
+  if (!githubOwner || !githubRepo || !githubPAT)
+  {
+    console.log('fetch fail 1: creds are not fully defined');
+    return false;
+  }
+  const response = await fetch(
+    'https://api.github.com/repos/' +
+    githubOwner + '/' + githubRepo + '/contents/' + knyteAppstateFilename,
+    {headers: {authorization: 'token ' + githubPAT}}
+  );
   if (response.statusCode !== 200)
   {
-    console.log('fetch fail 1: ' + JSON.stringify(response));
+    console.log('fetch fail 2: ' + JSON.stringify(response));
     return false;
   }
   const json = JSON.parse(response.body); //await response.json();
-  const file = json.files ? json.files[knyteAppstateFilename] : undefined;
-  const readRawUrl = file ? file.raw_url : undefined;
+  const readRawUrl = json.download_url ? json.download_url : undefined;
   if (readRawUrl)
   {
     const response = await fetch(readRawUrl,
       {headers: {authorization: 'token ' + githubPAT, 'User-Agent': 'Mozilla/5.0'}});
     if (response.statusCode !== 200)
     {
-      console.log('fetch fail 2: ' + JSON.stringify(response));
+      console.log('fetch fail 3: ' + JSON.stringify(response));
       return false;
     }
     const json = JSON.parse(response.body); //await response.json();
@@ -121,7 +128,7 @@ async function loadAppState(gistId)
   }
   else
   {
-    console.log('fetch fail 3: ' + JSON.stringify(json.url));
+    console.log('fetch fail 4: ' + JSON.stringify(json.url));
     return false;
   }
   return true;
@@ -892,7 +899,7 @@ exports.handler = async (event, context) => {
 
   const body = event.body ? JSON.parse(event.body) : {};
   console.log('knyte boot loading...');
-  const success = await loadAppState(body.appstateGistId);
+  const success = await loadAppState(body.appstateOwner, body.appstateRepo, body.appstatePAT);
   if (success)
   {
     console.log('run block starting...');

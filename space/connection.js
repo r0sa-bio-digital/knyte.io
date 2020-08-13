@@ -49,8 +49,11 @@ async function fetchRepoStatus()
   let readRawUrl;
   if (owner && repo && pat)
   {
-    const response = await fetch('https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + knyteAppstateFilename,
-      {headers: {authorization: 'token ' + pat}});
+    const response = await fetch(
+      'https://api.github.com/repos/' +
+      owner + '/' + repo + '/contents/' + knyteAppstateFilename,
+      {headers: {authorization: 'token ' + pat}}
+    );
     if (response.status === 200)
     {
       const json = await response.json();
