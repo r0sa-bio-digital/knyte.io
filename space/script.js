@@ -292,7 +292,7 @@ async function saveAppState(desc, fastMode)
 
 async function loadAppState(desc)
 {
-  // desc: {files, rawUrl}
+  // desc: {files, fileSHA}
 
   function assignAppState(state)
   {
@@ -364,20 +364,16 @@ async function loadAppState(desc)
     };
     reader.readAsText(file);
   }
-  else if (desc.rawUrl)
+  else if (desc.fileSHA)
   {
-    const response = await fetch(desc.rawUrl);
-    if (response.status === 200)
+    const stateText = await fetchRepoFile(desc.fileSHA);
+    if (stateText)
     {
-      const json = await response.json();
-      const state = json; // TODO: implement json format check
+      const state = JSON.parse(stateText); // TODO: implement json format check
       onAppStateLoaded(state);
     }
     else
-    {
-      alert('Failed to load appstate form gist.');
-      console.log(desc.rawUrl);
-    }
+      alert('Failed to load appstate from repo.');
   }
 }
 
@@ -4299,9 +4295,9 @@ async function onLoadBody(e)
   // initialise steering
   handleSteeringChanged = steeringChangedHandler;
   // init startup gist
-  const {readRawUrl} = await fetchRepoStatus();
-  if (readRawUrl)
-    await loadAppState({rawUrl: readRawUrl});
+  const {fileSHA} = await fetchRepoStatus();
+  if (fileSHA)
+    await loadAppState({fileSHA});
   bootLoadingElement.style.display = 'none';
 
   console.log('ready');

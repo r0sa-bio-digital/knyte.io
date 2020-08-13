@@ -41,7 +41,7 @@ async function fetchGistStatus()
   return {gistId, githubPAT, readRawUrl, authDone, writeAccess};
 }
 
-async function fetchRepoStatus()
+async function fetchRepoStatus_Less1Mb()
 {
   const owner = localStorage.getItem(githubOwnerKey);
   const repo = localStorage.getItem(githubRepoKey);
@@ -61,4 +61,61 @@ async function fetchRepoStatus()
     }
   }
   return {owner, repo, pat, readRawUrl};
+}
+
+async function fetchRepoStatus()
+{
+  const owner = localStorage.getItem(githubOwnerKey);
+  const repo = localStorage.getItem(githubRepoKey);
+  const pat = localStorage.getItem(githubPATKey);
+  let readRawUr, fileSHA;
+  if (owner && repo && pat)
+  {
+    const response = await fetch(
+      'https://api.github.com/repos/' +
+      owner + '/' + repo + '/commits/master',
+      {headers: {authorization: 'token ' + pat}}
+    );
+    if (response.status === 200)
+    {
+      const json = await response.json();
+      for (let i = 0; i < json.files.length; ++i)
+      {
+        const filename = json.files[i].filename;
+        if (filename === knyteAppstateFilename)
+        {
+          readRawUrl = json.files[i].raw_url;
+          fileSHA = json.files[i].sha;
+          break;
+        }
+      }
+    }
+  }
+  return {owner, repo, pat, readRawUrl, fileSHA};
+}
+
+function atou(b64) {
+  return decodeURIComponent(escape(atob(b64)));
+}
+
+async function fetchRepoFile(fileSHA)
+{
+  const owner = localStorage.getItem(githubOwnerKey);
+  const repo = localStorage.getItem(githubRepoKey);
+  const pat = localStorage.getItem(githubPATKey);
+  let fileContent;
+  if (owner && repo && pat)
+  {
+    const response = await fetch(
+      'https://api.github.com/repos/' +
+      owner + '/' + repo + '/git/blobs/' + fileSHA,
+      {headers: {authorization: 'token ' + pat}}
+    );
+    if (response.status === 200)
+    {
+      const json = await response.json();
+      fileContent = atou(json.content);
+    }
+  }
+  return fileContent;
 }
