@@ -1,4 +1,6 @@
 const gistIdKey = 'knoxelSpaceGistId';
+const githubOwnerKey = 'knoxelSpaceGithubOwner';
+const githubRepoKey = 'knoxelSpaceGithubRepo';
 const githubPATKey = 'knoxelSpaceGithubPAT';
 const knyteAppstateFilename = 'knyte-appstate.json';
 
@@ -37,4 +39,23 @@ async function fetchGistStatus()
     }
   }
   return {gistId, githubPAT, readRawUrl, authDone, writeAccess};
+}
+
+async function fetchRepoStatus()
+{
+  const owner = localStorage.getItem(githubOwnerKey);
+  const repo = localStorage.getItem(githubRepoKey);
+  const pat = localStorage.getItem(githubPATKey);
+  let readRawUrl;
+  if (owner && repo && pat)
+  {
+    const response = await fetch('https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + knyteAppstateFilename,
+      {headers: {authorization: 'token ' + pat}});
+    if (response.status === 200)
+    {
+      const json = await response.json();
+      readRawUrl = json.download_url;
+    }
+  }
+  return {owner, repo, pat, readRawUrl};
 }

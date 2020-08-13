@@ -4299,7 +4299,7 @@ async function onLoadBody(e)
   // initialise steering
   handleSteeringChanged = steeringChangedHandler;
   // init startup gist
-  const {readRawUrl} = await fetchGistStatus();
+  const {readRawUrl} = await fetchRepoStatus();
   if (readRawUrl)
     await loadAppState({rawUrl: readRawUrl});
   bootLoadingElement.style.display = 'none';

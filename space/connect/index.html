@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>knoxel space connect gist</title>
+    <title>knoxel space connect repo</title>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,67 +10,65 @@
     <script src="../connection.js"></script>
   </head>  
   <script type="text/javascript">
-    let gistIdElement, githubPATElement, readElement, authElement, writeElement;
+    let ownerElement, repoElement, patElement, readElement;
 
-    async function updateGistPreview()
+    async function updateRepoPreview()
     {
       readElement.innerHTML = '...';
-      authElement.innerHTML = '...';
-      writeElement.innerHTML = '...';
-      const {readRawUrl, authDone, writeAccess} = await fetchGistStatus();
+      const {readRawUrl} = await fetchRepoStatus();
       readElement.innerHTML = readRawUrl
         ? '<a href="' + readRawUrl + '">' + readRawUrl + '</a>' : 'not connected';
-      authElement.innerHTML = authDone ? 'yes' : 'no';
-      writeElement.innerHTML = writeAccess ? 'true' : 'false';
     }
 
     function onClickUpdate(e)
     {
-      localStorage.setItem(gistIdKey, gistIdElement.value);
-      localStorage.setItem(githubPATKey, githubPATElement.value);
-      updateGistPreview();
+      localStorage.setItem(githubOwnerKey, ownerElement.value);
+      localStorage.setItem(githubRepoKey, repoElement.value);
+      localStorage.setItem(githubPATKey, patElement.value);
+      updateRepoPreview();
     }
 
     function onClickReset(e)
     {
-      gistIdElement.value = '';
-      githubPATElement.value = '';
+      ownerElement.value = '';
+      repoElement.value = '';
+      patElement.value = '';
       onClickUpdate(e);
     }
 
     function onLoadBody(e)
     {
-      gistIdElement = document.getElementById('gistId');
-      githubPATElement = document.getElementById('githubPAT');
+      ownerElement = document.getElementById('owner');
+      repoElement = document.getElementById('repo');
+      patElement = document.getElementById('PAT');
       readElement = document.getElementById('previewRead');
-      authElement = document.getElementById('previewAuth');
-      writeElement = document.getElementById('previewWrite');
-      gistIdElement.value = localStorage.getItem(gistIdKey);
-      githubPATElement.value = localStorage.getItem(githubPATKey);
-      updateGistPreview();
+      ownerElement.value = localStorage.getItem(githubOwnerKey);
+      repoElement.value = localStorage.getItem(githubRepoKey);
+      patElement.value = localStorage.getItem(githubPATKey);
+      updateRepoPreview();
     }
   </script>
   <body onload="onLoadBody(event);">
     <h1>Knyte.io to KnoxelSpace connection</h1>
     <p>
-      <span>GitHub Gist id: </span>
-      <input id="gistId" type="text" size="35">
-      <span> for read access</span>
+      <span>GitHub Owner: </span>
+      <input id="owner" type="text">
     </p>
     <p>
-      <span>GitHub Private Access Token: </span>
-      <input id="githubPAT" type="password" size="44">
-      <span> for write access</span>
+      <span>GitHub Repo: </span>
+      <input id="repo" type="text">
+    </p>
+    <p>
+      <span>GitHub Private Access Token (PAT): </span>
+      <input id="PAT" type="password" size="44">
     </p>
     <div>
       <button onclick="onClickUpdate(event);">Update connection</button>
       <button onclick="onClickReset(event);">Reset connection</button>
     </div>
-    <h2>Gist preview</h2>
+    <h2>Repo preview</h2>
     <div id="preview">
       <div><span>read: </span><span id="previewRead"></span></div>
-      <div><span>auth: </span><span id="previewAuth"></span></div>
-      <div><span>write: </span><span id="previewWrite">...</span></div>
     </div>
   </body>
 </html>
