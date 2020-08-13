@@ -1,6 +1,5 @@
 const https = require('https');
 const http = require('http');
-const { githubPAT } = process.env;
 
 function fetch(url, options = {}) {
   return new Promise((resolve, reject) => {
