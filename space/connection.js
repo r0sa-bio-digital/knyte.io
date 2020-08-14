@@ -68,7 +68,7 @@ async function fetchRepoStatus()
   const owner = localStorage.getItem(githubOwnerKey);
   const repo = localStorage.getItem(githubRepoKey);
   const pat = localStorage.getItem(githubPATKey);
-  let readRawUr, fileSHA;
+  let readRawUrl, fileSHA;
   if (owner && repo && pat)
   {
     const response = await fetch(
