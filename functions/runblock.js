@@ -109,7 +109,7 @@ async function loadAppState(githubOwner, githubRepo, githubPAT)
     githubOwner + '/' + githubRepo + '/commits/master',
     {headers: {authorization: 'token ' + githubPAT, 'User-Agent': 'Mozilla/5.0'}}
   );
-  if (response.status !== 200)
+  if (response.statusCode !== 200)
   {
     console.log('fetch fail 2: ' + JSON.stringify(response));
     return false;
@@ -135,7 +135,7 @@ async function loadAppState(githubOwner, githubRepo, githubPAT)
     githubOwner + '/' + githubRepo + '/git/blobs/' + fileSHA,
     {headers: {authorization: 'token ' + githubPAT, 'User-Agent': 'Mozilla/5.0'}}
   );
-  if (response2.status !== 200)
+  if (response2.statusCode !== 200)
   {
     console.log('fetch fail 4: ' + JSON.stringify(response2));
     return false;
