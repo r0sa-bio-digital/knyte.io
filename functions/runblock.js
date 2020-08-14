@@ -96,6 +96,10 @@ async function loadAppState(githubOwner, githubRepo, githubPAT)
   }
 
   function atou(b64) {
+    function atob(a) {
+      return Buffer.from(a, 'base64').toString('binary');
+    }
+    
     return decodeURIComponent(escape(atob(b64)));
   }
 
