@@ -95,6 +95,10 @@ async function loadAppState(githubOwner, githubRepo, githubPAT)
     steeringForwardStack.length = 0;
   }
 
+  function atou(b64) {
+    return decodeURIComponent(escape(atob(b64)));
+  }
+
   if (!githubOwner || !githubRepo || !githubPAT)
   {
     console.log('fetch fail 1: creds are not fully defined');
@@ -102,34 +106,50 @@ async function loadAppState(githubOwner, githubRepo, githubPAT)
   }
   const response = await fetch(
     'https://api.github.com/repos/' +
-    githubOwner + '/' + githubRepo + '/contents/' + knyteAppstateFilename,
-    {headers: {authorization: 'token ' + githubPAT, 'User-Agent': 'Mozilla/5.0'}}
+    githubOwner + '/' + githubRepo + '/commits/master',
+    {headers: {authorization: 'token ' + githubPAT}}
   );
-  if (response.statusCode !== 200)
+  if (response.status !== 200)
   {
     console.log('fetch fail 2: ' + JSON.stringify(response));
     return false;
   }
-  const json = JSON.parse(response.body); //await response.json();
-  const readRawUrl = json.download_url ? json.download_url : undefined;
-  if (readRawUrl)
+  const json = JSON.parse(response.body); // await response.json();
+  let fileSHA;
+  for (let i = 0; i < json.files.length; ++i)
   {
-    const response = await fetch(readRawUrl,
-      {headers: {authorization: 'token ' + githubPAT, 'User-Agent': 'Mozilla/5.0'}});
-    if (response.statusCode !== 200)
+    const filename = json.files[i].filename;
+    if (filename === knyteAppstateFilename)
     {
-      console.log('fetch fail 3: ' + JSON.stringify(response));
-      return false;
+      fileSHA = json.files[i].sha;
+      break;
     }
-    const json = JSON.parse(response.body); //await response.json();
-    const state = json; // TODO: implement json format check
-    assignAppState(state);
   }
-  else
+  if (!fileSHA)
   {
-    console.log('fetch fail 4: ' + JSON.stringify(json.url));
+    console.log('fetch fail 3: ' + JSON.stringify(json));
     return false;
   }
+  const response2 = await fetch(
+    'https://api.github.com/repos/' +
+    githubOwner + '/' + githubRepo + '/git/blobs/' + fileSHA,
+    {headers: {authorization: 'token ' + githubPAT}}
+  );
+  if (response2.status !== 200)
+  {
+    console.log('fetch fail 4: ' + JSON.stringify(response2));
+    return false;
+  }
+  let fileContent;
+  const json2 = JSON.parse(response2.body); // await response2.json();
+  fileContent = json2.content;
+  if (!fileContent)
+  {
+    console.log('fetch fail 5: ' + JSON.stringify(json2));
+    return false;
+  }
+  const state = JSON.parse(atou(fileContent)); // TODO: implement json format check
+  assignAppState(state);
   return true;
 }
 
