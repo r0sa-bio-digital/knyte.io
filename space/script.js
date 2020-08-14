@@ -224,7 +224,7 @@ function checkAppBusy()
 
 async function saveAppState(desc, fastMode)
 {
-  // desc: {gistId, githubPAT}
+  // desc: {owner, repo, pat, fileSHA}
 
   function checkInformationMapSpaces()
   {
@@ -264,21 +264,17 @@ async function saveAppState(desc, fastMode)
   }
   if (desc)
   {
-    const method = 'PATCH';
-    const gist_id = desc.gistId;
-    const headers = {
-      authorization: 'token ' + desc.githubPAT,
-      'Content-Type': 'application/json'
-    };
-    const body = JSON.stringify({files: {[knyteAppstateFilename]: {content: stateText}}});
-    const response = await fetch('https://api.github.com/gists/' + gist_id, {method, headers, body});
-    const json = await response.json();
-    if (response.status === 200 && json.files && json.files[knyteAppstateFilename])
-      ; // successful upload
-    else
-      alert('Failed to upload appstate to gist.');
-    console.log('Appstate upload result:');
-    console.log(json);
+    const message = prompt('Comment for changes:');
+    if (message === null)
+      return;
+    if (message === '')
+    {
+      alert('Unable upload without comment.');
+      return;
+    }
+    const success = await putRepoFile(desc.owner, desc.repo, desc.pat, message, stateText, desc.fileSHA);
+    if (!success)
+      alert('Failed to upload appstate to repo.');
   }
   else
   {
@@ -2737,11 +2733,11 @@ async function onKeyDownWindow(e)
     if (!e.shiftKey && !e.altKey && e.cmdKey())
     {
       bootLoadingElement.style.display = 'block';
-      const {gistId, githubPAT, writeAccess} = await fetchGistStatus();
-      if (gistId && githubPAT && writeAccess)
-        await saveAppState({gistId, githubPAT}); // TODO: implement spinner while uploading and optional comment for uploaded changes
+      const {owner, repo, pat, fileSHA} = await fetchRepoStatus();
+      if (owner && repo && pat && fileSHA)
+        await saveAppState({owner, repo, pat, fileSHA}, true); // TODO: implement spinner while uploading and optional comment for uploaded changes
       else
-        alert('Imposible to upload appstate to gist without writable connection.');
+        alert('Imposible to upload appstate without github repo connection.');
       bootLoadingElement.style.display = 'none';
     }
   }
