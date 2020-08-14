@@ -107,7 +107,7 @@ async function loadAppState(githubOwner, githubRepo, githubPAT)
   const response = await fetch(
     'https://api.github.com/repos/' +
     githubOwner + '/' + githubRepo + '/commits/master',
-    {headers: {authorization: 'token ' + githubPAT}}
+    {headers: {authorization: 'token ' + githubPAT, 'User-Agent': 'Mozilla/5.0'}}
   );
   if (response.status !== 200)
   {
@@ -133,7 +133,7 @@ async function loadAppState(githubOwner, githubRepo, githubPAT)
   const response2 = await fetch(
     'https://api.github.com/repos/' +
     githubOwner + '/' + githubRepo + '/git/blobs/' + fileSHA,
-    {headers: {authorization: 'token ' + githubPAT}}
+    {headers: {authorization: 'token ' + githubPAT, 'User-Agent': 'Mozilla/5.0'}}
   );
   if (response2.status !== 200)
   {
