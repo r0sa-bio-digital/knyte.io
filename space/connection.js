@@ -68,7 +68,7 @@ async function fetchRepoStatus()
   const owner = localStorage.getItem(githubOwnerKey);
   const repo = localStorage.getItem(githubRepoKey);
   const pat = localStorage.getItem(githubPATKey);
-  let readRawUrl, fileSHA;
+  let readRawUrl, fileSHA, writeAccess;
   if (owner && repo && pat)
   {
     const response = await fetch(
@@ -86,12 +86,13 @@ async function fetchRepoStatus()
         {
           readRawUrl = json.files[i].raw_url;
           fileSHA = json.files[i].sha;
+          // TODO: get writeAccess for the file
           break;
         }
       }
     }
   }
-  return {owner, repo, pat, readRawUrl, fileSHA};
+  return {owner, repo, pat, readRawUrl, fileSHA, writeAccess};
 }
 
 function atou(b64) {

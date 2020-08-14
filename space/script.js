@@ -4294,7 +4294,7 @@ async function onLoadBody(e)
   handleSpacemapChanged();
   // initialise steering
   handleSteeringChanged = steeringChangedHandler;
-  // init startup gist
+  // init appstate on startup
   const {fileSHA} = await fetchRepoStatus();
   if (fileSHA)
     await loadAppState({fileSHA});
