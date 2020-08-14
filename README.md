@@ -17,11 +17,12 @@
 ---------------------
 * Ссылки на модули
   * Интерактивный прототип: <https://knyte.io/space/>
-  * Подключение к gist'у: <https://knyte.io/space/connect/>
-  * Спецификация на ядро системы: <https://gist.github.com/x-rodionov/db2e7e564eb343beddcc7fd71b3bba21>
+  * Подключение к github repo: <https://knyte.io/space/connect/>
+  * Спецификация на ядро системы: <https://github.com/r0sa-bio-digital/knyte-spec>
     * документ в собственном формате Knoxel Space
-    * для использования нужно прописать его gist id (db2e7e564eb343beddcc7fd71b3bba21) в connect'е
-  * Версия в активной разработке: <https://knyte-dev.netlify.app/space/>
+    * для использования нужно прописать его owner/repo (r0sa-bio-digital/knyte-spec) и PAT в connect'е
+      * как создавать PAT на githab'е: <https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token>
+  * Промежуточная версия в процессе разработке: <https://knyte-dev.netlify.app/space/>
 * Управление
   * drop file on app screen - загрузить стейт системы из json-файла
   * console global variables
@@ -35,7 +36,7 @@
       * без сортировки ключей, не подходит для построения адекватных diff'ов в git'е
     * cmd + shift + s - сохранить стейт системы в json-файл медленным методом
       * с сортировкой ключей, оптимально для построения diff'ов в git'е
-    * cmd + g - загрузить стейт системы в gist при наличии writable conection'а
+    * cmd + g - загрузить стейт системы в подсоединённый github repo при наличии прав на запись в PAT
     * cmd + click - создать новый knyte и knoxel для него в указанной точке пространства
     * cmd + alt + click - создать новый run block knyte и knoxel для него в указанной точке пространства
     * cmd + shift + click - создать knyte с заданным knyte id и knoxel для него в указанной точке пространства
