@@ -608,8 +608,8 @@ function runBlockHandleClick(knyteId, body, finalKnyteId, resolve)
   let codeText = codeRecord ? codeRecord.data : '';
 
   const logicKnytes = getConnectsByDataMatchFunction(knyteId, matchToken, 'logic', 'terminal');
-  const logicLinkKnyteId = logicKnytes[0];
-  const logicKnyteId = logicLinkKnyteId ? knyteVectors[logicLinkKnyteId].initialKnyteId : undefined;
+  const logicLinkKnyteIds = logicKnytes && logicKnytes.length ? logicKnytes : undefined;
+  const logicKnyteIds = logicLinkKnyteIds ? logicLinkKnyteIds.map((value, index) => knyteVectors[value].initialKnyteId) : undefined;
 
   const nextKnytes = getConnectsByDataMatchFunction(knyteId, matchToken, 'next', 'initial');
   const nextLinkKnyteId = nextKnytes[0];
@@ -696,8 +696,6 @@ function runBlockHandleClick(knyteId, body, finalKnyteId, resolve)
   {
     if (codeKnytes.length > 1)
       throw Error('run block knyte ' + knyteId + ' has more than 1 code links');
-    if (logicKnytes.length > 1)
-      throw Error('run block knyte ' + knyteId + ' has more than 1 logic links');
     if (nextKnytes.length > 1)
       throw Error('run block knyte ' + knyteId + ' has more than 1 next links');
     if (ifKnytes.length > 1)
@@ -789,14 +787,23 @@ function runBlockHandleClick(knyteId, body, finalKnyteId, resolve)
         runBlockDelay
       );
     }
-    else if (logicKnyteId)
+    else if (logicKnyteIds)
     {
       runBlockBusyList[knyteId] = true;
       setTimeout(
         function()
         {
           delete runBlockBusyList[knyteId];
-          const logicResult = logicCallHandler(logicKnyteId);
+          const logicResult = {complete: true, solution: {}};
+          for (let i = 0; i < logicKnyteIds.length; ++i)
+          {
+            const logicKnyteId = logicKnyteIds[i];
+            const logicResultPart = logicCallHandler(logicKnyteId);
+            logicResult.complete = logicResult.complete && logicResultPart.complete;
+            if (logicResultPart.complete)
+              for (let keyId in logicResultPart.solution)
+                logicResult.solution[keyId] = logicResultPart.solution[keyId];
+          }
           // write solution to output
           if (namesMap.solution && namesMap.solution.type === 'json')
           {
