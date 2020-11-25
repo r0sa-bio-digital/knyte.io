@@ -97,7 +97,7 @@ function appendEntitiesToCollectionGraph(hostKnyteId, entityDescs)
         addKnoxel({hostKnyteId, knyteId, knoxelId, position, collapse: false});
         informationMap[knyteId].record = getOnelinerRecordByData(data);
         // setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
-        return knyteId;
+        return {knyteId, knoxelId};
     }
 
     function cloneEntity(desc)
@@ -108,12 +108,37 @@ function appendEntitiesToCollectionGraph(hostKnyteId, entityDescs)
         const knoxelId = knit.new();
         addKnoxel({hostKnyteId, knyteId, knoxelId, position, collapse: false});
         // setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+        return {knyteId, knoxelId};
     }
 
     // get root
+    const rootLinks = getConnectsByDataMatchFunction(hostKnyteId, matchToken, 'root', 'initial');
+    if (rootLinks.length !== 1)
+        throw Error(hostKnyteId + ' must have 1 outgoing link with token root');
+    const rootLinkId = rootLinks[0];
+    let rootKnyteId = knyteVectors[rootLinkId].terminalKnyteId;
+    if (!rootKnyteId)
+        throw Error(hostKnyteId + ' must have root knoxel');
+
+    const hostSpace = informationMap[hostKnyteId].space;
+    if (!hostSpace)
+        throw Error(hostKnyteId + ' must have space');
+    let rootKnoxelId;
+    let rootKnoxelsCount = 0;
+    for (let knoxeId in hostSpace)
+        if (knoxels[knoxeId] === rootKnyteId)
+        {
+            if (!rootKnoxelId)
+                rootKnoxelId = knoxeId;
+            ++rootKnoxelsCount;
+        }
+    if (rootKnoxelsCount !== 1)
+        throw Error(hostKnyteId + ' must have 1 knoxel for root knyte ' + rootKnyteId);
+
     // get last entity number
     // get get fields header x positions
     // get space bottom y position
+
     // add series of linked knoxels to x,y
     const xstep = 150, ystep = 200;
     let y = 500;
@@ -122,46 +147,66 @@ function appendEntitiesToCollectionGraph(hostKnyteId, entityDescs)
     {
         let x = 0;
         const entityDesc = entityDescs[i];   
+        let lastCellPair;
+        let lastNextPair;
         for (let j = 0; j < entityDesc.length; ++j)
         {
             const fieldValue = entityDesc[j];
             if (j === 0)
             {
                 const position = {x, y};
-                addEntity({data: 'entity', position, color: '#b98e01'})
+                const entityPair = addEntity({data: 'entity', position, color: '#b98e01'});
+                let idPair;
                 x += xstep;
                 if (isUuid(fieldValue))
                 {
                     const position = {x, y};
-                    cloneEntity({knyteId: fieldValue, hostKnyteId, position});
+                    idPair = cloneEntity({knyteId: fieldValue, hostKnyteId, position});
                     x += xstep;
                 }
                 else
                 {
                     const position = {x, y};
-                    addEntity({data: fieldValue, position, color: '#bb99ff'})
+                    idPair = addEntity({data: fieldValue, position, color: '#bb99ff'});
                     x += xstep;
                 }
+                assignKnyteVectorInitial({jointKnyteId: entityPair.knyteId, initialKnyteId: rootKnyteId});
+                assignKnoxelVectorInitial({jointKnoxelId: entityPair.knoxelId, initialKnoxelId: rootKnoxelId});
+                assignKnyteVectorTerminal({jointKnyteId: entityPair.knyteId, terminalKnyteId: idPair.knyteId});
+                assignKnoxelVectorTerminal({jointKnoxelId: entityPair.knoxelId, terminalKnoxelId: idPair.knoxelId});
+                lastCellPair = idPair;
             }
             else if (isUuid(fieldValue))
             {
                 const position = {x, y};
-                const newKnyteId = addEntity({data: '', position, color: '#bb99ff'})
+                const newPair = addEntity({data: '', position, color: '#bb99ff'})
                 x += xstep;
-                cloneEntity({knyteId: fieldValue, hostKnyteId: newKnyteId, position: {x: 0, y: 0}});
+                cloneEntity({knyteId: fieldValue, hostKnyteId: newPair.knyteId, position: {x: 0, y: 0}});
+                lastCellPair = newPair;
             }
             else
             {
                 const position = {x, y};
-                addEntity({data: fieldValue, position, color: '#bb99ff'})
+                const newPair = addEntity({data: fieldValue, position, color: '#bb99ff'});
                 x += xstep;
+                lastCellPair = newPair;
+            }
+            if (lastNextPair)
+            {
+                assignKnyteVectorTerminal({jointKnyteId: lastNextPair.knyteId, terminalKnyteId: lastCellPair.knyteId});
+                assignKnoxelVectorTerminal({jointKnoxelId: lastNextPair.knoxelId, terminalKnoxelId: lastCellPair.knoxelId});
             }
             if (j < entityDesc.length - 1)
             {
                 const position = {x, y};
-                addEntity({data: 'next', position, color: '#ffc0cb'})
+                const nextPair = addEntity({data: 'next', position, color: '#ffc0cb'})
                 x += xstep;
+                assignKnyteVectorInitial({jointKnyteId: nextPair.knyteId, initialKnyteId: lastCellPair.knyteId});
+                assignKnoxelVectorInitial({jointKnoxelId: nextPair.knoxelId, initialKnoxelId: lastCellPair.knoxelId});
+                lastNextPair = nextPair;
             }
+            else
+                lastNextPair = null;
         }
         y += ystep;
     }
