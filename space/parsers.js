@@ -84,31 +84,85 @@ function parseCollectionGraph(knyteId)
     return result;
 }
 
-function appendEntitiesToCollectionGraph(knyteId, entityDescs)
+function appendEntitiesToCollectionGraph(hostKnyteId, entityDescs)
 {
+    function addEntity(desc)
+    {
+        // desc: {data, position, color}
+
+        const knyteId = knit.new();
+        const {data, position, color} = desc;
+        addKnyte({knyteId, color});
+        const knoxelId = knit.new();
+        addKnoxel({hostKnyteId, knyteId, knoxelId, position, collapse: false});
+        informationMap[knyteId].record = getOnelinerRecordByData(data);
+        // setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+        return knyteId;
+    }
+
+    function cloneEntity(desc)
+    {
+        // desc: {knyteId, hostKnyteId, position}
+
+        const {knyteId, hostKnyteId, position} = desc;
+        const knoxelId = knit.new();
+        addKnoxel({hostKnyteId, knyteId, knoxelId, position, collapse: false});
+        // setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+    }
+
     // get root
     // get last entity number
     // get get fields header x positions
     // get space bottom y position
     // add series of linked knoxels to x,y
+    const xstep = 150, ystep = 200;
+    let y = 500;
+    let nextKnyteId;
     for (let i = 0; i < entityDescs.length; ++i)
     {
+        let x = 0;
         const entityDesc = entityDescs[i];   
         for (let j = 0; j < entityDesc.length; ++j)
         {
             const fieldValue = entityDesc[j];
             if (j === 0)
             {
+                const position = {x, y};
+                addEntity({data: 'entity', position, color: '#b98e01'})
+                x += xstep;
                 if (isUuid(fieldValue))
-                    console.log('main entity'); // process as main entity
+                {
+                    const position = {x, y};
+                    cloneEntity({knyteId: fieldValue, hostKnyteId, position});
+                    x += xstep;
+                }
                 else
-                    console.log('new entity'); // process as new entity
+                {
+                    const position = {x, y};
+                    addEntity({data: fieldValue, position, color: '#bb99ff'})
+                    x += xstep;
+                }
             }
             else if (isUuid(fieldValue))
-                console.log('nested value'); // process as nested entity
+            {
+                const position = {x, y};
+                const newKnyteId = addEntity({data: '', position, color: '#bb99ff'})
+                x += xstep;
+                cloneEntity({knyteId: fieldValue, hostKnyteId: newKnyteId, position: {x: 0, y: 0}});
+            }
             else
-                console.log('plain value'); // process as value
+            {
+                const position = {x, y};
+                addEntity({data: fieldValue, position, color: '#bb99ff'})
+                x += xstep;
+            }
+            if (j < entityDesc.length - 1)
+            {
+                const position = {x, y};
+                addEntity({data: 'next', position, color: '#ffc0cb'})
+                x += xstep;
+            }
         }
-        console.log('entity done');
+        y += ystep;
     }
 }
