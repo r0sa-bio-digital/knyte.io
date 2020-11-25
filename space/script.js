@@ -1,6 +1,7 @@
 /* global visualThemeColors */
 /* global intersect */
 /* global saveAs */
+/* global parseCollectionGraph */
 
 let svgNameSpace;
 let bootLoadingSpinnerElement;
@@ -1930,6 +1931,12 @@ function rectExpandByRect(rect1, rect2)
     rect1.bottom = rect2.bottom;
 }
 
+function isUuid(s)
+{
+  const uuidv4pattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[4][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidv4pattern.test(s);
+}
+
 function onClickSpaceRoot(e)
 {
   if (!inputOptions.handleMouseClick)
@@ -1938,10 +1945,9 @@ function onClickSpaceRoot(e)
   if (!(e.shiftKey && e.altKey) && e.cmdKey())
   {
     const targetKnyteId = e.shiftKey ? prompt('Specify knyte id for new block:') : knit.new();
-    const uuidv4pattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[4][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     if (!targetKnyteId)
       return;
-    if (!uuidv4pattern.test(targetKnyteId))
+    if (!isUuid(targetKnyteId))
     {
       alert('Invalid knyte id specified. Must be uuid v4. Block creation cancelled.');
       return;
@@ -3531,9 +3537,12 @@ function runBlockHandleClick(knyteId)
       }
       return success;
     },
+    collection: function(value, knyteId) {
+      return parseCollectionGraph(knyteId) !== null;
+    }
   };
   
-  function getValueCode(typeValidator, value)
+  function getValueCode(typeValidator, value, knyteId)
   {
     if (typeValidator === typeValidators.string)
     {
@@ -3541,6 +3550,8 @@ function runBlockHandleClick(knyteId)
         return '""';
       return '"' + escapeStringToCode(value) + '"';
     }
+    else if (typeValidator === typeValidators.collection)
+      return JSON.stringify(parseCollectionGraph(knyteId));
     return value;
   }
 
@@ -3927,7 +3938,7 @@ function runBlockHandleClick(knyteId)
     const inputName = inputLinkRecord ? extractParameterName(inputLinkRecord.data) : '';
     if (inputName)
     {
-      inputs[inputName] = inputValue;
+      inputs[inputName] = {value: inputValue, knyteId: inputKnyteId};
       namesSequence.push(inputName);
       inputNamesSequence.push(inputName);
     }
@@ -3998,10 +4009,10 @@ function runBlockHandleClick(knyteId)
       const name = inputNamesSequence[i].split(':')[0];
       formalParametersList += '"' + name + '", ';
       const {typeValidator} = namesMap[name];
-      const value = inputs[inputNamesSequence[i]];
-      if (!typeValidator(value))
-        throw Error('invalid value for (' + inputNamesSequence[i] + '): ' + value);
-      actualParametersList += (i > 0 ? ', ' : '') + getValueCode(typeValidator, value);
+      const {value, knyteId} = inputs[inputNamesSequence[i]];
+      if (!typeValidator(value, knyteId))
+        throw Error('invalid value for (' + inputNamesSequence[i] + '): ' + knyteId + ' = ' + value);
+      actualParametersList += (i > 0 ? ', ' : '') + getValueCode(typeValidator, value, knyteId);
     }
     if (outputNamesSequence.length)
     {
@@ -4116,20 +4127,38 @@ function runBlockHandleClick(knyteId)
                 {
                   const {type, typeValidator} = namesMap[resultName];
                   const value = results[resultName];
-                  if (!typeValidator(value))
+                  if (type === 'collection')
+                  {
+                    // collection type output is out of common workflow for now
+                    const resultKnyteId = outputNameToKnyteMap[resultName];
+                    if (!typeValidators.collection(undefined, resultKnyteId))
+                      throw Error('invalid type for (' + resultName + ':' + type + '): ' + resultKnyteId);
+                    if (isString(value) || !typeValidators.json(value))
+                      throw Error('invalid value for (' + resultName + ':' + type + '): ' + value);
+                  }
+                  else if (!typeValidator(value))
                     throw Error('invalid value for (' + resultName + ':' + type + '): ' + value);
                 }
                 for (let resultName in results)
                 {
+                  const {type} = namesMap[resultName];
                   let resultValue = results[resultName];
                   if (resultValue === undefined)
                     continue;
-                  if (!isString(resultValue))
-                    resultValue = JSON.stringify(resultValue);
                   const resultKnyteId = outputNameToKnyteMap[resultName];
-                  const {record} = informationMap[resultKnyteId];
-                  const recordtype = getRecordtype(record);
-                  setKnyteRecordData(resultKnyteId, recordtype, resultValue);
+                  if (type === 'collection')
+                  {
+                    // collection type output is out of common workflow for now
+                    appendEntitiesToCollectionGraph(resultKnyteId, resultValue);
+                  }
+                  else
+                  {
+                    if (!isString(resultValue))
+                      resultValue = JSON.stringify(resultValue);
+                    const {record} = informationMap[resultKnyteId];
+                    const recordtype = getRecordtype(record);
+                    setKnyteRecordData(resultKnyteId, recordtype, resultValue);
+                  }
                   gotOutput = true;
                 }
                 if (gotOutput)
