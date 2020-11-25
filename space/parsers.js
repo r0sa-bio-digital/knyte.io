@@ -111,6 +111,25 @@ function appendEntitiesToCollectionGraph(hostKnyteId, entityDescs)
         return {knyteId, knoxelId};
     }
 
+    function findKnoxel(knyteId)
+    {
+        const hostSpace = informationMap[hostKnyteId].space;
+        if (!hostSpace)
+            throw Error(hostKnyteId + ' must have space');
+        let knoxelId;
+        let knoxelsCount = 0;
+        for (let hostedKnoxeId in hostSpace)
+            if (knoxels[hostedKnoxeId] === knyteId)
+            {
+                if (!knoxelId)
+                    knoxelId = hostedKnoxeId;
+                ++knoxelsCount;
+            }
+        if (knoxelsCount !== 1)
+            throw Error(hostKnyteId + ' must have 1 knoxel for knyte ' + knyteId);
+        return knoxelId;
+    }
+
     // get root
     const rootLinks = getConnectsByDataMatchFunction(hostKnyteId, matchToken, 'root', 'initial');
     if (rootLinks.length !== 1)
@@ -119,33 +138,71 @@ function appendEntitiesToCollectionGraph(hostKnyteId, entityDescs)
     let rootKnyteId = knyteVectors[rootLinkId].terminalKnyteId;
     if (!rootKnyteId)
         throw Error(hostKnyteId + ' must have root knoxel');
+    const rootKnoxelId = findKnoxel(rootKnyteId);
 
-    const hostSpace = informationMap[hostKnyteId].space;
-    if (!hostSpace)
-        throw Error(hostKnyteId + ' must have space');
-    let rootKnoxelId;
-    let rootKnoxelsCount = 0;
-    for (let knoxeId in hostSpace)
-        if (knoxels[knoxeId] === rootKnyteId)
-        {
-            if (!rootKnoxelId)
-                rootKnoxelId = knoxeId;
-            ++rootKnoxelsCount;
-        }
-    if (rootKnoxelsCount !== 1)
-        throw Error(hostKnyteId + ' must have 1 knoxel for root knyte ' + rootKnyteId);
+    // get fields header x positions
+    const columnsPositions = [];
+    const fieldLinks = getConnectsByDataMatchFunction(rootKnyteId, matchToken, 'header', 'initial');
+    if (fieldLinks.length !== 1)
+        throw Error(rootKnyteId + ' must have 1 outgoing link with token header');
+    const fieldLinkId = fieldLinks[0];
+    const fieldLinkKnoxelId = findKnoxel(fieldLinkId);
+    columnsPositions.push(getKnoxelPosition(hostKnyteId, fieldLinkKnoxelId).x);
+    let fieldId = knyteVectors[fieldLinkId].terminalKnyteId;
+    if (!fieldId)
+        throw Error(fieldId + ' must have header knoxel');
+    const maxFieldCount = 100;
+    let fieldCount = 0;
+    const fieldsOrder = [];
+    while (fieldId && fieldCount < maxFieldCount)
+    {
+        const fieldKnoxelId = findKnoxel(fieldId);
+        columnsPositions.push(getKnoxelPosition(hostKnyteId, fieldKnoxelId).x);
+        fieldsOrder.push(fieldId);
+        const fieldLinks = getConnectsByDataMatchFunction(fieldId, matchToken, 'next', 'initial');
+        if (fieldLinks.length === 0)
+            break;
+        if (fieldLinks.length > 1)
+            throw Error(fieldId + ' must have 1 outgoing link with token next');
+        const fieldLinkId = fieldLinks[0];
+        const fieldLinkKnoxelId = findKnoxel(fieldLinkId);
+        columnsPositions.push(getKnoxelPosition(hostKnyteId, fieldLinkKnoxelId).x);
+        fieldId = knyteVectors[fieldLinkId].terminalKnyteId;
+        ++fieldCount;
+    }
 
     // get last entity number
-    // get get fields header x positions
+    const maxEntityIndex = 100000;
+    let lastEntityIndex;
+    let lastEntityKnoxelId;
+    for (let entityIndex = 1; entityIndex < maxEntityIndex; ++entityIndex)
+    {
+        const token = 'entity ' + entityIndex;
+        const entityLinks = getConnectsByDataMatchFunction(rootKnyteId, matchToken, token, 'initial');
+        if (entityLinks.length === 0)
+        {
+            lastEntityIndex = entityIndex;
+            break;
+        }
+        if (entityLinks.length > 1)
+            throw Error(rootKnyteId + ' must have 1 outgoing link with token ' + token);
+        const entityLinkId = entityLinks[0];
+        const entityKnyteId = knyteVectors[entityLinkId].terminalKnyteId;
+        const entityKnoxelId = findKnoxel(entityKnyteId);
+        lastEntityKnoxelId = entityKnoxelId;
+    }
+
     // get space bottom y position
+    const lastPosition = getKnoxelPosition(hostKnyteId, lastEntityKnoxelId || fieldLinkKnoxelId);
 
     // add series of linked knoxels to x,y
-    const xstep = 150, ystep = 200;
-    let y = 500;
+    const xstep = 150, ystep = 90;
+    let y = lastPosition.y + ystep;
     let nextKnyteId;
     for (let i = 0; i < entityDescs.length; ++i)
     {
-        let x = 0;
+        let columnIndex = 0;
+        let x = columnsPositions[columnIndex++];
         const entityDesc = entityDescs[i];   
         let lastCellPair;
         let lastNextPair;
@@ -155,20 +212,20 @@ function appendEntitiesToCollectionGraph(hostKnyteId, entityDescs)
             if (j === 0)
             {
                 const position = {x, y};
-                const entityPair = addEntity({data: 'entity', position, color: '#b98e01'});
+                const entityPair = addEntity({data: 'entity ' + lastEntityIndex, position, color: '#b98e01'});
                 let idPair;
-                x += xstep;
+                x = columnsPositions[columnIndex] ? columnsPositions[columnIndex++] : x + xstep;
                 if (isUuid(fieldValue))
                 {
                     const position = {x, y};
                     idPair = cloneEntity({knyteId: fieldValue, hostKnyteId, position});
-                    x += xstep;
+                    x = columnsPositions[columnIndex] ? columnsPositions[columnIndex++] : x + xstep;
                 }
                 else
                 {
                     const position = {x, y};
                     idPair = addEntity({data: fieldValue, position, color: '#bb99ff'});
-                    x += xstep;
+                    x = columnsPositions[columnIndex] ? columnsPositions[columnIndex++] : x + xstep;
                 }
                 assignKnyteVectorInitial({jointKnyteId: entityPair.knyteId, initialKnyteId: rootKnyteId});
                 assignKnoxelVectorInitial({jointKnoxelId: entityPair.knoxelId, initialKnoxelId: rootKnoxelId});
@@ -180,7 +237,7 @@ function appendEntitiesToCollectionGraph(hostKnyteId, entityDescs)
             {
                 const position = {x, y};
                 const newPair = addEntity({data: '', position, color: '#bb99ff'})
-                x += xstep;
+                x = columnsPositions[columnIndex] ? columnsPositions[columnIndex++] : x + xstep;
                 cloneEntity({knyteId: fieldValue, hostKnyteId: newPair.knyteId, position: {x: 0, y: 0}});
                 lastCellPair = newPair;
             }
@@ -188,7 +245,7 @@ function appendEntitiesToCollectionGraph(hostKnyteId, entityDescs)
             {
                 const position = {x, y};
                 const newPair = addEntity({data: fieldValue, position, color: '#bb99ff'});
-                x += xstep;
+                x = columnsPositions[columnIndex] ? columnsPositions[columnIndex++] : x + xstep;
                 lastCellPair = newPair;
             }
             if (lastNextPair)
@@ -200,7 +257,7 @@ function appendEntitiesToCollectionGraph(hostKnyteId, entityDescs)
             {
                 const position = {x, y};
                 const nextPair = addEntity({data: 'next', position, color: '#ffc0cb'})
-                x += xstep;
+                x = columnsPositions[columnIndex] ? columnsPositions[columnIndex++] : x + xstep;
                 assignKnyteVectorInitial({jointKnyteId: nextPair.knyteId, initialKnyteId: lastCellPair.knyteId});
                 assignKnoxelVectorInitial({jointKnoxelId: nextPair.knoxelId, initialKnoxelId: lastCellPair.knoxelId});
                 lastNextPair = nextPair;
