@@ -212,7 +212,7 @@ function appendEntitiesToCollectionGraph(hostKnyteId, entityDescs)
             if (j === 0)
             {
                 const position = {x, y};
-                const entityPair = addEntity({data: 'entity ' + lastEntityIndex, position, color: '#b98e01'});
+                const entityPair = addEntity({data: 'entity ' + (lastEntityIndex + i), position, color: '#b98e01'});
                 let idPair;
                 x = columnsPositions[columnIndex] ? columnsPositions[columnIndex++] : x + xstep;
                 if (isUuid(fieldValue))
