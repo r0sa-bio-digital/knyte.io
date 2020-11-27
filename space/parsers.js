@@ -95,8 +95,8 @@ function appendEntitiesToCollectionGraph(hostKnyteId, entityDescs)
         addKnyte({knyteId, color});
         const knoxelId = knit.new();
         addKnoxel({hostKnyteId, knyteId, knoxelId, position, collapse: false});
-        informationMap[knyteId].record = getOnelinerRecordByData(data);
-        // setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
+        if (data)
+            informationMap[knyteId].record = getOnelinerRecordByData(data);
         return {knyteId, knoxelId};
     }
 
@@ -107,7 +107,6 @@ function appendEntitiesToCollectionGraph(hostKnyteId, entityDescs)
         const {knyteId, hostKnyteId, position} = desc;
         const knoxelId = knit.new();
         addKnoxel({hostKnyteId, knyteId, knoxelId, position, collapse: false});
-        // setSpaceRootKnoxel({knoxelId: spaceRootElement.dataset.knoxelId}); // TODO: optimise space refresh
         return {knyteId, knoxelId};
     }
 
@@ -236,7 +235,7 @@ function appendEntitiesToCollectionGraph(hostKnyteId, entityDescs)
             else if (isUuid(fieldValue))
             {
                 const position = {x, y};
-                const newPair = addEntity({data: '', position, color: '#bb99ff'})
+                const newPair = addEntity({position, color: '#bb99ff'})
                 x = columnsPositions[columnIndex] ? columnsPositions[columnIndex++] : x + xstep;
                 cloneEntity({knyteId: fieldValue, hostKnyteId: newPair.knyteId, position: {x: 0, y: 0}});
                 lastCellPair = newPair;
