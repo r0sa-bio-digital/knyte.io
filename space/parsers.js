@@ -74,7 +74,7 @@ function parseCollectionGraph(knyteId)
             fieldId = knyteVectors[fieldLinkId].terminalKnyteId;
             const headerFieldId = fieldsOrder[fieldIndex];
             const {record} = informationMap[fieldId];
-            const data = record ? record.data : getHostedKnyteId(fieldId);
+            const data = (record && record.data) ? record.data : getHostedKnyteId(fieldId);
             const fieldValue = data || '';
             entityValues.push(fieldValue);
             ++fieldIndex;
