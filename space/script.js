@@ -3551,7 +3551,7 @@ function runBlockHandleClick(knyteId)
       return '"' + escapeStringToCode(value) + '"';
     }
     else if (typeValidator === typeValidators.collection)
-      return JSON.stringify(parseCollectionGraph(knyteId));
+      return JSON.stringify(parseCollectionGraph(knyteId), null, '\t');
     return value;
   }
 
@@ -4080,7 +4080,7 @@ function runBlockHandleClick(knyteId)
           if (namesMap.solution && namesMap.solution.type === 'json')
           {
             const resultValue = logicResult.complete
-              ? JSON.stringify(logicResult.solution)
+              ? JSON.stringify(logicResult.solution, null, '\t')
               : '{}';
             const resultKnyteId = outputNameToKnyteMap.solution;
             const {record} = informationMap[resultKnyteId];
@@ -4154,7 +4154,7 @@ function runBlockHandleClick(knyteId)
                   else
                   {
                     if (!isString(resultValue))
-                      resultValue = JSON.stringify(resultValue);
+                      resultValue = JSON.stringify(resultValue, null, '\t');
                     const {record} = informationMap[resultKnyteId];
                     const recordtype = getRecordtype(record);
                     setKnyteRecordData(resultKnyteId, recordtype, resultValue);
