@@ -25,11 +25,18 @@ async function fetchRepoStatus_Less1Mb()
   return {owner, repo, pat, readRawUrl};
 }
 
+function getConnectionDesc()
+{
+  const ownerLocal = localStorage.getItem(githubOwnerKey);
+  const repoLocal = localStorage.getItem(githubRepoKey);
+  const patLocal = localStorage.getItem(githubPATKey);
+
+  return {owner: ownerLocal, repo: repoLocal, pat: patLocal};
+}
+
 async function fetchRepoStatus()
 {
-  const owner = localStorage.getItem(githubOwnerKey);
-  const repo = localStorage.getItem(githubRepoKey);
-  const pat = localStorage.getItem(githubPATKey);
+  const {owner, repo, pat} = getConnectionDesc();
   let readRawUrl, fileSHA;
   if (owner && repo && pat)
   {
