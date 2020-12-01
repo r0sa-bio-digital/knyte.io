@@ -1,16 +1,25 @@
 const githubOwnerParamName = 'owner';
 const githubRepoParamName = 'repo';
-const githubPATParamName = 'pat';
+const githubPATKeyPrefix = 'knoxelSpaceGithubPAT';
 const knyteAppstateFilename = 'knyte-appstate.json';
+
+function askItem(keyName, message)
+{
+  const value = prompt(message);
+  if (value)
+    localStorage.setItem(keyName, value);
+  return value;
+}
 
 function getConnectionDesc()
 {
   const searchParams = new URLSearchParams(location.search);
-  return {
-    owner: searchParams.get(githubOwnerParamName),
-    repo: searchParams.get(githubRepoParamName),
-    pat: searchParams.get(githubPATParamName)
-  };
+  const owner = searchParams.get(githubOwnerParamName);
+  const repo = searchParams.get(githubRepoParamName);
+  const githubPATKeyName = githubPATKeyPrefix + '.' + owner + '.' + repo;
+  const pat = localStorage.getItem(githubPATKeyName) ||
+    askItem(githubPATKeyName, 'Enter personal access token (PAT) for the repo:');
+  return {owner, repo, pat};
 }
 
 async function fetchRepoStatus()
@@ -71,20 +80,24 @@ async function fetchRepoFile(owner, repo, pat, fileSHA)
 
 async function putRepoFile(owner, repo, pat, message, textContent, sha)
 {
-  const method = 'PUT';
-  const headers = {
-    authorization: 'token ' + pat,
-    'Content-Type': 'application/json'
-  };
-  const content = utoa(textContent);
-  const body = JSON.stringify({message, content, sha});
-  const response = await fetch('https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + knyteAppstateFilename, {method, headers, body});
-  const json = await response.json();
-  if (response.status !== 200 || json.content.name !== knyteAppstateFilename)
+  if (owner && repo && pat)
   {
-    console.warn(response);
-    console.warn(json);
-    return false;
+    const method = 'PUT';
+    const headers = {
+      authorization: 'token ' + pat,
+      'Content-Type': 'application/json'
+    };
+    const content = utoa(textContent);
+    const body = JSON.stringify({message, content, sha});
+    const response = await fetch('https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + knyteAppstateFilename, {method, headers, body});
+    const json = await response.json();
+    if (response.status !== 200 || json.content.name !== knyteAppstateFilename)
+    {
+      console.warn(response);
+      console.warn(json);
+      return false;
+    }
+    return true;
   }
-  return true;
+  return false;
 }
