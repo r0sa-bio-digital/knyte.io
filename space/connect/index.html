@@ -10,7 +10,7 @@
     <script src="../connection.js"></script>
   </head>  
   <script type="text/javascript">
-    let ownerElement, repoElement, patElement, readElement;
+    let readElement;
 
     async function updateRepoPreview()
     {
@@ -20,52 +20,14 @@
         ? '<a href="' + readRawUrl + '">' + readRawUrl + '</a>' : 'not connected';
     }
 
-    function onClickUpdate(e)
+    async function onLoadBody(e)
     {
-      localStorage.setItem(githubOwnerKey, ownerElement.value);
-      localStorage.setItem(githubRepoKey, repoElement.value);
-      localStorage.setItem(githubPATKey, patElement.value);
-      updateRepoPreview();
-    }
-
-    function onClickReset(e)
-    {
-      ownerElement.value = '';
-      repoElement.value = '';
-      patElement.value = '';
-      onClickUpdate(e);
-    }
-
-    function onLoadBody(e)
-    {
-      ownerElement = document.getElementById('owner');
-      repoElement = document.getElementById('repo');
-      patElement = document.getElementById('PAT');
       readElement = document.getElementById('previewRead');
-      ownerElement.value = localStorage.getItem(githubOwnerKey);
-      repoElement.value = localStorage.getItem(githubRepoKey);
-      patElement.value = localStorage.getItem(githubPATKey);
-      updateRepoPreview();
+      await updateRepoPreview();
     }
   </script>
   <body onload="onLoadBody(event);">
-    <h1>Knyte.io to KnoxelSpace connection</h1>
-    <p>
-      <span>GitHub Owner: </span>
-      <input id="owner" type="text">
-    </p>
-    <p>
-      <span>GitHub Repo: </span>
-      <input id="repo" type="text">
-    </p>
-    <p>
-      <span>GitHub Private Access Token (PAT): </span>
-      <input id="PAT" type="password" size="44">
-    </p>
-    <div>
-      <button onclick="onClickUpdate(event);">Update connection</button>
-      <button onclick="onClickReset(event);">Reset connection</button>
-    </div>
+    <h1>Test Knyte.io to KnoxelSpace connection</h1>
     <h2>Repo preview</h2>
     <div id="preview">
       <div><span>read: </span><span id="previewRead"></span></div>
