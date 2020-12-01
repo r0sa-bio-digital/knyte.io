@@ -1,15 +1,15 @@
-const githubOwnerKey = 'owner';
-const githubRepoKey = 'repo';
-const githubPATKey = 'pat';
+const githubOwnerParamName = 'owner';
+const githubRepoParamName = 'repo';
+const githubPATParamName = 'pat';
 const knyteAppstateFilename = 'knyte-appstate.json';
 
 function getConnectionDesc()
 {
   const searchParams = new URLSearchParams(location.search);
   return {
-    owner: searchParams.get(githubOwnerKey),
-    repo: searchParams.get(githubRepoKey),
-    pat: searchParams.get(githubPATKey)
+    owner: searchParams.get(githubOwnerParamName),
+    repo: searchParams.get(githubRepoParamName),
+    pat: searchParams.get(githubPATParamName)
   };
 }
 
