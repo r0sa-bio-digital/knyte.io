@@ -22,7 +22,8 @@
     * тест подключения к репу: <https://knyte.io/test/?owner=owner-name&repo=repo-name&pat=access-token>
   * Спецификация на ядро системы: <https://github.com/r0sa-bio-digital/knyte-spec>
     * документ в собственном формате Knoxel Space
-    * для использования нужно прописать его owner/repo (r0sa-bio-digital/knyte-spec) и PAT в connect'е
+    * для использования нужно открывать ссылку <https://knyte.io/space/?owner=r0sa-bio-digital&repo=knyte-spec>
+      * сгенерировать и использовать personal access token (PAT) для авторизации доступа к репу
       * как создавать PAT на githab'е: <https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token>
   * Промежуточная версия в процессе разработке: <https://knyte-dev.netlify.app/space/>
 * Управление
