@@ -1,21 +1,15 @@
-const githubOwnerKey = 'knoxelSpaceGithubOwner';
-const githubRepoKey = 'knoxelSpaceGithubRepo';
-const githubPATKey = 'knoxelSpaceGithubPAT';
+const githubOwnerKey = 'owner';
+const githubRepoKey = 'repo';
+const githubPATKey = 'pat';
 const knyteAppstateFilename = 'knyte-appstate.json';
 
 function getConnectionDesc()
 {
   const searchParams = new URLSearchParams(location.search);
-  if (searchParams.has('owner') || searchParams.has('repo') || searchParams.has('pat'))
-    return {
-      owner: searchParams.get('owner'),
-      repo: searchParams.get('repo'),
-      pat: searchParams.get('pat')
-    };
   return {
-    owner: localStorage.getItem(githubOwnerKey),
-    repo: localStorage.getItem(githubRepoKey),
-    pat: localStorage.getItem(githubPATKey)
+    owner: searchParams.get(githubOwnerKey),
+    repo: searchParams.get(githubRepoKey),
+    pat: searchParams.get(githubPATKey)
   };
 }
 
