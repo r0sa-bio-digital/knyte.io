@@ -19,12 +19,13 @@ function getConnectionDesc()
   const githubPATKeyName = githubPATKeyPrefix + '.' + owner + '.' + repo;
   const pat = localStorage.getItem(githubPATKeyName) ||
     askItem(githubPATKeyName, 'Enter personal access token (PAT) for the repo:');
-  return {owner, repo, pat};
+  const reset = function() { localStorage.setItem(githubPATKeyName, '') };
+  return {owner, repo, pat, reset};
 }
 
 async function fetchRepoStatus()
 {
-  const {owner, repo, pat} = getConnectionDesc();
+  const {owner, repo, pat, reset} = getConnectionDesc();
   let readRawUrl, fileSHA;
   if (owner && repo && pat)
   {
@@ -47,6 +48,8 @@ async function fetchRepoStatus()
         }
       }
     }
+    else if (confirm('Failed to connect to repo by given PAT. Do you want to reset it?'))
+      reset();
   }
   return {owner, repo, pat, readRawUrl, fileSHA};
 }
