@@ -5,11 +5,18 @@ const knyteAppstateFilename = 'knyte-appstate.json';
 
 function getConnectionDesc()
 {
-  const ownerLocal = localStorage.getItem(githubOwnerKey);
-  const repoLocal = localStorage.getItem(githubRepoKey);
-  const patLocal = localStorage.getItem(githubPATKey);
-
-  return {owner: ownerLocal, repo: repoLocal, pat: patLocal};
+  const searchParams = new URLSearchParams(location.search);
+  if (searchParams.has('owner') || searchParams.has('repo') || searchParams.has('pat'))
+    return {
+      owner: searchParams.get('owner'),
+      repo: searchParams.get('repo'),
+      pat: searchParams.get('pat')
+    };
+  return {
+    owner: localStorage.getItem(githubOwnerKey),
+    repo: localStorage.getItem(githubRepoKey),
+    pat: localStorage.getItem(githubPATKey)
+  };
 }
 
 async function fetchRepoStatus()
