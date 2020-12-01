@@ -3,28 +3,6 @@ const githubRepoKey = 'knoxelSpaceGithubRepo';
 const githubPATKey = 'knoxelSpaceGithubPAT';
 const knyteAppstateFilename = 'knyte-appstate.json';
 
-async function fetchRepoStatus_Less1Mb()
-{
-  const owner = localStorage.getItem(githubOwnerKey);
-  const repo = localStorage.getItem(githubRepoKey);
-  const pat = localStorage.getItem(githubPATKey);
-  let readRawUrl;
-  if (owner && repo && pat)
-  {
-    const response = await fetch(
-      'https://api.github.com/repos/' +
-      owner + '/' + repo + '/contents/' + knyteAppstateFilename,
-      {headers: {authorization: 'token ' + pat}}
-    );
-    if (response.status === 200)
-    {
-      const json = await response.json();
-      readRawUrl = json.download_url;
-    }
-  }
-  return {owner, repo, pat, readRawUrl};
-}
-
 function getConnectionDesc()
 {
   const ownerLocal = localStorage.getItem(githubOwnerKey);
@@ -71,11 +49,8 @@ function utoa(data) {
   return btoa(unescape(encodeURIComponent(data)));
 }
 
-async function fetchRepoFile(fileSHA)
+async function fetchRepoFile(owner, repo, pat, fileSHA)
 {
-  const owner = localStorage.getItem(githubOwnerKey);
-  const repo = localStorage.getItem(githubRepoKey);
-  const pat = localStorage.getItem(githubPATKey);
   let fileContent;
   if (owner && repo && pat)
   {

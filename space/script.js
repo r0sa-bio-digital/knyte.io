@@ -363,7 +363,7 @@ async function loadAppState(desc)
   }
   else if (desc.fileSHA)
   {
-    const stateText = await fetchRepoFile(desc.fileSHA);
+    const stateText = await fetchRepoFile(desc.owner, desc.repo, desc.pat, desc.fileSHA);
     if (stateText)
     {
       const state = JSON.parse(stateText); // TODO: implement json format check
@@ -4327,9 +4327,9 @@ async function onLoadBody(e)
   // initialise steering
   handleSteeringChanged = steeringChangedHandler;
   // init appstate on startup
-  const {fileSHA} = await fetchRepoStatus();
+  const {owner, repo, pat, fileSHA} = await fetchRepoStatus();
   if (fileSHA)
-    await loadAppState({fileSHA});
+    await loadAppState({owner, repo, pat, fileSHA});
   bootLoadingElement.style.display = 'none';
 
   console.log('ready');
