@@ -17,7 +17,9 @@
 ---------------------
 * Ссылки на модули
   * Интерактивный прототип: <https://knyte.io/space/>
-  * Подключение к github repo: <https://knyte.io/space/connect/>
+  * Подключение к github repo: <https://knyte.io/space/?owner=owner-name&repo=repo-name&pat=access-token>
+    * pat должен быть опциональным - не требуется для read only доступа к публичным репам
+    * тест подключения к репу: <https://knyte.io/test/?owner=owner-name&repo=repo-name&pat=access-token>
   * Спецификация на ядро системы: <https://github.com/r0sa-bio-digital/knyte-spec>
     * документ в собственном формате Knoxel Space
     * для использования нужно прописать его owner/repo (r0sa-bio-digital/knyte-spec) и PAT в connect'е
