@@ -31,7 +31,7 @@ async function fetchRepoStatus()
   {
     const response = await fetch(
       'https://api.github.com/repos/' +
-      owner + '/' + repo + '/commits/master',
+      owner + '/' + repo + '/commits/main',
       {headers: {authorization: 'token ' + pat}}
     );
     if (response.status === 200)
