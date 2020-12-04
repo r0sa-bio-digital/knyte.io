@@ -2739,9 +2739,11 @@ async function onKeyDownWindow(e)
     if (!e.shiftKey && !e.altKey && e.cmdKey())
     {
       bootLoadingElement.style.display = 'block';
-      const {owner, repo, pat, fileSHA} = await fetchRepoStatus();
-      if (owner && repo && pat && fileSHA)
+      const {owner, repo, pat, write, fileSHA} = await fetchRepoStatus();
+      if (owner && repo && pat && write && fileSHA)
         await saveAppState({owner, repo, pat, fileSHA}, true); // TODO: implement spinner while uploading and optional comment for uploaded changes
+      else if (owner && repo && pat && !write && fileSHA)
+        alert('Imposible to upload appstate without write permission.');
       else
         alert('Imposible to upload appstate without github repo connection.');
       bootLoadingElement.style.display = 'none';
