@@ -3,6 +3,7 @@ const githubRepoParamName = 'repo';
 const githubWriteParamName = 'write';
 const githubPATKeyPrefix = 'knoxelSpaceGithubPAT';
 const knyteAppstateFilename = 'knyte-appstate.json';
+let githubActualFileSHA;
 
 function askItem(keyName, message)
 {
@@ -107,9 +108,9 @@ async function putRepoFile(owner, repo, pat, message, textContent, sha)
     {
       console.warn(response);
       console.warn(json);
-      return false;
+      return null;
     }
-    return true;
+    return json.content.sha;
   }
-  return false;
+  return null;
 }

@@ -265,17 +265,20 @@ async function saveAppState(desc, fastMode)
   }
   if (desc)
   {
+    // TODO: implement optional comment for uploaded changes
     const message = prompt('Comment for changes:');
     if (message === null)
-      return;
+      return desc.fileSHA;
     if (message === '')
     {
       alert('Unable upload without comment.');
-      return;
+      return desc.fileSHA;
     }
-    const success = await putRepoFile(desc.owner, desc.repo, desc.pat, message, stateText, desc.fileSHA);
-    if (!success)
+    const newFileSHA = await putRepoFile(desc.owner, desc.repo, desc.pat, message, stateText, desc.fileSHA);
+    if (!newFileSHA)
       alert('Failed to upload appstate to repo.');
+    else
+      return newFileSHA;
   }
   else
   {
@@ -2740,8 +2743,10 @@ async function onKeyDownWindow(e)
     {
       bootLoadingElement.style.display = 'block';
       const {owner, repo, pat, write, fileSHA} = await fetchRepoStatus();
-      if (owner && repo && pat && write && fileSHA)
-        await saveAppState({owner, repo, pat, fileSHA}, true); // TODO: implement spinner while uploading and optional comment for uploaded changes
+      if (owner && repo && pat && write && fileSHA && fileSHA === githubActualFileSHA)
+        githubActualFileSHA = await saveAppState({owner, repo, pat, fileSHA}, true);
+      else if (owner && repo && pat && write && fileSHA && fileSHA !== githubActualFileSHA)
+        alert('Imposible to upload outdated appstate. Refresh and try again.');
       else if (owner && repo && pat && !write && fileSHA)
         alert('Imposible to upload appstate without write permission.');
       else
@@ -4331,7 +4336,10 @@ async function onLoadBody(e)
   // init appstate on startup
   const {owner, repo, pat, fileSHA} = await fetchRepoStatus();
   if (fileSHA)
+  {
     await loadAppState({owner, repo, pat, fileSHA});
+    githubActualFileSHA = fileSHA;
+  }
   bootLoadingElement.style.display = 'none';
 
   console.log('ready');
