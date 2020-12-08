@@ -120,6 +120,7 @@ async function loadAppState(githubOwner, githubRepo, githubPAT)
   }
   const json = JSON.parse(response.body); // await response.json();
   let fileSHA;
+/*
   for (let i = 0; i < json.files.length; ++i)
   {
     const filename = json.files[i].filename;
@@ -127,6 +128,28 @@ async function loadAppState(githubOwner, githubRepo, githubPAT)
     {
       fileSHA = json.files[i].sha;
       break;
+    }
+  }
+*/
+  const response1 = await fetch(
+    'https://api.github.com/repos/' +
+    owner + '/' + repo + '/git/trees/' + json.commit.tree.sha,
+    {headers: {authorization: 'token ' + pat}}
+  );
+  if (response1.status === 200)
+  {
+    const json = JSON.parse(response1.body); // await response1.json();
+    if (json && json.tree && json.tree.length)
+    {
+      for (let i = 0; i < json.tree.length; ++i)
+      {
+        const filename = json.tree[i].path;
+        if (filename === knyteAppstateFilename)
+        {
+          fileSHA = json.tree[i].sha;
+          break;
+        }
+      }
     }
   }
   if (!fileSHA)
