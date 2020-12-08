@@ -133,8 +133,8 @@ async function loadAppState(githubOwner, githubRepo, githubPAT)
 */
   const response1 = await fetch(
     'https://api.github.com/repos/' +
-    owner + '/' + repo + '/git/trees/' + json.commit.tree.sha,
-    {headers: {authorization: 'token ' + pat}}
+    githubOwner + '/' + githubRepo + '/git/trees/' + json.commit.tree.sha,
+    {headers: {authorization: 'token ' + githubPAT}}
   );
   if (response1.status === 200)
   {
