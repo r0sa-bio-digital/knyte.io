@@ -110,7 +110,7 @@ async function loadAppState(githubOwner, githubRepo, githubPAT)
   }
   const response = await fetch(
     'https://api.github.com/repos/' +
-    githubOwner + '/' + githubRepo + '/commits/master',
+    githubOwner + '/' + githubRepo + '/commits/main',
     {headers: {authorization: 'token ' + githubPAT, 'User-Agent': 'Mozilla/5.0'}}
   );
   if (response.statusCode !== 200)
