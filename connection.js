@@ -31,7 +31,7 @@ function getConnectionDesc()
 async function fetchRepoStatus()
 {
   const {owner, repo, pat, write, reset} = getConnectionDesc();
-  let readRawUrl, fileSHA;
+  let fileUrl, fileSHA;
   if (owner && repo && pat)
   {
     const response = await fetch(
@@ -47,21 +47,40 @@ async function fetchRepoStatus()
     if (response.status === 200)
     {
       const json = await response.json();
-      for (let i = 0; i < json.files.length; ++i)
       {
-        const filename = json.files[i].filename;
-        if (filename === knyteAppstateFilename)
+        const response = await fetch(
+          'https://api.github.com/repos/' +
+          owner + '/' + repo + '/git/trees/' + json.commit.tree.sha,
+          {
+            headers: {
+              authorization: 'token ' + pat,
+              'If-None-Match': '' // to disable github api 60 seconds cache
+            }
+          }
+        );
+        if (response.status === 200)
         {
-          readRawUrl = json.files[i].raw_url;
-          fileSHA = json.files[i].sha;
-          break;
+          const json = await response.json();
+          if (json && json.tree && json.tree.length)
+          {
+            for (let i = 0; i < json.tree.length; ++i)
+            {
+              const filename = json.tree[i].path;
+              if (filename === knyteAppstateFilename)
+              {
+                fileUrl = json.tree[i].url;
+                fileSHA = json.tree[i].sha;
+                break;
+              }
+            }
+          }
         }
       }
     }
     else if (confirm('Failed to connect to repo by given PAT. Do you want to reset it?'))
       reset();
   }
-  return {owner, repo, pat, write, readRawUrl, fileSHA};
+  return {owner, repo, pat, write, fileUrl, fileSHA};
 }
 
 function atou(b64) {

@@ -15,9 +15,10 @@
     async function updateRepoPreview()
     {
       readElement.innerHTML = '...';
-      const {readRawUrl} = await fetchRepoStatus();
-      readElement.innerHTML = readRawUrl
-        ? '<a href="' + readRawUrl + '">' + readRawUrl + '</a>' : 'not connected';
+      const {fileUrl} = await fetchRepoStatus();
+      readElement.innerHTML = fileUrl
+        ? '<a href="' + fileUrl + '">' + fileUrl + '</a>'
+        : 'not connected';
     }
 
     async function onLoadBody(e)
