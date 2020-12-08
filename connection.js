@@ -17,6 +17,8 @@ function getConnectionDesc()
   const searchParams = new URLSearchParams(location.search);
   const owner = searchParams.get(githubOwnerParamName);
   const repo = searchParams.get(githubRepoParamName);
+  if (!owner || !repo)
+    return {};
   const write = searchParams.get(githubWriteParamName) === 'true';
   const githubPATKeyName = githubPATKeyPrefix + '.' + owner + '.' + repo;
   const pat = localStorage.getItem(githubPATKeyName) ||
