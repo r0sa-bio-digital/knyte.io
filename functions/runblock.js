@@ -136,7 +136,7 @@ async function loadAppState(githubOwner, githubRepo, githubPAT)
     githubOwner + '/' + githubRepo + '/git/trees/' + json.commit.tree.sha,
     {headers: {authorization: 'token ' + githubPAT, 'User-Agent': 'Mozilla/5.0'}}
   );
-  if (response1.status === 200)
+  if (response1.statusCode === 200)
   {
     const json = JSON.parse(response1.body); // await response1.json();
     if (json && json.tree && json.tree.length)
