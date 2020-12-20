@@ -844,7 +844,7 @@ function runBlockHandleClick(knyteId, body, finalKnyteId, resolve)
           if (namesMap.solution && namesMap.solution.type === 'json')
           {
             const resultValue = logicResult.complete
-              ? JSON.stringify(logicResult.solution)
+              ? JSON.stringify(logicResult.solution, null, '\t')
               : '{}';
             const resultKnyteId = outputNameToKnyteMap.solution;
             const {record} = informationMap[resultKnyteId];
@@ -900,7 +900,7 @@ function runBlockHandleClick(knyteId, body, finalKnyteId, resolve)
                   if (resultValue === undefined)
                     continue;
                   if (!isString(resultValue))
-                    resultValue = JSON.stringify(resultValue);
+                    resultValue = JSON.stringify(resultValue, null, '\t');
                   const resultKnyteId = outputNameToKnyteMap[resultName];
                   const {record} = informationMap[resultKnyteId];
                   const recordtype = getRecordtype(record);
