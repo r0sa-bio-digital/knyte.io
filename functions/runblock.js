@@ -180,6 +180,20 @@ async function loadAppState(githubOwner, githubRepo, githubPAT)
   return true;
 }
 
+function getHostedKnyteId(knyteId)
+{
+  const hostedKnoxels = informationMap[knyteId].space;
+  const hostedKnytes = {};
+  for (let hostedKnoxelId in hostedKnoxels)
+  {
+    const hostedKnyteId = knoxels[hostedKnoxelId];
+    hostedKnytes[hostedKnyteId] = true;
+  }
+  if (Object.keys(hostedKnytes).length === 1)
+    return Object.keys(hostedKnytes)[0];
+  return null;
+}
+
 function getConnectsByDataMatchFunction(knyteId, match, token, type)
 {
   const result = [];
