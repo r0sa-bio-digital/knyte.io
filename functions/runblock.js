@@ -224,7 +224,6 @@ function logicReset(logicKnyteId)
   for (let hostedKnoxelId in hostedKnoxels)
   {
     const knyteId = knoxels[hostedKnoxelId];
-    resetTransparentOutline(hostedKnoxelId);
     const hostedKnoxels2 = informationMap[knyteId].space;
     const {record} = informationMap[knyteId];
     const {initialKnyteId, terminalKnyteId} = knyteVectors[knyteId];
