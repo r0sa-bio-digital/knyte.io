@@ -1710,6 +1710,22 @@ function parseTransform(s)
   return {x, y};
 }
 
+function jumpIntoKnoxelSpace(knoxelId)
+{
+  spaceBackStack.push(spaceRootElement.dataset.knoxelId);
+  steeringBackStack.push(steeringGear.getCTM());
+  spaceForwardStack.length = 0;
+  steeringForwardStack.length = 0;
+  {
+    setSpaceRootKnoxel({knoxelId});
+    steeringGear.setCTM(spaceRootElement.createSVGMatrix());
+  }
+  refreshActiveRect({screenPosition: mouseMovePosition});
+  setNavigationControlState({
+    backKnoxelId: spaceBackStack[spaceBackStack.length - 1]
+  });
+}
+
 function onClickRect(e)
 {
   if (!inputOptions.handleMouseClick)
@@ -1721,35 +1737,35 @@ function onClickRect(e)
   {
     if (targetKnoxelElement && targetKnoxelElement.id !== spaceRootElement.dataset.knoxelId)
     {
-      spaceBackStack.push(spaceRootElement.dataset.knoxelId);
-      steeringBackStack.push(steeringGear.getCTM());
-      spaceForwardStack.length = 0;
-      steeringForwardStack.length = 0;
       const spacemap = knoxels[targetKnoxelElement.id] === knoxels[spacemapKnoxelId];
       const selfcontained = knoxels[targetKnoxelElement.id] === knoxels[spaceRootElement.dataset.knoxelId];
       if (spacemap)
+        jumpIntoKnoxelSpace(targetKnoxelElement.id);
+      else 
       {
-        setSpaceRootKnoxel({knoxelId: targetKnoxelElement.id});
-        steeringGear.setCTM(spaceRootElement.createSVGMatrix());
+        spaceBackStack.push(spaceRootElement.dataset.knoxelId);
+        steeringBackStack.push(steeringGear.getCTM());
+        spaceForwardStack.length = 0;
+        steeringForwardStack.length = 0;
+        if (selfcontained)
+          setSpaceRootKnoxel({knoxelId: targetKnoxelElement.id});
+        else
+        {
+          const panOffset = steeringGear.getPan();
+          const zoom = steeringGear.getZoom();
+          const knoxelLeftTop = parseTransform(targetKnoxelElement.getAttribute('transform'));
+          const knoxelSize = knoxelRect.getElementSize(targetKnoxelElement, false);
+          const {leftTop, w, h} = knoxelRect.getKnoxelDimensions(targetKnoxelElement.id);
+          setSpaceRootKnoxel({knoxelId: targetKnoxelElement.id}); // +++1
+          const x = panOffset.x + (knoxelLeftTop.x + knoxelSize.w/2 - leftTop.x - w/2)/zoom;
+          const y = panOffset.y + (knoxelLeftTop.y + knoxelSize.h/2 - leftTop.y - h/2)/zoom;
+          steeringGear.setPan({x, y});
+        }
+        refreshActiveRect({screenPosition: mouseMovePosition});
+        setNavigationControlState({
+          backKnoxelId: spaceBackStack[spaceBackStack.length - 1]
+        });
       }
-      else if (!selfcontained)
-      {
-        const panOffset = steeringGear.getPan();
-        const zoom = steeringGear.getZoom();
-        const knoxelLeftTop = parseTransform(targetKnoxelElement.getAttribute('transform'));
-        const knoxelSize = knoxelRect.getElementSize(targetKnoxelElement, false);
-        const {leftTop, w, h} = knoxelRect.getKnoxelDimensions(targetKnoxelElement.id);
-        setSpaceRootKnoxel({knoxelId: targetKnoxelElement.id}); // +++1
-        const x = panOffset.x + (knoxelLeftTop.x + knoxelSize.w/2 - leftTop.x - w/2)/zoom;
-        const y = panOffset.y + (knoxelLeftTop.y + knoxelSize.h/2 - leftTop.y - h/2)/zoom;
-        steeringGear.setPan({x, y});
-      }
-      else
-        setSpaceRootKnoxel({knoxelId: targetKnoxelElement.id});
-      refreshActiveRect({screenPosition: mouseMovePosition});
-      setNavigationControlState({
-        backKnoxelId: spaceBackStack[spaceBackStack.length - 1]
-      });
     }
     e.stopPropagation(); // to prevent onClickSpaceRoot call
   }
@@ -3287,6 +3303,8 @@ async function onKeyDownWindow(e)
       const jumpTargetKnoxelId = prompt('Enter knoxel id to jump:');
       if (jumpTargetKnoxelId && (jumpTargetKnoxelId in knoxels))
         jumpToKnoxel(jumpTargetKnoxelId);
+      else
+        alert('knoxel ' + jumpTargetKnoxelId + ' not found.');
     }
   }
   else if (e.code === 'KeyK')
@@ -3328,14 +3346,41 @@ function jumpToKnoxel(targetKnoxelId)
     hostKnyteId = spaceRootKnyteId;
   else
   {
-    alert('knoxel not found in the current space');
-    return;
-    // TODO: ask if user want to jump to another space
-    // TODO: find the space containing target knoxel
-    // TODO: jump to this space
+    for (let knyteId in informationMap)
+    {
+      const space = informationMap[knyteId].space;
+      if (targetKnoxelId in space)
+      {
+        hostKnyteId = knyteId;
+        break;
+      }
+    }
+    let hostKnoxelId;
+    if (hostKnyteId)
+      for (let knoxelId in knoxels)
+      {
+        const knyteId = knoxels[knoxelId];
+        if (knyteId === hostKnyteId)
+        {
+          hostKnoxelId = knoxelId;
+          break;
+        }
+      }
+    if (hostKnoxelId)
+    {
+      if (confirm('are you sure to jump to another space?'))
+        jumpIntoKnoxelSpace(hostKnoxelId);
+      else
+        return;
+    }
+    else
+    {
+      alert('knoxel not found in the knoxel space');
+      return;
+    }
   }
 
-  // jump to target knoxel inside of thr current space
+  // jump to target knoxel inside of the current space
   const targetKnoxelPosition = informationMap[hostKnyteId].space[targetKnoxelId];
   const width = parseFloat(spaceRootElement.getAttribute('width'));
   const height = parseFloat(spaceRootElement.getAttribute('height'));
