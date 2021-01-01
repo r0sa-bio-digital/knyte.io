@@ -263,6 +263,12 @@ async function saveAppState(desc, fastMode)
     );
     stateText = JSON.stringify(state, keys.sort(), '\t');
   }
+  const maxStateTextSize = 67108864; // 64 MB
+  if (stateText.length > maxStateTextSize)
+  {
+    alert('Appstate must be less than ' + maxStateTextSize + ' bytes. Failed to save/upload the appstate.');
+    return;
+  }
   if (desc)
   {
     // TODO: implement optional comment for uploaded changes
