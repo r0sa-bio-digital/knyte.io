@@ -245,7 +245,7 @@ async function saveAppState(desc, fastMode)
   }
 
   if (!checkAppBusy())
-    return;
+    return githubActualFileSHA;
   checkInformationMapSpaces();
   const state = {masterKnoxelId, spacemapKnoxelId, knyteVectors, knoxelVectors,
     knyteConnects, knyteInitialConnects, knyteTerminalConnects, informationMap, knoxels, knoxelViews};
@@ -267,7 +267,7 @@ async function saveAppState(desc, fastMode)
   if (stateText.length > maxStateTextSize)
   {
     alert('Appstate must be less than ' + maxStateTextSize + ' bytes. Failed to save/upload the appstate.');
-    return;
+    return githubActualFileSHA;
   }
   if (desc)
   {
