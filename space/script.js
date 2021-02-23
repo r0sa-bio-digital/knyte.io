@@ -3101,6 +3101,15 @@ async function onKeyDownWindow(e)
       }
     }
   }
+  else if (e.code === 'KeyR')
+  {
+    if (!e.shiftKey && !e.altKey && !e.cmdKey())
+      if (confirm('Sure to reset space navigation?'))
+      {
+        steeringGear.setPan({x: 0, y: 0});
+        steeringGear.setZoom(1.0);
+      }
+  }
   else if (e.code === 'KeyC')
   {
     if (!e.shiftKey && !e.altKey && !e.cmdKey())
