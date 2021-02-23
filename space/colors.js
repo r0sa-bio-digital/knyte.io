@@ -8,6 +8,8 @@ const visualThemeColors = {
   success: '#55ff84',
   fail: '#ff5d5d',
   frame: '#0000ff',
+  knoxelmap: '#1da6ac',
+  knytemap: '#4d97ff',
   elements: [
     '#79e6d9',
     '#a4a4e4',

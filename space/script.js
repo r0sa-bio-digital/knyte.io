@@ -3320,20 +3320,15 @@ async function onKeyDownWindow(e)
   {
     if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
-      const targetKnoxelId = mouseoverKnoxelId;
-      const targetKnyteId = knoxels[targetKnoxelId];
-      const matchKnoxels = [targetKnoxelId];
-      for (const knoxelId in knoxels)
-      {
-        if (knoxelId === targetKnoxelId)
-          continue;
-        const knyteId = knoxels[knoxelId];
-        if (knyteId === targetKnyteId)
-          matchKnoxels.push(knoxelId);
-      }
-      console.log('knoxels of knyte ' + targetKnyteId + ':');
-      console.log(matchKnoxels);
-      alert('list of ' + matchKnoxels.length + ' knoxels of the knyte logged to console');
+      const knyteId = knit.new();
+      const color = visualThemeColors.knoxelmap;
+      addKnyte({knyteId, color});
+      const position = steeringGear.screenToSpacePosition(mouseMovePosition);
+      const collapse = true;
+      const knoxelId = addKnoxelRect({knyteId, hostKnoxelId: spaceRootElement.dataset.knoxelId, position, collapse});
+      knoxelSpaceRoot.update();
+      handleSpacemapChanged();
+      fillKnoxelmapSubspace(mouseoverKnoxelId, knyteId);
     }
   }
   else if (e.code === 'KeyL')
@@ -3341,13 +3336,14 @@ async function onKeyDownWindow(e)
     if (!e.shiftKey && !e.altKey && !e.cmdKey())
     {
       const knyteId = knit.new();
-      const color = visualTheme.rect.fillColor;
+      const color = visualThemeColors.knytemap;
       addKnyte({knyteId, color});
       const position = steeringGear.screenToSpacePosition(mouseMovePosition);
       const collapse = true;
       const knoxelId = addKnoxelRect({knyteId, hostKnoxelId: spaceRootElement.dataset.knoxelId, position, collapse});
       knoxelSpaceRoot.update();
       handleSpacemapChanged();
+      fillKnytemapSubspace(mouseoverKnoxelId, knyteId);
     }
   }
 }
@@ -3355,6 +3351,43 @@ async function onKeyDownWindow(e)
 async function onKeyUpWindow(e)
 {
   delete inputCodeMap[e.code];
+}
+
+function fillKnoxelmapSubspace(targetKnoxelId, hostKnyteId)
+{
+  // TODO: fill knoxelmap by jump-knoxels, not by text
+  const targetKnyteId = knoxels[targetKnoxelId];
+  const matchKnoxels = [targetKnoxelId];
+  for (const knoxelId in knoxels)
+  {
+    if (knoxelId === targetKnoxelId)
+      continue;
+    const knyteId = knoxels[knoxelId];
+    if (knyteId === targetKnyteId)
+      matchKnoxels.push(knoxelId);
+  }
+  let result = matchKnoxels.length + ' knoxels of knyte ' + targetKnyteId + ':\n';
+  for (let i = 0; i < matchKnoxels.length; ++i)
+    result += '\t' + matchKnoxels[i] + '\n';
+  informationMap[hostKnyteId].record = getMultilinerRecordByData(result);
+}
+
+function fillKnytemapSubspace(targetKnoxelId, hostKnyteId)
+{
+  // TODO: fill knytemap by bubble-knoxels, not by text
+  const targetKnyteId = knoxels[targetKnoxelId];
+  let result = 'knyte ' + targetKnyteId + ' links:\n';
+  for (let connectKnyteId in knyteInitialConnects[targetKnyteId])
+  {
+    const vector = knyteVectors[connectKnyteId];
+    result += vector.initialKnyteId + ' --' + connectKnyteId + '--> ' + vector.terminalKnyteId + '\n';
+  }
+  for (let connectKnyteId in knyteTerminalConnects[targetKnyteId])
+  {
+    const vector = knyteVectors[connectKnyteId];
+    result += vector.initialKnyteId + ' --' + connectKnyteId + '--> ' + vector.terminalKnyteId + '\n';
+  }
+  informationMap[hostKnyteId].record = getMultilinerRecordByData(result);
 }
 
 function jumpToKnoxel(targetKnoxelId)
