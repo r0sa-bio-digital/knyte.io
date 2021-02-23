@@ -3336,6 +3336,20 @@ async function onKeyDownWindow(e)
       alert('list of ' + matchKnoxels.length + ' knoxels of the knyte logged to console');
     }
   }
+  else if (e.code === 'KeyL')
+  {
+    if (!e.shiftKey && !e.altKey && !e.cmdKey())
+    {
+      const knyteId = knit.new();
+      const color = visualTheme.rect.fillColor;
+      addKnyte({knyteId, color});
+      const position = steeringGear.screenToSpacePosition(mouseMovePosition);
+      const collapse = true;
+      const knoxelId = addKnoxelRect({knyteId, hostKnoxelId: spaceRootElement.dataset.knoxelId, position, collapse});
+      knoxelSpaceRoot.update();
+      handleSpacemapChanged();
+    }
+  }
 }
 
 async function onKeyUpWindow(e)
