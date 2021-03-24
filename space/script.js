@@ -3318,8 +3318,21 @@ async function onKeyDownWindow(e)
   }
   else if (e.code === 'KeyK')
   {
-    if (!e.shiftKey && !e.altKey && !e.cmdKey())
+    if (!e.altKey && !e.cmdKey())
     {
+      const targetKnyteId = e.shiftKey ? prompt('Specify knyte id for knoxelmap:') : knoxels[mouseoverKnoxelId];
+      if (!targetKnyteId)
+        return;
+      if (!isUuid(targetKnyteId))
+      {
+        alert('Invalid knyte id specified. Must be uuid v4. Map creation cancelled.');
+        return;
+      }
+      if (!(targetKnyteId.toLowerCase() in knyteVectors))
+      {
+        alert('Knyte id not found. Map creation cancelled.');
+        return;
+      }
       const knyteId = knit.new();
       const color = visualThemeColors.knoxelmap;
       addKnyte({knyteId, color});
@@ -3328,13 +3341,26 @@ async function onKeyDownWindow(e)
       const knoxelId = addKnoxelRect({knyteId, hostKnoxelId: spaceRootElement.dataset.knoxelId, position, collapse});
       knoxelSpaceRoot.update();
       handleSpacemapChanged();
-      fillKnoxelmapSubspace(mouseoverKnoxelId, knyteId);
+      fillKnoxelmapSubspace(targetKnyteId, knyteId);
     }
   }
   else if (e.code === 'KeyL')
   {
-    if (!e.shiftKey && !e.altKey && !e.cmdKey())
+    if (!e.altKey && !e.cmdKey())
     {
+      const targetKnyteId = e.shiftKey ? prompt('Specify knyte id for knytemap:') : knoxels[mouseoverKnoxelId];
+      if (!targetKnyteId)
+        return;
+      if (!isUuid(targetKnyteId))
+      {
+        alert('Invalid knyte id specified. Must be uuid v4. Map creation cancelled.');
+        return;
+      }
+      if (!(targetKnyteId.toLowerCase() in knyteVectors))
+      {
+        alert('Knyte id not found. Map creation cancelled.');
+        return;
+      }
       const knyteId = knit.new();
       const color = visualThemeColors.knytemap;
       addKnyte({knyteId, color});
@@ -3343,7 +3369,7 @@ async function onKeyDownWindow(e)
       const knoxelId = addKnoxelRect({knyteId, hostKnoxelId: spaceRootElement.dataset.knoxelId, position, collapse});
       knoxelSpaceRoot.update();
       handleSpacemapChanged();
-      fillKnytemapSubspace(mouseoverKnoxelId, knyteId);
+      fillKnytemapSubspace(targetKnyteId, knyteId);
     }
   }
 }
@@ -3353,15 +3379,12 @@ async function onKeyUpWindow(e)
   delete inputCodeMap[e.code];
 }
 
-function fillKnoxelmapSubspace(targetKnoxelId, hostKnyteId)
+function fillKnoxelmapSubspace(targetKnyteId, hostKnyteId)
 {
   // TODO: fill knoxelmap by jump-knoxels, not by text
-  const targetKnyteId = knoxels[targetKnoxelId];
-  const matchKnoxels = [targetKnoxelId];
+  const matchKnoxels = [];
   for (const knoxelId in knoxels)
   {
-    if (knoxelId === targetKnoxelId)
-      continue;
     const knyteId = knoxels[knoxelId];
     if (knyteId === targetKnyteId)
       matchKnoxels.push(knoxelId);
@@ -3372,10 +3395,9 @@ function fillKnoxelmapSubspace(targetKnoxelId, hostKnyteId)
   informationMap[hostKnyteId].record = getMultilinerRecordByData(result);
 }
 
-function fillKnytemapSubspace(targetKnoxelId, hostKnyteId)
+function fillKnytemapSubspace(targetKnyteId, hostKnyteId)
 {
   // TODO: fill knytemap by bubble-knoxels, not by text
-  const targetKnyteId = knoxels[targetKnoxelId];
   let result = 'knyte ' + targetKnyteId + ' links:\n';
   for (let connectKnyteId in knyteInitialConnects[targetKnyteId])
   {
