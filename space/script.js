@@ -1697,8 +1697,11 @@ function addKnoxelRect(desc)
   const hostKnyteId = knoxels[desc.hostKnoxelId];
   const knoxelId = knit.new();
   addKnoxel({hostKnyteId, knyteId: desc.knyteId, knoxelId, position, collapse: desc.collapse, color: desc.color});
-  knoxelRect.add({knoxelId, position});
-  knoxelRect.updateArrowShape(knoxelId, position);
+  if (desc.hostKnoxelId === spaceRootElement.dataset.knoxelId)
+  {
+    knoxelRect.add({knoxelId, position});
+    knoxelRect.updateArrowShape(knoxelId, position);
+  }
   return knoxelId;
 }
 
@@ -3341,7 +3344,7 @@ async function onKeyDownWindow(e)
       const knoxelId = addKnoxelRect({knyteId, hostKnoxelId: spaceRootElement.dataset.knoxelId, position, collapse});
       knoxelSpaceRoot.update();
       handleSpacemapChanged();
-      fillKnoxelmapSubspace(targetKnyteId, knyteId);
+      fillKnoxelmapSubspace(targetKnyteId, knyteId, knoxelId);
     }
   }
   else if (e.code === 'KeyL')
@@ -3379,7 +3382,7 @@ async function onKeyUpWindow(e)
   delete inputCodeMap[e.code];
 }
 
-function fillKnoxelmapSubspace(targetKnyteId, hostKnyteId)
+function fillKnoxelmapSubspace(targetKnyteId, hostKnyteId, hostKnoxelId)
 {
   // TODO: fill knoxelmap by jump-knoxels, not by text
   const matchKnoxels = [];
@@ -3389,10 +3392,31 @@ function fillKnoxelmapSubspace(targetKnyteId, hostKnyteId)
     if (knyteId === targetKnyteId)
       matchKnoxels.push(knoxelId);
   }
-  let result = matchKnoxels.length + ' knoxels of knyte ' + targetKnyteId + ':\n';
+  informationMap[hostKnyteId].record = getOnelinerRecordByData(
+    `${matchKnoxels.length} knoxels of knyte ${targetKnyteId}:`
+  );
+  const color = visualTheme.rect.fillColor;;
+  let p = {x: 230, y: 55};
   for (let i = 0; i < matchKnoxels.length; ++i)
-    result += '\t' + matchKnoxels[i] + '\n';
-  informationMap[hostKnyteId].record = getMultilinerRecordByData(result);
+  {
+    const position = {x: p.x, y: p.y};
+    const knyteId = knit.new();
+    addKnyte({knyteId, color});
+    const knoxelId = addKnoxelRect({knyteId, hostKnoxelId, position});
+    informationMap[knyteId].record = getInteractiveRecordByData(
+`<div style="width: 430px; height: 24px; margin: 8px;">
+  <span>${matchKnoxels[i]}</span>
+  <button
+    data-knoxel-id="${matchKnoxels[i]}"
+    onclick="event.stopPropagation(); jumpBlockHandleClick(this.dataset.knoxelId);"
+    onfocus="this.blur();"
+  >
+    jump
+  </button>
+</div>`
+    );
+    p.y += 50;
+  }
 }
 
 function fillKnytemapSubspace(targetKnyteId, hostKnyteId)
@@ -3570,6 +3594,11 @@ function getHostedKnyteId(knyteId)
   if (Object.keys(hostedKnytes).length === 1)
     return Object.keys(hostedKnytes)[0];
   return null;
+}
+
+function jumpBlockHandleClick(knoxelId)
+{
+  jumpToKnoxel(knoxelId);
 }
 
 function logicBlockHandleClick(knyteId)
