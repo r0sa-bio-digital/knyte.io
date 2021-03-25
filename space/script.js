@@ -3372,7 +3372,7 @@ async function onKeyDownWindow(e)
       const knoxelId = addKnoxelRect({knyteId, hostKnoxelId: spaceRootElement.dataset.knoxelId, position, collapse});
       knoxelSpaceRoot.update();
       handleSpacemapChanged();
-      fillKnytemapSubspace(targetKnyteId, knyteId);
+      fillKnytemapSubspace(targetKnyteId, knyteId, knoxelId);
     }
   }
 }
@@ -3384,7 +3384,6 @@ async function onKeyUpWindow(e)
 
 function fillKnoxelmapSubspace(targetKnyteId, hostKnyteId, hostKnoxelId)
 {
-  // TODO: fill knoxelmap by jump-knoxels, not by text
   const matchKnoxels = [];
   for (const knoxelId in knoxels)
   {
@@ -3419,21 +3418,59 @@ function fillKnoxelmapSubspace(targetKnyteId, hostKnyteId, hostKnoxelId)
   }
 }
 
-function fillKnytemapSubspace(targetKnyteId, hostKnyteId)
+function fillKnytemapSubspace(targetKnyteId, hostKnyteId, hostKnoxelId)
 {
-  // TODO: fill knytemap by bubble-knoxels, not by text
+  // TODO: implement adaptive grid for knoxels of all sizes
   let result = 'knyte ' + targetKnyteId + ' links:\n';
-  for (let connectKnyteId in knyteInitialConnects[targetKnyteId])
-  {
-    const vector = knyteVectors[connectKnyteId];
-    result += vector.initialKnyteId + ' --' + connectKnyteId + '--> ' + vector.terminalKnyteId + '\n';
-  }
   for (let connectKnyteId in knyteTerminalConnects[targetKnyteId])
   {
     const vector = knyteVectors[connectKnyteId];
     result += vector.initialKnyteId + ' --' + connectKnyteId + '--> ' + vector.terminalKnyteId + '\n';
   }
+  for (let connectKnyteId in knyteInitialConnects[targetKnyteId])
+  {
+    const vector = knyteVectors[connectKnyteId];
+    result += vector.initialKnyteId + ' --' + connectKnyteId + '--> ' + vector.terminalKnyteId + '\n';
+  }
   informationMap[hostKnyteId].record = getMultilinerRecordByData(result);
+
+  const knoxelId = addKnoxelRect({knyteId: targetKnyteId, hostKnoxelId, position: {x: 0, y: 0}});
+  let p = {x: -300, y: 0};
+  for (let connectKnyteId in knyteTerminalConnects[targetKnyteId])
+  {
+    const initialKnyteId = knyteVectors[connectKnyteId].initialKnyteId;
+    p.x -= 300;
+    const initialKnoxelId = addKnoxelRect({knyteId: initialKnyteId, hostKnoxelId, position: {x: p.x, y: p.y}});
+    p.x += 300;
+    const connectKnoxelId = addKnoxelRect({knyteId: connectKnyteId, hostKnoxelId, position: {x: p.x, y: p.y}});
+    p.y += 50;
+    initialConnectBubbleRect({
+      droppedKnoxelId: connectKnoxelId,
+      connectingKnoxelId: initialKnoxelId,
+    });
+    terminalConnectBubbleRect({
+      droppedKnoxelId: connectKnoxelId,
+      connectingKnoxelId: knoxelId,
+    });
+  }
+  p = {x: 300, y: 0};
+  for (let connectKnyteId in knyteInitialConnects[targetKnyteId])
+  {
+    const terminalKnyteId = knyteVectors[connectKnyteId].terminalKnyteId;
+    const connectKnoxelId = addKnoxelRect({knyteId: connectKnyteId, hostKnoxelId, position: {x: p.x, y: p.y}});
+    p.x += 300;
+    const terminalKnoxelId = addKnoxelRect({knyteId: terminalKnyteId, hostKnoxelId, position: {x: p.x, y: p.y}});
+    p.x -= 300;
+    p.y += 50;
+    initialConnectBubbleRect({
+      droppedKnoxelId: connectKnoxelId,
+      connectingKnoxelId: knoxelId,
+    });
+    terminalConnectBubbleRect({
+      droppedKnoxelId: connectKnoxelId,
+      connectingKnoxelId: terminalKnoxelId,
+    });
+  }
 }
 
 function jumpToKnoxel(targetKnoxelId)
