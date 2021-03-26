@@ -1171,12 +1171,13 @@ function setKnoxelPosition(hostKnyteId, knoxelId, position)
     return;
   p.x = position.x;
   p.y = position.y;
-  const knoxelElement = document.getElementById(knoxelId);
   const {w, h} = knoxelRect.getKnoxelDimensions(knoxelId);
   let {x, y} = p;
   x -= w/2;
   y -= h/2;
-  knoxelElement.setAttribute('transform', 'translate(' + x + ',' + y + ')');
+  const knoxelElement = document.getElementById(knoxelId);
+  if (knoxelElement)
+    knoxelElement.setAttribute('transform', 'translate(' + x + ',' + y + ')');
 }
 
 function setKnoxelCollapse(knoxelId, collapse)
@@ -3420,56 +3421,105 @@ function fillKnoxelmapSubspace(targetKnyteId, hostKnyteId, hostKnoxelId)
 
 function fillKnytemapSubspace(targetKnyteId, hostKnyteId, hostKnoxelId)
 {
-  // TODO: implement adaptive grid for knoxels of all sizes
-  let result = 'knyte ' + targetKnyteId + ' links:\n';
-  for (let connectKnyteId in knyteTerminalConnects[targetKnyteId])
-  {
-    const vector = knyteVectors[connectKnyteId];
-    result += vector.initialKnyteId + ' --' + connectKnyteId + '--> ' + vector.terminalKnyteId + '\n';
-  }
-  for (let connectKnyteId in knyteInitialConnects[targetKnyteId])
-  {
-    const vector = knyteVectors[connectKnyteId];
-    result += vector.initialKnyteId + ' --' + connectKnyteId + '--> ' + vector.terminalKnyteId + '\n';
-  }
-  informationMap[hostKnyteId].record = getMultilinerRecordByData(result);
-
-  const knoxelId = addKnoxelRect({knyteId: targetKnyteId, hostKnoxelId, position: {x: 0, y: 0}});
-  let p = {x: -300, y: 0};
+  const widths = {leftKnoxel: 0, leftConnect: 0, center: 0, rightConnect: 0, rightKnoxel: 0};
+  const heights = {left: 0, right: 0};
+  const leftHeights = [];
+  const rightHeights = [];
+  const padding = 30;
+  const mainPadding = 3 * padding;
+  const centralKnoxel = {id: '', size: {}};
+  centralKnoxel.id = addKnoxelRect({knyteId: targetKnyteId, hostKnoxelId, position: {x: 0, y: 0}});
+  centralKnoxel.size = knoxelRect.getKnoxelDimensions(centralKnoxel.id);
+  widths.center = centralKnoxel.size.w + mainPadding;
+  // left
+  const leftParts = [];
   for (let connectKnyteId in knyteTerminalConnects[targetKnyteId])
   {
     const initialKnyteId = knyteVectors[connectKnyteId].initialKnyteId;
-    p.x -= 300;
-    const initialKnoxelId = addKnoxelRect({knyteId: initialKnyteId, hostKnoxelId, position: {x: p.x, y: p.y}});
-    p.x += 300;
-    const connectKnoxelId = addKnoxelRect({knyteId: connectKnyteId, hostKnoxelId, position: {x: p.x, y: p.y}});
-    p.y += 50;
+    const initialKnoxelId = addKnoxelRect({knyteId: initialKnyteId, hostKnoxelId, position: {x: 0, y: 0}});
+    const connectKnoxelId = addKnoxelRect({knyteId: connectKnyteId, hostKnoxelId, position: {x: 0, y: 0}});
     initialConnectBubbleRect({
       droppedKnoxelId: connectKnoxelId,
       connectingKnoxelId: initialKnoxelId,
     });
     terminalConnectBubbleRect({
       droppedKnoxelId: connectKnoxelId,
-      connectingKnoxelId: knoxelId,
+      connectingKnoxelId: centralKnoxel.id,
     });
+    leftParts.push({
+      knoxel: {id: initialKnoxelId, size: knoxelRect.getKnoxelDimensions(initialKnoxelId)},
+      connect: {id: connectKnoxelId, size: knoxelRect.getKnoxelDimensions(connectKnoxelId)},
+    })
   }
-  p = {x: 300, y: 0};
+  // right
+  const rightParts = [];
   for (let connectKnyteId in knyteInitialConnects[targetKnyteId])
   {
     const terminalKnyteId = knyteVectors[connectKnyteId].terminalKnyteId;
-    const connectKnoxelId = addKnoxelRect({knyteId: connectKnyteId, hostKnoxelId, position: {x: p.x, y: p.y}});
-    p.x += 300;
-    const terminalKnoxelId = addKnoxelRect({knyteId: terminalKnyteId, hostKnoxelId, position: {x: p.x, y: p.y}});
-    p.x -= 300;
-    p.y += 50;
+    const connectKnoxelId = addKnoxelRect({knyteId: connectKnyteId, hostKnoxelId, position: {x: 0, y: 0}});
+    const terminalKnoxelId = addKnoxelRect({knyteId: terminalKnyteId, hostKnoxelId, position: {x: 0, y: 0}});
     initialConnectBubbleRect({
       droppedKnoxelId: connectKnoxelId,
-      connectingKnoxelId: knoxelId,
+      connectingKnoxelId: centralKnoxel.id,
     });
     terminalConnectBubbleRect({
       droppedKnoxelId: connectKnoxelId,
       connectingKnoxelId: terminalKnoxelId,
     });
+    rightParts.push({
+      connect: {id: connectKnoxelId, size: knoxelRect.getKnoxelDimensions(connectKnoxelId)},
+      knoxel: {id: terminalKnoxelId, size: knoxelRect.getKnoxelDimensions(terminalKnoxelId)},
+    })
+  }
+  // sort sizes
+  for (let i = 0; i < leftParts.length; ++i)
+  {
+    const knoxelWidth = leftParts[i].knoxel.size.w;
+    if (widths.leftKnoxel < knoxelWidth)
+      widths.leftKnoxel = knoxelWidth;
+    const connectWidth = leftParts[i].connect.size.w;
+    if (widths.leftConnect < connectWidth)
+      widths.leftConnect = connectWidth;
+    const height = Math.max(leftParts[i].knoxel.size.h, leftParts[i].connect.size.h) + padding;
+    leftHeights.push(height);
+    heights.left += height;
+  }
+  widths.leftKnoxel += padding;
+  widths.leftConnect += padding;
+  for (let i = 0; i < rightParts.length; ++i)
+  {
+    const connectWidth = rightParts[i].connect.size.w;
+    if (widths.rightConnect < connectWidth)
+      widths.rightConnect = connectWidth;
+    const knoxelWidth = rightParts[i].knoxel.size.w;
+    if (widths.rightKnoxel < knoxelWidth)
+      widths.rightKnoxel = knoxelWidth;
+    const height = Math.max(rightParts[i].knoxel.size.h, rightParts[i].connect.size.h) + padding;
+    rightHeights.push(height);
+    heights.right += height;
+  }
+  widths.rightKnoxel += padding;
+  widths.rightConnect += padding;
+  // apply grid positions
+  let initialY = -0.5*heights.left;
+  for (let i = 0; i < leftParts.length; ++i)
+  {
+    const y = initialY + 0.5*leftHeights[i];
+    const leftKnoxelPosition = {x: -0.5*widths.leftKnoxel -widths.leftConnect -0.5*widths.center, y};
+    setKnoxelPosition(hostKnyteId, leftParts[i].knoxel.id, leftKnoxelPosition);
+    const leftConnectPosition = {x: -0.5*widths.leftConnect -0.5*widths.center, y};
+    setKnoxelPosition(hostKnyteId, leftParts[i].connect.id, leftConnectPosition);
+    initialY += leftHeights[i];
+  }
+  initialY = -0.5*heights.right;
+  for (let i = 0; i < rightParts.length; ++i)
+  {
+    const y = initialY + 0.5*rightHeights[i];
+    const rightConnectPosition = {x: 0.5*widths.rightConnect +0.5*widths.center, y};
+    setKnoxelPosition(hostKnyteId, rightParts[i].connect.id, rightConnectPosition);
+    const rightKnoxelPosition = {x: 0.5*widths.rightKnoxel +widths.rightConnect +0.5*widths.center, y};
+    setKnoxelPosition(hostKnyteId, rightParts[i].knoxel.id, rightKnoxelPosition);
+    initialY += rightHeights[i];
   }
 }
 
