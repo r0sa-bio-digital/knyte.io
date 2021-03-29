@@ -5,7 +5,7 @@ function matchToken(data, token)
 
 function parseCollectionGraph(knyteId)
 {
-    const elementTypeNames = ['string', 'string?', 'number', 'number?', 'date', 'date?'];
+    const elementTypeNames = ['string', 'string?', 'widestring', 'widestring?', 'number', 'number?', 'date', 'date?'];
 
     const rootLinks = getConnectsByDataMatchFunction(knyteId, matchToken, 'root', 'initial');
     if (rootLinks.length !== 1)
