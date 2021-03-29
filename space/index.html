@@ -312,7 +312,7 @@
           const element = inputElements[i];
           const j = parseInt(element.dataset.index);
           const value = element.value;
-          if (!value)
+          if (!value && element.dataset.optional !== 'true')
           {
             statusElement.textContent = 'feel all required fields before submit';
             return;
