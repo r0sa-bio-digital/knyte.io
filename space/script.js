@@ -2511,7 +2511,9 @@ function onMouseMoveSpaceRoot(e)
 
   if (e.buttons === 4) // mouse input systems support
   {
-    if (!document.getElementById('colorpicker').open && !document.getElementById('recordeditor').open)
+    if (!document.getElementById('colorpicker').open && 
+      !document.getElementById('recordeditor').open &&
+      !document.getElementById('inputeditor').open)
     {
       if (!e.shiftKey && !e.altKey && !e.cmdKey())
       {
@@ -2718,7 +2720,9 @@ function getRecordtype(record)
 async function onKeyDownWindow(e)
 {
   inputCodeMap[e.code] = true;
-  if (document.getElementById('colorpicker').open || document.getElementById('recordeditor').open)
+  if (document.getElementById('colorpicker').open ||
+    document.getElementById('recordeditor').open ||
+    document.getElementById('inputeditor').open)
     return;
   const allowedBrowserCommand = (e.code === 'KeyR' && !e.altKey && e.cmdKey()) || 
     (e.code === 'KeyF' && !e.shiftKey && !e.altKey && e.cmdKey()) || 
@@ -3593,7 +3597,9 @@ function onMouseWheelWindow(e)
     e.preventDefault();
     return;
   }
-  if (document.getElementById('colorpicker').open || document.getElementById('recordeditor').open)
+  if (document.getElementById('colorpicker').open ||
+    document.getElementById('recordeditor').open ||
+    document.getElementById('inputeditor').open)
     return;
   if (!e.shiftKey && !e.altKey && !e.cmdKey())
   {

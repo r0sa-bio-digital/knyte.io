@@ -286,6 +286,72 @@
       
       onChangeRecordtype();
     </script>
+    <dialog id="inputeditor">
+      <div id="inputfield">
+      </div>
+      <p>
+        <button onclick="onClickInputeditorSubmit();">
+          Submit
+        </button>
+        <span id="inputstatus"></span>
+      </p>
+      <p>
+        press esc to cancel
+      </p>
+    </dialog>
+    <script>
+      function onClickInputeditorSubmit()
+      {
+        const statusElement = document.getElementById('inputstatus');
+        statusElement.textContent = '';
+        const inputeditorDialog = document.getElementById('inputeditor');
+        const inputElements = inputeditorDialog.getElementsByClassName('inputElement');
+        const results = [];
+        results[0] = knit.new();
+        for (let i = 0; i < inputElements.length; ++i)
+        {
+          const element = inputElements[i];
+          const j = parseInt(element.dataset.index);
+          const value = element.value;
+          if (!value)
+          {
+            statusElement.textContent = 'feel all required fields before submit';
+            return;
+          }
+          results[j] = value;
+        }
+        inputeditorDialog.returnValue = JSON.stringify(results);
+        inputeditorDialog.close();
+      }
+
+      function fillInputeditorDialog(inputHTML)
+      {
+        return new Promise((resolve, reject) => {
+          function onCancelDialog(e)
+          {
+            e.target.removeEventListener('close', onCloseDialog);
+            e.target.removeEventListener('cancel', onCancelDialog);
+            resolve(null);
+          }
+          
+          function onCloseDialog(e)
+          {
+            e.target.removeEventListener('close', onCloseDialog);
+            e.target.removeEventListener('cancel', onCancelDialog);
+            const newData = JSON.parse(e.target.returnValue);
+            resolve(newData);
+          }
+          
+          const inputeditorDialog = document.getElementById('inputeditor');
+          inputeditorDialog.returnValue = '';
+          inputeditorDialog.addEventListener('close', onCloseDialog);
+          inputeditorDialog.addEventListener('cancel', onCancelDialog);
+          const inputfieldElement = document.getElementById('inputfield');
+          inputfieldElement.innerHTML = inputHTML;
+          inputeditorDialog.showModal();
+        });
+      }
+    </script>
     <div id="dropPrompt" style="display: none;">
       drop knoxel space file to load
     </div>
