@@ -5,7 +5,7 @@ function matchToken(data, token)
 
 function parseCollectionGraph(knyteId)
 {
-    const elementTypeNames = ['string', 'string?', 'number', 'number?'];
+    const elementTypeNames = ['string', 'string?', 'number', 'number?', 'date', 'date?'];
 
     const rootLinks = getConnectsByDataMatchFunction(knyteId, matchToken, 'root', 'initial');
     if (rootLinks.length !== 1)
@@ -37,8 +37,10 @@ function parseCollectionGraph(knyteId)
         {
             const typeLinkId = typeLinks[0];
             const typeFieldId = knyteVectors[typeLinkId].terminalKnyteId;
-            typeName = informationMap[typeFieldId].record.data;
-            if (!elementTypeNames.includes(typeName))
+            const {record} = informationMap[typeFieldId];
+            const typeData = (record && record.data) ? record.data : getHostedKnyteId(typeFieldId);
+            const typeName = typeData || '';
+            if (!elementTypeNames.includes(typeName) && !isUuid(typeName))
                 throw Error(typeName + ' - invalid type');
         }
         typesOrder.push(typeName);
