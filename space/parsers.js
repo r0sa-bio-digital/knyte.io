@@ -38,10 +38,18 @@ function parseCollectionGraph(knyteId)
             const typeLinkId = typeLinks[0];
             const typeFieldId = knyteVectors[typeLinkId].terminalKnyteId;
             const {record} = informationMap[typeFieldId];
-            const typeData = (record && record.data) ? record.data : getHostedKnyteId(typeFieldId);
+            const nestedTypeId = getHostedKnyteId(typeFieldId);
+            const typeData = nestedTypeId ? nestedTypeId : (record && record.data);
             typeName = typeData || '';
             if (!elementTypeNames.includes(typeName) && !isUuid(typeName))
                 throw Error(typeName + ' - invalid type');
+            if (nestedTypeId && record && record.data)
+            {
+                if (record.data === '?' || record.data === '?xN') // nested type is optional or multiselect
+                    typeName += record.data;
+                else
+                    throw Error(record.data + ' - invalid type modifier');
+            }
         }
         typesOrder.push(typeName);
         const fieldLinks = getConnectsByDataMatchFunction(fieldId, matchToken, 'next', 'initial');
