@@ -39,7 +39,7 @@ function parseCollectionGraph(knyteId)
             const typeFieldId = knyteVectors[typeLinkId].terminalKnyteId;
             const {record} = informationMap[typeFieldId];
             const typeData = (record && record.data) ? record.data : getHostedKnyteId(typeFieldId);
-            const typeName = typeData || '';
+            typeName = typeData || '';
             if (!elementTypeNames.includes(typeName) && !isUuid(typeName))
                 throw Error(typeName + ' - invalid type');
         }
