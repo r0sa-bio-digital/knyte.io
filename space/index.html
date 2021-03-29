@@ -311,13 +311,21 @@
         {
           const element = inputElements[i];
           const j = parseInt(element.dataset.index);
-          const value = element.value.trim();
-          if (!value && element.dataset.optional !== 'true')
+          if (element.multiple)
           {
-            statusElement.textContent = 'feel all required fields before submit';
-            return;
+            const value = Array.from(element.selectedOptions).map( v => v.value);
+            results[j] = JSON.stringify(value);
           }
-          results[j] = value;
+          else
+          {
+            const value = element.value.trim();
+            if (!value && element.dataset.optional !== 'true')
+            {
+              statusElement.textContent = 'feel all required fields before submit';
+              return;
+            }
+            results[j] = value;
+          }
         }
         inputeditorDialog.returnValue = JSON.stringify(results);
         inputeditorDialog.close();
