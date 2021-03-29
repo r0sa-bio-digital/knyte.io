@@ -3675,6 +3675,13 @@ function escapeStringToCode(s) {
   return s.replace(/\\/g, '\\\\').replace(/\"/g, '\\\"').replace(/\n/g, '\\n');
 }
 
+function dateTimeLocalToUTC(isoDateTimeLocal)
+{
+  if (isoDateTimeLocal)
+    return (new Date(isoDateTimeLocal)).toISOString();
+  return '';
+}
+
 function getHostedKnyteId(knyteId)
 {
   const hostedKnoxels = informationMap[knyteId].space;

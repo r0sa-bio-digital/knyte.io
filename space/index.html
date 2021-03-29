@@ -318,7 +318,9 @@
           }
           else
           {
-            const value = element.value.trim();
+            const value = element.type === 'datetime-local'
+              ? dateTimeLocalToUTC(element.value)
+              : element.value.trim();
             if (!value && element.dataset.optional !== 'true')
             {
               statusElement.textContent = 'feel all required fields before submit';
