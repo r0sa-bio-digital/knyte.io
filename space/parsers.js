@@ -5,6 +5,8 @@ function matchToken(data, token)
 
 function parseCollectionGraph(knyteId)
 {
+    const elementTypeNames = ['string', 'string?', 'number', 'number?'];
+
     const rootLinks = getConnectsByDataMatchFunction(knyteId, matchToken, 'root', 'initial');
     if (rootLinks.length !== 1)
         throw Error(knyteId + ' must have 1 outgoing link with token root');
@@ -23,9 +25,23 @@ function parseCollectionGraph(knyteId)
     const maxFieldCount = 100;
     let fieldCount = 0;
     const fieldsOrder = [];
+    const typesOrder = [];
     while (fieldId && fieldCount < maxFieldCount)
     {
         fieldsOrder.push(fieldId);
+        const typeLinks = getConnectsByDataMatchFunction(fieldId, matchToken, 'type', 'initial');
+        if (typeLinks.length > 1)
+            throw Error(fieldId + ' must have 1 outgoing link with token type');
+        let typeName = 'string';
+        if (typeLinks.length === 1)
+        {
+            const typeLinkId = typeLinks[0];
+            const typeFieldId = knyteVectors[typeLinkId].terminalKnyteId;
+            typeName = informationMap[typeFieldId].record.data;
+            if (!elementTypeNames.includes(typeName))
+                throw Error(typeName + ' - invalid type');
+        }
+        typesOrder.push(typeName);
         const fieldLinks = getConnectsByDataMatchFunction(fieldId, matchToken, 'next', 'initial');
         if (fieldLinks.length === 0)
             break;
@@ -42,7 +58,7 @@ function parseCollectionGraph(knyteId)
     {
         const fieldId = fieldsOrder[i];
         const fieldName = informationMap[fieldId].record.data;
-        row0.push(fieldId + '\n' + fieldName);
+        row0.push(fieldId + '\n' + fieldName + '\n' + typesOrder[i]);
     }
     result.push(row0);
     const maxEntityIndex = 100000;
