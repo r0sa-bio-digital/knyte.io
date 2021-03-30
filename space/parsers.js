@@ -45,7 +45,8 @@ function parseCollectionGraph(knyteId)
                 throw Error(typeName + ' - invalid type');
             if (nestedTypeId && record && record.data)
             {
-                if (record.data === '?' || record.data === '?xN') // nested type is optional or multiselect
+                // nested type is optional or multiselect or filter
+                if (record.data === '?' || record.data === '?xN' || record.data === '?F')
                     typeName += record.data;
                 else
                     throw Error(record.data + ' - invalid type modifier');
