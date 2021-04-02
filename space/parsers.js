@@ -26,9 +26,11 @@ function parseCollectionGraph(knyteId)
     let fieldCount = 0;
     const fieldsOrder = [];
     const typesOrder = [];
+    const codeAliasesOrder = [];
     while (fieldId && fieldCount < maxFieldCount)
     {
         fieldsOrder.push(fieldId);
+
         const typeLinks = getConnectsByDataMatchFunction(fieldId, matchToken, 'type', 'initial');
         if (typeLinks.length > 1)
             throw Error(fieldId + ' must have 1 outgoing link with token type');
@@ -53,6 +55,21 @@ function parseCollectionGraph(knyteId)
             }
         }
         typesOrder.push(typeName);
+
+        const codeLinks = getConnectsByDataMatchFunction(fieldId, matchToken, 'rpm', 'initial'); // TODO: replace 'rpm' keyword by 'code'
+        if (codeLinks.length > 1)
+            throw Error(fieldId + ' must have 1 outgoing link with token rpm');
+        let codeAlias = '';
+        if (codeLinks.length === 1)
+        {
+            const codeLinkId = codeLinks[0];
+            const codeFieldId = knyteVectors[codeLinkId].terminalKnyteId;
+            const {record} = informationMap[codeFieldId];
+            const codeData = record && record.data;
+            codeAlias = codeData || '';
+        }
+        codeAliasesOrder.push(codeAlias);
+
         const fieldLinks = getConnectsByDataMatchFunction(fieldId, matchToken, 'next', 'initial');
         if (fieldLinks.length === 0)
             break;
@@ -69,7 +86,7 @@ function parseCollectionGraph(knyteId)
     {
         const fieldId = fieldsOrder[i];
         const fieldName = informationMap[fieldId].record.data;
-        row0.push(fieldId + '\n' + fieldName + '\n' + typesOrder[i]);
+        row0.push(fieldId + '\n' + fieldName + '\n' + typesOrder[i] + '\n' + codeAliasesOrder[i]);
     }
     result.push(row0);
     const maxEntityIndex = 100000;
