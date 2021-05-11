@@ -4471,6 +4471,10 @@ function runBlockHandleClick(knyteId)
 
 function spacemapChangedHandler()
 {
+  // disable current implementation of spacemap as depricated
+  return; 
+  // TODO: 1) implement new spacemap approach similar to knoxelmap 2) remove all old spacemap related code
+
   // do it for spacemap spaces only
   if (knoxels[spaceRootElement.dataset.knoxelId] !== knoxels[spacemapKnoxelId])
     return;
