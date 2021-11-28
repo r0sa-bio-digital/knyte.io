@@ -1,7 +1,7 @@
-const a = {b: 'c'};
+global.a = {b: 'c'};
 let runBlockDelay = 0;
 
-function runBlockHandleClick(a, codeText, resolve)
+function runBlockHandleClick(codeText, resolve)
 {
 
   function onComplete(success)
@@ -64,15 +64,15 @@ function runBlockHandleClick(a, codeText, resolve)
   */
 }
 
-function runBlockAsync(a, codeText)
+function runBlockAsync(codeText)
 {
   return new Promise(
-    (resolve) => {runBlockHandleClick(a, codeText, resolve);}
+    (resolve) => {runBlockHandleClick(codeText, resolve);}
   );
 }
 
 exports.handler = async (event, context) => {
-  console.log(await runBlockAsync(a, 'console.log(a);'));
+  console.log(await runBlockAsync('console.log(a);'));
   return {
     statusCode: 200,
     body: 'hello from netlify functions'
