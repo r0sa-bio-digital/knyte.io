@@ -14,11 +14,12 @@ function runBlockHandleClick(a, codeText, resolve)
     console.log('run block result: ' + result);
     resolve(result);
   }
-
+  /*
   try
   {
-    const formalParametersList = '"a",';
-    const actualParametersList = JSON.stringify(a);
+  */
+    const formalParametersList = ''; //'"a",';
+    const actualParametersList = ''; //JSON.stringify(a);
 
     const useStrict = '"use strict";\n';
     const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
@@ -55,10 +56,12 @@ function runBlockHandleClick(a, codeText, resolve)
       }, 
       runBlockDelay
     );
+  /*
   }
   finally
   {
   }
+  */
 }
 
 function runBlockAsync(a, codeText)
