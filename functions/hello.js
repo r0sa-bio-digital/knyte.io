@@ -1,4 +1,3 @@
-exports.aa = {bb: 'cc'};
 const a = {b: 'c'};
 let runBlockDelay = 0;
 
@@ -67,7 +66,6 @@ function runBlockAsync(codeText)
 }
 
 exports.handler = async (event, context) => {
-  console.log(await runBlockAsync('console.log(exports.aa);'));
   console.log(await runBlockAsync('console.log(a);'));
   return {
     statusCode: 200,
