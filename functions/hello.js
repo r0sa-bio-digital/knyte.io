@@ -1,7 +1,7 @@
 const a = {b: 'c'};
 let runBlockDelay = 0;
 
-function runBlockHandleClick(codeText, resolve)
+function runBlockHandleClick(a, codeText, resolve)
 {
 
   function onComplete(success)
@@ -19,9 +19,8 @@ function runBlockHandleClick(codeText, resolve)
   {
     const useStrict = '"use strict";\n';
     const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
-    //const evalText = 'new AsyncFunction(useStrict + codeText)';
-    //const codeFunction = eval(evalText);
-    const codeFunction = new Function(codeText);
+    const evalText = 'new AsyncFunction(useStrict + codeText)';
+    const codeFunction = eval(evalText);
     setTimeout(
       function()
       {
@@ -62,7 +61,7 @@ function runBlockHandleClick(codeText, resolve)
 function runBlockAsync(codeText)
 {
   return new Promise(
-    (resolve) => {runBlockHandleClick(codeText, resolve);}
+    (resolve) => {runBlockHandleClick(a, codeText, resolve);}
   );
 }
 
