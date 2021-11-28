@@ -14,16 +14,15 @@ function runBlockHandleClick(codeText, resolve)
     resolve(result);
   }
 
-  let runComplete = false;
   try
   {
     const useStrict = '"use strict";\n';
     const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
     const evalText = 'new AsyncFunction(useStrict + codeText)';
     const codeFunction = eval(evalText);
-    setTimeout(
-      function()
-      {
+//    setTimeout(
+//      function()
+//      {
         let promiseComplete = false;
         try
         {
@@ -32,6 +31,7 @@ function runBlockHandleClick(codeText, resolve)
           promiseResults.then(
             function(results)
             {
+              codeComplete = true;
             }
           ).finally(
             function()
@@ -48,10 +48,9 @@ function runBlockHandleClick(codeText, resolve)
             onComplete(false);
           }
         }
-      }, 
-      runBlockDelay
-    );
-    runComplete = true;
+//      }, 
+//      runBlockDelay
+//    );
   }
   finally
   {
