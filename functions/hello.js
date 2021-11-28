@@ -1,19 +1,19 @@
 const a = {b: 'c'};
 let runBlockDelay = 0;
 
-function onComplete(success)
-{
-  let result = JSON.stringify({success: false, result: 'run block execution failed.'});
-  if (success)
-  {
-    result = JSON.stringify({success: true, result: 'OK'});
-  }
-  console.log('run block result: ' + result);
-  resolve(result);
-}
-
 function runBlockHandleClick(codeText, resolve)
 {
+  function onComplete(success)
+  {
+    let result = JSON.stringify({success: false, result: 'run block execution failed.'});
+    if (success)
+    {
+      result = JSON.stringify({success: true, result: 'OK'});
+    }
+    console.log('run block result: ' + result);
+    resolve(result);
+  }
+
   let runComplete = false;
   try
   {
