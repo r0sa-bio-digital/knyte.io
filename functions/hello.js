@@ -56,7 +56,7 @@ function runBlockHandleClick(codeText, resolve)
   }
 }
 
-function runBlockAsync(body)
+function runBlockAsync(codeText)
 {
   return new Promise(
     (resolve) => {runBlockHandleClick(codeText, resolve);}
