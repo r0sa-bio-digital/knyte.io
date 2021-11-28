@@ -3,6 +3,8 @@ let runBlockDelay = 0;
 
 function runBlockHandleClick(codeText, resolve)
 {
+  const aa = {bb: 'cc'};
+
   function onComplete(success)
   {
     let result = JSON.stringify({success: false, result: 'run block execution failed.'});
@@ -20,9 +22,9 @@ function runBlockHandleClick(codeText, resolve)
     const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
     const evalText = 'new AsyncFunction(useStrict + codeText)';
     const codeFunction = eval(evalText);
-//    setTimeout(
-//      function()
-//      {
+    setTimeout(
+      function()
+      {
         let promiseComplete = false;
         try
         {
@@ -48,9 +50,9 @@ function runBlockHandleClick(codeText, resolve)
             onComplete(false);
           }
         }
-//      }, 
-//      runBlockDelay
-//    );
+      }, 
+      runBlockDelay
+    );
   }
   finally
   {
@@ -65,6 +67,7 @@ function runBlockAsync(codeText)
 }
 
 exports.handler = async (event, context) => {
+  console.log(await runBlockAsync('console.log(aa);'));
   console.log(await runBlockAsync('console.log(a);'));
   return {
     statusCode: 200,
