@@ -19,8 +19,9 @@ function runBlockHandleClick(codeText, resolve)
   {
     const useStrict = '"use strict";\n';
     const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
-    const evalText = 'new AsyncFunction(useStrict + codeText)';
-    const codeFunction = eval(evalText);
+    //const evalText = 'new AsyncFunction(useStrict + codeText)';
+    //const codeFunction = eval(evalText);
+    const codeFunction = new Function(codeText);
     setTimeout(
       function()
       {
