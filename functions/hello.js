@@ -1,11 +1,7 @@
 const a = {b: 'c'};
-const aa = {bb: 'cc'};
-const aaa = {bbb: 'ccc'};
 
 exports.handler = async (event, context) => {
-  console.log(a);
-  eval('console.log(aa);');
-  eval('"use strict";\nconsole.log(aaa);');
+  setTimeout(() => eval('"use strict";\nconsole.log(a);'), 10);
   return {
     statusCode: 200,
     body: 'hello from netlify functions'
