@@ -16,6 +16,7 @@ function runBlockHandleClick(codeText, resolve)
   let runComplete = false;
   try
   {
+    const useStrict = '"use strict";\n';
     const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
     const evalText = 'new AsyncFunction(useStrict + codeText)';
     const codeFunction = eval(evalText);
@@ -64,7 +65,7 @@ function runBlockAsync(codeText)
 }
 
 exports.handler = async (event, context) => {
-  console.log(await runBlockAsync('"use strict";\nconsole.log(a);'));
+  console.log(await runBlockAsync('console.log(a);'));
   return {
     statusCode: 200,
     body: 'hello from netlify functions'
