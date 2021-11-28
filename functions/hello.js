@@ -1,4 +1,5 @@
 const a = {b: 'c'};
+let runBlockDelay = 0;
 
 function onComplete(success)
 {
