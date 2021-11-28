@@ -14,16 +14,11 @@ function runBlockHandleClick(codeText, resolve)
     console.log('run block result: ' + result);
     resolve(result);
   }
-  /*
   try
   {
-  */
-    const formalParametersList = ''; //'"a",';
-    const actualParametersList = ''; //JSON.stringify(a);
-
     const useStrict = '"use strict";\n';
     const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
-    const evalText = 'new AsyncFunction(' + formalParametersList + 'useStrict + codeText)';
+    const evalText = 'new AsyncFunction(useStrict + codeText)';
     const codeFunction = eval(evalText);
     setTimeout(
       function()
@@ -32,7 +27,7 @@ function runBlockHandleClick(codeText, resolve)
         try
         {
           let codeComplete = false;
-          const promiseResults = eval('codeFunction(' + actualParametersList + ')');
+          const promiseResults = eval('codeFunction()');
           promiseResults.then(
             function(results)
             {
@@ -56,12 +51,10 @@ function runBlockHandleClick(codeText, resolve)
       }, 
       runBlockDelay
     );
-  /*
   }
   finally
   {
   }
-  */
 }
 
 function runBlockAsync(codeText)
