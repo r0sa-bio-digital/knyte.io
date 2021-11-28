@@ -19,8 +19,9 @@ function runBlockHandleClick(a, codeText, resolve)
   {
     const useStrict = '"use strict";\n';
     const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
-    const evalText = 'new AsyncFunction(useStrict + codeText)';
-    const codeFunction = eval(evalText);
+    //const evalText = 'new AsyncFunction(useStrict + codeText)';
+    //const codeFunction = eval(evalText);
+    const codeFunction = new AsyncFunction(useStrict + codeText);
     setTimeout(
       function()
       {
@@ -58,7 +59,7 @@ function runBlockHandleClick(a, codeText, resolve)
   }
 }
 
-function runBlockAsync(codeText)
+function runBlockAsync(a, codeText)
 {
   return new Promise(
     (resolve) => {runBlockHandleClick(a, codeText, resolve);}
@@ -66,7 +67,7 @@ function runBlockAsync(codeText)
 }
 
 exports.handler = async (event, context) => {
-  console.log(await runBlockAsync('console.log(a);'));
+  console.log(await runBlockAsync(a, 'console.log(a);'));
   return {
     statusCode: 200,
     body: 'hello from netlify functions'
