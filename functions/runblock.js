@@ -37,28 +37,28 @@ function fetch(url, options = {}) {
 }
 
 // state variables to save/load
-let masterKnoxelId;
-let spacemapKnoxelId;
-const knyteVectors = {}; // knyte id --> {initialKnyteId, terminalKnyteId}
-const knoxelVectors = {}; // knoxel id --> {initialKnoxelId, terminalKnoxelId}
-const knyteConnects = {}; // knyte id --> {knyte id: true}
-const knyteInitialConnects = {}; // knyte id --> {knyte id: true}
-const knyteTerminalConnects = {}; // knyte id --> {knyte id: true}
-const informationMap = {}; // knyte id --> {color, space: {knoxel id --> position}, record: {data, viewertype, size}}
-const knoxels = {}; // knoxel id --> knyte id
-const knoxelViews = {}; // knoxel id --> {collapse, color}
+global.masterKnoxelId = undefined;
+global.spacemapKnoxelId = undefined;
+global.knyteVectors = {}; // knyte id --> {initialKnyteId, terminalKnyteId}
+global.knoxelVectors = {}; // knoxel id --> {initialKnoxelId, terminalKnoxelId}
+global.knyteConnects = {}; // knyte id --> {knyte id: true}
+global.knyteInitialConnects = {}; // knyte id --> {knyte id: true}
+global.knyteTerminalConnects = {}; // knyte id --> {knyte id: true}
+global.informationMap = {}; // knyte id --> {color, space: {knoxel id --> position}, record: {data, viewertype, size}}
+global.knoxels = {}; // knoxel id --> knyte id
+global.knoxelViews = {}; // knoxel id --> {collapse, color}
 
 // state variables to reset on load
-const knyteEvalCode = {}; // knyte id --> eval key --> function made from parameters and code
-const arrows = {}; // arrow id --> {initialKnoxelId, terminalKnoxelId}
-const spaceBackStack = []; // [previous space root knoxel id]
-const steeringBackStack = []; // [previous space root steering]
-const spaceForwardStack = []; // [next space root knoxel id]
-const steeringForwardStack = []; // [next space root steering]
+global.knyteEvalCode = {}; // knyte id --> eval key --> function made from parameters and code
+global.arrows = {}; // arrow id --> {initialKnoxelId, terminalKnoxelId}
+global.spaceBackStack = []; // [previous space root knoxel id]
+global.steeringBackStack = []; // [previous space root steering]
+global.spaceForwardStack = []; // [next space root knoxel id]
+global.steeringForwardStack = []; // [next space root steering]
 
 // global settings
-let runBlockDelay = 0;
-const runBlockBusyList = {};
+global.runBlockDelay = 0;
+global.runBlockBusyList = {};
 
 // duplicates from client-side code
 const knyteAppstateFilename = 'knyte-appstate.json';
@@ -120,17 +120,6 @@ async function loadAppState(githubOwner, githubRepo, githubPAT)
   }
   const json = JSON.parse(response.body); // await response.json();
   let fileSHA;
-/*
-  for (let i = 0; i < json.files.length; ++i)
-  {
-    const filename = json.files[i].filename;
-    if (filename === knyteAppstateFilename)
-    {
-      fileSHA = json.files[i].sha;
-      break;
-    }
-  }
-*/
   const response1 = await fetch(
     'https://api.github.com/repos/' +
     githubOwner + '/' + githubRepo + '/git/trees/' + json.commit.tree.sha,
