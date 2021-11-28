@@ -18,6 +18,8 @@ function runBlockHandleClick(a, codeText, resolve)
   try
   {
     const formalParametersList = '"a",';
+    const actualParametersList = JSON.stringify(a);
+
     const useStrict = '"use strict";\n';
     const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
     const evalText = 'new AsyncFunction(' + formalParametersList + 'useStrict + codeText)';
@@ -29,7 +31,7 @@ function runBlockHandleClick(a, codeText, resolve)
         try
         {
           let codeComplete = false;
-          const promiseResults = eval('codeFunction(' + JSON.stringify(a) + ')');
+          const promiseResults = eval('codeFunction(' + actualParametersList + ')');
           promiseResults.then(
             function(results)
             {
