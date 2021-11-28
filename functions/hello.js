@@ -1,9 +1,9 @@
+exports.aa = {bb: 'cc'};
 const a = {b: 'c'};
 let runBlockDelay = 0;
 
 function runBlockHandleClick(codeText, resolve)
 {
-  const aa = {bb: 'cc'};
 
   function onComplete(success)
   {
