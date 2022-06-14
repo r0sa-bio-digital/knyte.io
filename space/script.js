@@ -2726,7 +2726,6 @@ async function onKeyDownWindow(e)
     return;
   const allowedBrowserCommand = (e.code === 'KeyR' && !e.altKey && e.cmdKey()) || 
     (e.code === 'KeyF' && !e.shiftKey && !e.altKey && e.cmdKey()) || 
-    (e.code === 'KeyG' && !e.shiftKey && !e.altKey && e.cmdKey()) || 
     (e.code === 'KeyI' && !e.shiftKey && e.altKey && e.cmdKey()) || 
     (e.code === 'F12' && !e.shiftKey && !e.altKey && !e.cmdKey()) || 
     ((e.code === 'Minus' || e.code === 'Equal') && !e.shiftKey && !e.altKey && e.cmdKey());
